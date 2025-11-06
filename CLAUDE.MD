@@ -187,7 +187,7 @@ ALWAYS verify schema before ANY database work
 - Comments can be in English or Russian
 
 ### Git Conventions
-- **Commit Messages**: Clear, descriptive messages in imperative mood
+- **Commit Messages**: На русском языке, чёткие и описательные в повелительном наклонении
 - **Branch Naming**: feature/, fix/, refactor/ prefixes
 - **Pull Requests**: Must include description and testing steps
 
