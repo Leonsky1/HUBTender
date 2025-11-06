@@ -1,0 +1,92 @@
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  margin: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+/* Dark theme logo */
+.logo-dark {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.logo-dark:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.logo-dark .logo-text {
+  color: #fff;
+}
+
+/* Light theme logo */
+.logo-light {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.logo-light:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.logo-light .logo-text {
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+/* Ant Design Menu Overrides */
+.ant-menu {
+  background: transparent !important;
+}
+
+/* Dark theme menu */
+.ant-menu-dark .ant-menu-item-selected {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+}
+
+.ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected) {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Light theme menu */
+.ant-menu-light .ant-menu-item-selected {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+  color: #fff !important;
+}
+
+.ant-menu-light .ant-menu-item-selected .anticon {
+  color: #fff !important;
+}
+
+.ant-menu-light .ant-menu-item:hover:not(.ant-menu-item-selected) {
+  background: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Custom scrollbar for sidebar */
+.ant-layout-sider::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

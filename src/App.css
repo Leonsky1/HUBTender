@@ -1,22 +1,36 @@
+/* Reset default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* Remove Ant Design focus outlines for cleaner look */
+.ant-layout {
   min-height: 100vh;
+  transition: background 0.3s;
 }
 
-.card {
-  padding: 2em;
+/* Light theme layout background */
+.ant-layout-content {
+  transition: background 0.3s;
 }
 
-.read-the-docs {
-  color: #888;
+/* Custom ant-design overrides */
+.ant-menu-item-selected {
+  background-color: transparent !important;
+}
+
+.ant-menu-item-selected::after {
+  border-right: 3px solid #10b981;
+  transform: scaleY(1);
+  opacity: 1;
+  transition: transform 0.15s cubic-bezier(0.215, 0.61, 0.355, 1),
+    opacity 0.15s cubic-bezier(0.215, 0.61, 0.355, 1);
 }

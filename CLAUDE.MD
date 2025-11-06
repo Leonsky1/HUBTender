@@ -115,6 +115,49 @@ ALWAYS verify schema before ANY database work
   - TanStack Query for server state
   - Context API for cross-cutting concerns
 
+### Theme Requirements
+- **Dual Theme Support**: Application MUST support both light and dark themes
+- **Theme Switching**: Users should be able to toggle between themes
+- **Consistent Theming**: When implementing any UI changes, ensure compatibility with BOTH themes
+- **Theme Implementation**:
+  - Use Ant Design's ConfigProvider with theme algorithms
+  - Store theme preference in localStorage (key: `tenderHub_theme`)
+  - Apply theme-specific colors via CSS variables or Ant Design tokens
+  - Test all components in both light and dark modes
+- **Color Scheme**:
+  - **Dark Theme**:
+    - Background: `#000000` (pure black)
+    - Sidebar: `#0a0a0a`
+    - Cards: `#141414`
+    - Borders: `rgba(255, 255, 255, 0.08)`
+    - Text: `#ffffff` / `rgba(255, 255, 255, 0.85)`
+  - **Light Theme**:
+    - Background: `#f0f2f5`
+    - Sidebar: `#ffffff`
+    - Cards: default Ant Design
+    - Borders: `rgba(0, 0, 0, 0.06)`
+    - Text: default Ant Design
+  - **Header Gradients** (green/teal color scheme):
+    - Light: `linear-gradient(135deg, #0891b2 0%, #10b981 100%)` (cyan to emerald)
+    - Dark: `linear-gradient(135deg, #1a5f7a 0%, #159957 100%)` (dark teal to green)
+    - Border radius: `24px` for modern rounded corners
+    - Box shadow for depth perception
+  - **Icon Design System**:
+    - Circular containers: 64px × 64px
+    - Icon size: 28px (white color)
+    - Filled icons for modern look
+    - Gradient backgrounds per feature:
+      1. Dashboard: `#1a5f7a → #159957`
+      2. Positions: `#10b981 → #059669`
+      3. Commerce: `#06b6d4 → #0891b2`
+      4. Libraries: `#14b8a6 → #0d9488`
+      5. Costs: `#34d399 → #10b981`
+      6. Administration: `#0284c7 → #0369a1`
+      7. Users: `#0891b2 → #0e7490`
+      8. Settings: `#22c55e → #16a34a`
+- **Design Pattern**: Headers with gradient backgrounds and rounded corners, content on solid backgrounds
+- **Accessibility**: Ensure sufficient contrast ratios in both themes (WCAG AA standard minimum)
+
 ### Database Operations
 - **Always check prod.sql** before any database operation
 - **Use RPC functions** for complex queries (defined in prod.sql)
