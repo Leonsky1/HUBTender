@@ -460,6 +460,7 @@ const Nomenclatures: React.FC = () => {
       dataIndex: 'unit',
       key: 'unit',
       width: 150,
+      align: 'center',
       render: (unit: string) => (
         <Tag color={unitColors[unit] || 'default'}>{unit}</Tag>
       ),
@@ -469,6 +470,7 @@ const Nomenclatures: React.FC = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
+      align: 'center',
     },
     {
       title: 'Действия',
@@ -508,6 +510,7 @@ const Nomenclatures: React.FC = () => {
       dataIndex: 'unit',
       key: 'unit',
       width: 150,
+      align: 'center',
       render: (unit: string) => (
         <Tag color={unitColors[unit] || 'default'}>{unit}</Tag>
       ),
@@ -517,6 +520,7 @@ const Nomenclatures: React.FC = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
+      align: 'center',
     },
     {
       title: 'Действия',
