@@ -451,6 +451,13 @@ const Nomenclatures: React.FC = () => {
 
   const materialColumns: ColumnsType<MaterialRecord> = [
     {
+      title: '№',
+      key: 'index',
+      width: 60,
+      align: 'center',
+      render: (_: any, __: any, index: number) => (currentPage - 1) * pageSize + index + 1,
+    },
+    {
       title: 'Наименование',
       dataIndex: 'name',
       key: 'name',
@@ -501,6 +508,13 @@ const Nomenclatures: React.FC = () => {
 
   const workColumns: ColumnsType<WorkRecord> = [
     {
+      title: '№',
+      key: 'index',
+      width: 60,
+      align: 'center',
+      render: (_: any, __: any, index: number) => (currentPage - 1) * pageSize + index + 1,
+    },
+    {
       title: 'Наименование',
       dataIndex: 'name',
       key: 'name',
@@ -550,6 +564,13 @@ const Nomenclatures: React.FC = () => {
   ];
 
   const unitColumns: ColumnsType<UnitRecord> = [
+    {
+      title: '№',
+      key: 'index',
+      width: 60,
+      align: 'center',
+      render: (_: any, __: any, index: number) => (currentPage - 1) * pageSize + index + 1,
+    },
     {
       title: 'Наименование',
       dataIndex: 'name',
