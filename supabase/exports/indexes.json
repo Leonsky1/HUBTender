@@ -455,37 +455,29 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_cost_categories_unit ON public.cost_categories USING btree (unit)"
   },
-  "public.detail_cost_categories.idx_detail_cost_categories_category_location": {
+  "public.detail_cost_categories.idx_detail_cost_categories_category_id": {
     "schema": "public",
-    "name": "idx_detail_cost_categories_category_location",
+    "name": "idx_detail_cost_categories_category_id",
     "table_name": null,
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX idx_detail_cost_categories_category_location ON public.detail_cost_categories USING btree (cost_category_id, location_id)"
+    "sql": "CREATE INDEX idx_detail_cost_categories_category_id ON public.detail_cost_categories USING btree (cost_category_id)"
   },
-  "public.detail_cost_categories.idx_detail_cost_categories_cost_category_id": {
+  "public.detail_cost_categories.idx_detail_cost_categories_composite": {
     "schema": "public",
-    "name": "idx_detail_cost_categories_cost_category_id",
+    "name": "idx_detail_cost_categories_composite",
     "table_name": null,
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX idx_detail_cost_categories_cost_category_id ON public.detail_cost_categories USING btree (cost_category_id)"
+    "sql": "CREATE INDEX idx_detail_cost_categories_composite ON public.detail_cost_categories USING btree (cost_category_id, location)"
   },
-  "public.detail_cost_categories.idx_detail_cost_categories_created_at": {
+  "public.detail_cost_categories.idx_detail_cost_categories_location": {
     "schema": "public",
-    "name": "idx_detail_cost_categories_created_at",
+    "name": "idx_detail_cost_categories_location",
     "table_name": null,
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX idx_detail_cost_categories_created_at ON public.detail_cost_categories USING btree (created_at DESC)"
-  },
-  "public.detail_cost_categories.idx_detail_cost_categories_location_id": {
-    "schema": "public",
-    "name": "idx_detail_cost_categories_location_id",
-    "table_name": null,
-    "is_unique": false,
-    "is_primary": false,
-    "sql": "CREATE INDEX idx_detail_cost_categories_location_id ON public.detail_cost_categories USING btree (location_id)"
+    "sql": "CREATE INDEX idx_detail_cost_categories_location ON public.detail_cost_categories USING btree (location)"
   },
   "public.detail_cost_categories.idx_detail_cost_categories_name": {
     "schema": "public",
@@ -510,22 +502,6 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX idx_detail_cost_categories_unit ON public.detail_cost_categories USING btree (unit)"
-  },
-  "public.locations.idx_locations_created_at": {
-    "schema": "public",
-    "name": "idx_locations_created_at",
-    "table_name": null,
-    "is_unique": false,
-    "is_primary": false,
-    "sql": "CREATE INDEX idx_locations_created_at ON public.locations USING btree (created_at DESC)"
-  },
-  "public.locations.idx_locations_location": {
-    "schema": "public",
-    "name": "idx_locations_location",
-    "table_name": null,
-    "is_unique": false,
-    "is_primary": false,
-    "sql": "CREATE INDEX idx_locations_location ON public.locations USING btree (location)"
   },
   "public.material_names.idx_material_names_name": {
     "schema": "public",

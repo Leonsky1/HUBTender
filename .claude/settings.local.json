@@ -16,7 +16,18 @@
       "Bash(npm run dev:*)",
       "Bash(npm install:*)",
       "Bash(npm run build)",
-      "Bash(supabase status:*)"
+      "Bash(supabase status:*)",
+      "Bash(nul)",
+      "Bash(git -C \"C:\\Users\\odintsov.a.a\\WebstormProjects\\HUBTender\" log --oneline -10)",
+      "Bash(git -C \"C:\\Users\\odintsov.a.a\\WebstormProjects\\HUBTender\" remote -v)",
+      "Bash(dir:*)",
+      "Bash(node test-tender-creation.js:*)",
+      "Bash(supabase db push:*)",
+      "Bash(node test-cost-categories.js:*)",
+      "Bash(findstr:*)",
+      "Bash(node create-excel-template.js:*)",
+      "Bash(node:*)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "ask": []

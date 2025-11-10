@@ -3149,7 +3149,7 @@
   "public.cost_categories": {
     "schema": "public",
     "name": "cost_categories",
-    "comment": "Категории затрат",
+    "comment": "Справочник      \r\n  категорий затрат",
     "columns": [
       {
         "name": "id",
@@ -3159,7 +3159,7 @@
         "numeric_scale": null,
         "is_nullable": "NO",
         "default": "uuid_generate_v4()",
-        "comment": "Уникальный идентификатор категории затрат"
+        "comment": "Уникальный идентификатор категории (UUID)"
       },
       {
         "name": "name",
@@ -3179,7 +3179,7 @@
         "numeric_scale": null,
         "is_nullable": "NO",
         "default": null,
-        "comment": "Единица измерения"
+        "comment": "Единица измерения категории"
       },
       {
         "name": "created_at",
@@ -3189,7 +3189,7 @@
         "numeric_scale": null,
         "is_nullable": "YES",
         "default": "now()",
-        "comment": "Дата создания записи"
+        "comment": "Дата и время создания записи"
       },
       {
         "name": "updated_at",
@@ -3199,12 +3199,12 @@
         "numeric_scale": null,
         "is_nullable": "YES",
         "default": "now()",
-        "comment": "Дата последнего обновления записи"
+        "comment": "Дата и время последнего обновления"
       }
     ],
     "constraints": [
       {
-        "name": "2200_17578_1_not_null",
+        "name": "2200_17831_1_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3212,7 +3212,7 @@
         "foreign_column": null
       },
       {
-        "name": "2200_17578_2_not_null",
+        "name": "2200_17831_2_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3220,7 +3220,7 @@
         "foreign_column": null
       },
       {
-        "name": "2200_17578_3_not_null",
+        "name": "2200_17831_3_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3236,12 +3236,12 @@
         "foreign_column": "id"
       }
     ],
-    "sql": "-- Категории затрат\nCREATE TABLE IF NOT EXISTS public.cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT cost_categories_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.cost_categories IS 'Категории затрат';\nCOMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории затрат';\nCOMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';\nCOMMENT ON COLUMN public.cost_categories.unit IS 'Единица измерения';\nCOMMENT ON COLUMN public.cost_categories.created_at IS 'Дата создания записи';\nCOMMENT ON COLUMN public.cost_categories.updated_at IS 'Дата последнего обновления записи';"
+    "sql": "-- Справочник      \r\n  категорий затрат\nCREATE TABLE IF NOT EXISTS public.cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT cost_categories_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.cost_categories IS 'Справочник      \r\n  категорий затрат';\nCOMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории (UUID)';\nCOMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';\nCOMMENT ON COLUMN public.cost_categories.unit IS 'Единица измерения категории';\nCOMMENT ON COLUMN public.cost_categories.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.cost_categories.updated_at IS 'Дата и время последнего обновления';"
   },
   "public.detail_cost_categories": {
     "schema": "public",
     "name": "detail_cost_categories",
-    "comment": "Детализированные категории затрат с привязкой к локациям",
+    "comment": "Детальные категории затрат по локациям",
     "columns": [
       {
         "name": "id",
@@ -3251,7 +3251,7 @@
         "numeric_scale": null,
         "is_nullable": "NO",
         "default": "uuid_generate_v4()",
-        "comment": "Уникальный идентификатор детализированной категории"
+        "comment": "Уникальный идентификатор детальной категории (UUID)"
       },
       {
         "name": "cost_category_id",
@@ -3264,14 +3264,14 @@
         "comment": "Ссылка на категорию затрат"
       },
       {
-        "name": "location_id",
-        "data_type": "uuid",
+        "name": "location",
+        "data_type": "text",
         "max_length": null,
         "numeric_precision": null,
         "numeric_scale": null,
         "is_nullable": "NO",
         "default": null,
-        "comment": "Ссылка на локацию"
+        "comment": "Локация/местоположение"
       },
       {
         "name": "name",
@@ -3281,7 +3281,7 @@
         "numeric_scale": null,
         "is_nullable": "NO",
         "default": null,
-        "comment": "Наименование детализированной категории"
+        "comment": "Наименование детальной категории"
       },
       {
         "name": "unit",
@@ -3301,7 +3301,7 @@
         "numeric_scale": 0,
         "is_nullable": "YES",
         "default": "0",
-        "comment": "Порядковый номер для сортировки"
+        "comment": "Порядковый      \r\n  номер для сортировки"
       },
       {
         "name": "created_at",
@@ -3311,7 +3311,7 @@
         "numeric_scale": null,
         "is_nullable": "YES",
         "default": "now()",
-        "comment": "Дата создания записи"
+        "comment": "Дата и\r\n  время создания записи"
       },
       {
         "name": "updated_at",
@@ -3321,12 +3321,12 @@
         "numeric_scale": null,
         "is_nullable": "YES",
         "default": "now()",
-        "comment": "Дата последнего обновления записи"
+        "comment": "Дата и\r\n  время последнего обновления"
       }
     ],
     "constraints": [
       {
-        "name": "2200_17591_1_not_null",
+        "name": "2200_17841_1_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3334,7 +3334,7 @@
         "foreign_column": null
       },
       {
-        "name": "2200_17591_2_not_null",
+        "name": "2200_17841_2_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3342,7 +3342,7 @@
         "foreign_column": null
       },
       {
-        "name": "2200_17591_3_not_null",
+        "name": "2200_17841_3_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3350,7 +3350,7 @@
         "foreign_column": null
       },
       {
-        "name": "2200_17591_4_not_null",
+        "name": "2200_17841_4_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3358,7 +3358,7 @@
         "foreign_column": null
       },
       {
-        "name": "2200_17591_5_not_null",
+        "name": "2200_17841_5_not_null",
         "type": "CHECK",
         "column": null,
         "foreign_table_schema": null,
@@ -3374,14 +3374,6 @@
         "foreign_column": null
       },
       {
-        "name": "detail_cost_categories_location_id_fkey",
-        "type": "FOREIGN KEY",
-        "column": "location_id",
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
         "name": "detail_cost_categories_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
@@ -3390,81 +3382,7 @@
         "foreign_column": "id"
       }
     ],
-    "sql": "-- Детализированные категории затрат с привязкой к локациям\nCREATE TABLE IF NOT EXISTS public.detail_cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    cost_category_id uuid NOT NULL,\n    location_id uuid NOT NULL,\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    order_num integer(32) DEFAULT 0,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT detail_cost_categories_cost_category_id_fkey FOREIGN KEY (cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT detail_cost_categories_location_id_fkey FOREIGN KEY (location_id) REFERENCES None.None(None),\n    CONSTRAINT detail_cost_categories_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.detail_cost_categories IS 'Детализированные категории затрат с привязкой к локациям';\nCOMMENT ON COLUMN public.detail_cost_categories.id IS 'Уникальный идентификатор детализированной категории';\nCOMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылка на категорию затрат';\nCOMMENT ON COLUMN public.detail_cost_categories.location_id IS 'Ссылка на локацию';\nCOMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детализированной категории';\nCOMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';\nCOMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый номер для сортировки';\nCOMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата создания записи';\nCOMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата последнего обновления записи';"
-  },
-  "public.locations": {
-    "schema": "public",
-    "name": "locations",
-    "comment": "Справочник локаций/местоположений",
-    "columns": [
-      {
-        "name": "id",
-        "data_type": "uuid",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": "uuid_generate_v4()",
-        "comment": "Уникальный идентификатор локации"
-      },
-      {
-        "name": "location",
-        "data_type": "text",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "NO",
-        "default": null,
-        "comment": "Наименование локации"
-      },
-      {
-        "name": "created_at",
-        "data_type": "timestamp with time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": "now()",
-        "comment": "Дата создания записи"
-      },
-      {
-        "name": "updated_at",
-        "data_type": "timestamp with time zone",
-        "max_length": null,
-        "numeric_precision": null,
-        "numeric_scale": null,
-        "is_nullable": "YES",
-        "default": "now()",
-        "comment": "Дата последнего обновления записи"
-      }
-    ],
-    "constraints": [
-      {
-        "name": "2200_17566_1_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "2200_17566_2_not_null",
-        "type": "CHECK",
-        "column": null,
-        "foreign_table_schema": null,
-        "foreign_table": null,
-        "foreign_column": null
-      },
-      {
-        "name": "locations_pkey",
-        "type": "PRIMARY KEY",
-        "column": "id",
-        "foreign_table_schema": "public",
-        "foreign_table": "locations",
-        "foreign_column": "id"
-      }
-    ],
-    "sql": "-- Справочник локаций/местоположений\nCREATE TABLE IF NOT EXISTS public.locations (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    location text NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT locations_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.locations IS 'Справочник локаций/местоположений';\nCOMMENT ON COLUMN public.locations.id IS 'Уникальный идентификатор локации';\nCOMMENT ON COLUMN public.locations.location IS 'Наименование локации';\nCOMMENT ON COLUMN public.locations.created_at IS 'Дата создания записи';\nCOMMENT ON COLUMN public.locations.updated_at IS 'Дата последнего обновления записи';"
+    "sql": "-- Детальные категории затрат по локациям\nCREATE TABLE IF NOT EXISTS public.detail_cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    cost_category_id uuid NOT NULL,\n    location text NOT NULL,\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    order_num integer(32) DEFAULT 0,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT detail_cost_categories_cost_category_id_fkey FOREIGN KEY (cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT detail_cost_categories_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.detail_cost_categories IS 'Детальные категории затрат по локациям';\nCOMMENT ON COLUMN public.detail_cost_categories.id IS 'Уникальный идентификатор детальной категории (UUID)';\nCOMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылка на категорию затрат';\nCOMMENT ON COLUMN public.detail_cost_categories.location IS 'Локация/местоположение';\nCOMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детальной категории';\nCOMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';\nCOMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      \r\n  номер для сортировки';\nCOMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и\r\n  время создания записи';\nCOMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и\r\n  время последнего обновления';"
   },
   "public.material_names": {
     "schema": "public",
