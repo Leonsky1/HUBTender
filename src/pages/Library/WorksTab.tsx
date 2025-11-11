@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Table, Button, Form, Input, Select, InputNumber, message, Popconfirm, Space, AutoComplete, Row, Col, theme, Tag, Tooltip } from 'antd';
-import { DeleteOutlined, SaveOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SaveOutlined, CloseOutlined, EditOutlined, CheckOutlined } from '@ant-design/icons';
 import { supabase, WorkLibraryFull, WorkName, CurrencyType, UnitType, WorkItemType } from '../../lib/supabase';
 
 interface WorksTabProps {
@@ -554,7 +554,7 @@ const WorksTab = forwardRef<any, WorksTabProps>((props, ref) => {
             }}
           >
             <Row gutter={8}>
-              <Col span={4}>
+              <Col span={3}>
                 <Form.Item
                   label="Вид работы"
                   name="item_type"
@@ -567,7 +567,7 @@ const WorksTab = forwardRef<any, WorksTabProps>((props, ref) => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col span={13}>
                 <Form.Item
                   label="Наименование работы"
                   name="work_name_id"
@@ -590,6 +590,15 @@ const WorksTab = forwardRef<any, WorksTabProps>((props, ref) => {
               </Col>
               <Col span={3}>
                 <Form.Item
+                  label="Цена за ед."
+                  name="unit_rate"
+                  rules={[{ required: true, message: 'Обязательное поле' }]}
+                >
+                  <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col span={3}>
+                <Form.Item
                   label="Валюта"
                   name="currency_type"
                   rules={[{ required: true, message: 'Обязательное поле' }]}
@@ -602,25 +611,16 @@ const WorksTab = forwardRef<any, WorksTabProps>((props, ref) => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={3}>
-                <Form.Item
-                  label="Цена"
-                  name="unit_rate"
-                  rules={[{ required: true, message: 'Обязательное поле' }]}
-                >
-                  <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
             </Row>
-            <Row gutter={16}>
+            <Row gutter={8}>
               <Col span={24} style={{ textAlign: 'right' }}>
-                <Space>
-                  <Button onClick={cancelAdd} icon={<CloseOutlined />}>
-                    Отмена
-                  </Button>
-                  <Button type="primary" onClick={handleAddSubmit} icon={<SaveOutlined />}>
-                    Сохранить
-                  </Button>
+                <Space size="small">
+                  <Tooltip title="Добавить">
+                    <Button type="primary" onClick={handleAddSubmit} icon={<CheckOutlined />} />
+                  </Tooltip>
+                  <Tooltip title="Отмена">
+                    <Button onClick={cancelAdd} icon={<CloseOutlined />} />
+                  </Tooltip>
                 </Space>
               </Col>
             </Row>

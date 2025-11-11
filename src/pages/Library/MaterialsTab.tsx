@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Table, Button, Form, Input, Select, InputNumber, message, Popconfirm, Space, AutoComplete, Row, Col, theme, Tag, Tooltip } from 'antd';
-import { DeleteOutlined, SaveOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SaveOutlined, CloseOutlined, EditOutlined, CheckOutlined } from '@ant-design/icons';
 import { supabase, MaterialLibraryFull, MaterialName, MaterialType, ItemType, CurrencyType, DeliveryPriceType, UnitType } from '../../lib/supabase';
 
 interface MaterialsTabProps {
@@ -695,7 +695,7 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
             }}
           >
             <Row gutter={8}>
-              <Col span={2}>
+              <Col span={3}>
                 <Form.Item
                   label="Вид материала"
                   name="item_type"
@@ -708,7 +708,7 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={2}>
+              <Col span={3}>
                 <Form.Item
                   label="Тип материала"
                   name="material_type"
@@ -720,7 +720,7 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={8}>
+              <Col span={5}>
                 <Form.Item
                   label="Наименование материала"
                   name="material_name_id"
@@ -736,12 +736,12 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={2}>
+              <Col span={1}>
                 <Form.Item label="Ед.изм">
                   <Input value={selectedAddUnit || '-'} disabled style={{ textAlign: 'center' }} />
                 </Form.Item>
               </Col>
-              <Col span={2}>
+              <Col span={3}>
                 <Form.Item
                   label="Коэфф. расхода"
                   name="consumption_coefficient"
@@ -762,6 +762,15 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
               </Col>
               <Col span={2}>
                 <Form.Item
+                  label="Цена за ед."
+                  name="unit_rate"
+                  rules={[{ required: true, message: 'Обязательное поле' }]}
+                >
+                  <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
+                </Form.Item>
+              </Col>
+              <Col span={2}>
+                <Form.Item
                   label="Валюта"
                   name="currency_type"
                   rules={[{ required: true, message: 'Обязательное поле' }]}
@@ -776,16 +785,7 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
               </Col>
               <Col span={2}>
                 <Form.Item
-                  label="Цена"
-                  name="unit_rate"
-                  rules={[{ required: true, message: 'Обязательное поле' }]}
-                >
-                  <InputNumber min={0} step={0.01} precision={2} style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={2}>
-                <Form.Item
-                  label="Доставка"
+                  label="Тип доставки"
                   name="delivery_price_type"
                   rules={[{ required: true, message: 'Обязательное поле' }]}
                 >
@@ -796,9 +796,9 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={2}>
+              <Col span={3}>
                 <Form.Item
-                  label="Сумма"
+                  label="Сумма доставки"
                   name="delivery_amount"
                   dependencies={['delivery_price_type']}
                   rules={[
@@ -818,15 +818,15 @@ const MaterialsTab = forwardRef<any, MaterialsTabProps>((props, ref) => {
                 </Form.Item>
               </Col>
             </Row>
-            <Row gutter={16}>
+            <Row gutter={8}>
               <Col span={24} style={{ textAlign: 'right' }}>
-                <Space>
-                  <Button onClick={cancelAdd} icon={<CloseOutlined />}>
-                    Отмена
-                  </Button>
-                  <Button type="primary" onClick={handleAddSubmit} icon={<SaveOutlined />}>
-                    Сохранить
-                  </Button>
+                <Space size="small">
+                  <Tooltip title="Добавить">
+                    <Button type="primary" onClick={handleAddSubmit} icon={<CheckOutlined />} />
+                  </Tooltip>
+                  <Tooltip title="Отмена">
+                    <Button onClick={cancelAdd} icon={<CloseOutlined />} />
+                  </Tooltip>
                 </Space>
               </Col>
             </Row>
