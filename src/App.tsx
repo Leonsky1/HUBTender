@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Nomenclatures from './pages/Admin/Nomenclatures/Nomenclatures';
 import Tenders from './pages/Admin/Tenders/Tenders';
 import ConstructionCost from './pages/Admin/ConstructionCost/ConstructionCost';
+import Library from './pages/Library';
 import './App.css';
 
 // Временный импорт для тестирования Supabase (удалить после проверки)
@@ -32,7 +33,7 @@ function AppContent() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="positions" element={<div>Позиции заказчика</div>} />
           <Route path="commerce" element={<div>Коммерция</div>} />
-          <Route path="library" element={<div>Библиотеки</div>} />
+          <Route path="library" element={<Library />} />
           <Route path="costs" element={<div>Затраты на строительство</div>} />
           <Route path="admin">
             <Route index element={<Navigate to="/admin/nomenclatures" replace />} />

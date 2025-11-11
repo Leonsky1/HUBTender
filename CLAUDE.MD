@@ -22,13 +22,9 @@ npm run build        # TypeScript check + Vite production build
 npm run preview      # Preview production build
 npm run lint         # ESLint with zero-warning enforcement
 
-# Database commands
-supabase db push     # Apply migrations to local database
-supabase db reset    # Reset and re-apply all migrations
-supabase status      # Check Supabase local development status
-
-# Testing utilities
-node test-tender-creation.js  # Test tender creation via Supabase API
+# Database (when Supabase client is added)
+supabase db push     # Apply migrations
+supabase db reset    # Reset local database
 ```
 
 ## 🚨 CRITICAL DATABASE RULES 🚨
@@ -95,8 +91,7 @@ Both accept: `size`, `color`, `className` props
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "antd": "^5.28.0",
-    "@supabase/supabase-js": "^2.80.0",  // ✅ Now installed
-    "dayjs": "^1.11.19",                 // Date manipulation library
+    "dayjs": "^1.11.19",    // Date manipulation library
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.9.5"
@@ -105,6 +100,7 @@ Both accept: `size`, `color`, `className` props
 ```
 
 ### NOT Yet Installed (but planned)
+- @supabase/supabase-js
 - @tanstack/react-query
 - react-hook-form + yup
 - xlsx-js-style
@@ -117,8 +113,7 @@ Both accept: `size`, `color`, `className` props
 
 ### File Size Rule
 **STRICT**: All files MUST be ≤ 600 lines
-- Current violator: **Tenders.tsx (643 lines)** ⚠️ EXCEEDS LIMIT - needs refactoring
-- Within limits: ConstructionCost.tsx (393 lines), TenderModal.tsx (316 lines)
+- Current largest: Tenders.tsx (425 lines), ConstructionCost.tsx (400 lines)
 - Split large files into modules with barrel exports
 
 ### TypeScript Configuration
@@ -178,11 +173,11 @@ Each card has:
 
 ## Implementation Gaps
 
-### Backend Integration Status
-1. ✅ Supabase client initialized (`src/lib/supabase.ts`)
-2. ❌ No API service layer yet
-3. ❌ No authentication UI
-4. ❌ No data fetching/mutation hooks
+### Backend Integration Missing
+1. No Supabase client initialization
+2. No API service layer
+3. No authentication UI
+4. No data fetching/mutation
 
 ### UI Implementation Status
 **Fully Implemented:**
@@ -211,10 +206,14 @@ Each card has:
 2. Fix ESLint warning in ThemeContext.tsx (extract hook to separate file)
 
 ### Supabase Integration
-1. ✅ Installed: `@supabase/supabase-js@2.80.0`
-2. ✅ `.env.local` configured (gitignored)
-3. ✅ `src/lib/supabase.ts` client created with types
-4. ❌ Implement auth pages and user context
+1. Install: `npm install @supabase/supabase-js`
+2. Create `.env.local`:
+   ```
+   VITE_SUPABASE_URL=your_project_url
+   VITE_SUPABASE_ANON_KEY=your_anon_key
+   ```
+3. Create `src/lib/supabase.ts` client
+4. Implement auth pages and user context
 
 ### Feature Development Priority
 1. Complete remaining table migrations
@@ -297,22 +296,3 @@ Standardized colors for measurement units across the application:
 'компл' (set): 'volcano'
 'м.п.' (running meters): 'geekblue'
 ```
-
-## Project Structure Reference
-
-### Key Files and Directories
-```
-src/lib/supabase.ts         # Supabase client with TypeScript types
-src/pages/Admin/Tenders/    # Tender management (needs refactoring - exceeds 600 lines)
-supabase/schemas/prod.sql   # Database schema source of truth
-supabase/migrations/        # Applied database migrations (001, 002, 003)
-docs/                       # Design system documentation
-public/logo-preview.html    # Logo showcase (visit at localhost:3000)
-test-tender-creation.js     # Node.js test script for Supabase operations
-```
-
-### Testing and Validation
-- Run `npm run lint` before commits (zero warnings enforced)
-- Test database operations with `node test-tender-creation.js`
-- Preview logos at `http://localhost:3000/logo-preview.html`
-- Check TypeScript types with `npm run build`

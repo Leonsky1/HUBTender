@@ -1,52 +1,14 @@
--- Database Schema Export
--- Generated: 2025-11-10T08:59:10.911432
+-- Database Schema SQL Export
+-- Generated: 2025-11-10T11:19:15.671251
 -- Database: postgres
 -- Host: aws-1-eu-west-1.pooler.supabase.com
 
 -- ============================================
-
--- EXTENSIONS
--- ============================================
-
-CREATE EXTENSION IF NOT EXISTS pg_graphql;
-CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS plpgsql;
-CREATE EXTENSION IF NOT EXISTS supabase_vault;
-CREATE EXTENSION IF NOT EXISTS uuid-ossp;
-
--- SCHEMAS
--- ============================================
-
-CREATE SCHEMA IF NOT EXISTS auth;
-CREATE SCHEMA IF NOT EXISTS extensions;
-CREATE SCHEMA IF NOT EXISTS graphql;
-CREATE SCHEMA IF NOT EXISTS graphql_public;
-CREATE SCHEMA IF NOT EXISTS realtime;
-CREATE SCHEMA IF NOT EXISTS storage;
-CREATE SCHEMA IF NOT EXISTS vault;
-
--- ENUM TYPES
--- ============================================
-
-CREATE TYPE auth.aal_level AS ENUM ('aal1', 'aal2', 'aal3');
-CREATE TYPE auth.code_challenge_method AS ENUM ('s256', 'plain');
-CREATE TYPE auth.factor_status AS ENUM ('unverified', 'verified');
-CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone');
-CREATE TYPE auth.oauth_authorization_status AS ENUM ('pending', 'approved', 'denied', 'expired');
-CREATE TYPE auth.oauth_client_type AS ENUM ('public', 'confidential');
-CREATE TYPE auth.oauth_registration_type AS ENUM ('dynamic', 'manual');
-CREATE TYPE auth.oauth_response_type AS ENUM ('code');
-CREATE TYPE auth.one_time_token_type AS ENUM ('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');
-CREATE TYPE public.unit_type AS ENUM ('шт', 'м', 'м2', 'м3', 'кг', 'т', 'л', 'компл', 'м.п.');
-CREATE TYPE realtime.action AS ENUM ('INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'ERROR');
-CREATE TYPE realtime.equality_op AS ENUM ('eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in');
-CREATE TYPE storage.buckettype AS ENUM ('STANDARD', 'ANALYTICS');
-
 -- TABLES
 -- ============================================
 
--- Auth: Audit trail for user actions.
+-- Table: auth.audit_log_entries
+-- Description: Auth: Audit trail for user actions.
 CREATE TABLE IF NOT EXISTS auth.audit_log_entries (
     instance_id uuid,
     id uuid NOT NULL,
@@ -55,10 +17,10 @@ CREATE TABLE IF NOT EXISTS auth.audit_log_entries (
     ip_address character varying(64) NOT NULL DEFAULT ''::character varying,
     CONSTRAINT audit_log_entries_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE auth.audit_log_entries IS 'Auth: Audit trail for user actions.';
 
--- stores metadata for pkce logins
+-- Table: auth.flow_state
+-- Description: stores metadata for pkce logins
 CREATE TABLE IF NOT EXISTS auth.flow_state (
     id uuid NOT NULL,
     user_id uuid,
@@ -74,10 +36,10 @@ CREATE TABLE IF NOT EXISTS auth.flow_state (
     auth_code_issued_at timestamp with time zone,
     CONSTRAINT flow_state_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE auth.flow_state IS 'stores metadata for pkce logins';
 
--- Auth: Stores identities associated to a user.
+-- Table: auth.identities
+-- Description: Auth: Stores identities associated to a user.
 CREATE TABLE IF NOT EXISTS auth.identities (
     provider_id text NOT NULL,
     user_id uuid NOT NULL,
@@ -93,11 +55,11 @@ CREATE TABLE IF NOT EXISTS auth.identities (
     CONSTRAINT identities_provider_id_provider_unique UNIQUE (provider_id),
     CONSTRAINT identities_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.identities IS 'Auth: Stores identities associated to a user.';
 COMMENT ON COLUMN auth.identities.email IS 'Auth: Email is a generated column that references the optional email property in the identity_data';
 
--- Auth: Manages users across multiple sites.
+-- Table: auth.instances
+-- Description: Auth: Manages users across multiple sites.
 CREATE TABLE IF NOT EXISTS auth.instances (
     id uuid NOT NULL,
     uuid uuid,
@@ -106,10 +68,10 @@ CREATE TABLE IF NOT EXISTS auth.instances (
     updated_at timestamp with time zone,
     CONSTRAINT instances_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE auth.instances IS 'Auth: Manages users across multiple sites.';
 
--- auth: stores authenticator method reference claims for multi factor authentication
+-- Table: auth.mfa_amr_claims
+-- Description: auth: stores authenticator method reference claims for multi factor authentication
 CREATE TABLE IF NOT EXISTS auth.mfa_amr_claims (
     session_id uuid NOT NULL,
     created_at timestamp with time zone NOT NULL,
@@ -121,10 +83,10 @@ CREATE TABLE IF NOT EXISTS auth.mfa_amr_claims (
     CONSTRAINT mfa_amr_claims_session_id_authentication_method_pkey UNIQUE (session_id),
     CONSTRAINT mfa_amr_claims_session_id_fkey FOREIGN KEY (session_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.mfa_amr_claims IS 'auth: stores authenticator method reference claims for multi factor authentication';
 
--- auth: stores metadata about challenge requests made
+-- Table: auth.mfa_challenges
+-- Description: auth: stores metadata about challenge requests made
 CREATE TABLE IF NOT EXISTS auth.mfa_challenges (
     id uuid NOT NULL,
     factor_id uuid NOT NULL,
@@ -136,10 +98,10 @@ CREATE TABLE IF NOT EXISTS auth.mfa_challenges (
     CONSTRAINT mfa_challenges_auth_factor_id_fkey FOREIGN KEY (factor_id) REFERENCES None.None(None),
     CONSTRAINT mfa_challenges_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE auth.mfa_challenges IS 'auth: stores metadata about challenge requests made';
 
--- auth: stores metadata about factors
+-- Table: auth.mfa_factors
+-- Description: auth: stores metadata about factors
 CREATE TABLE IF NOT EXISTS auth.mfa_factors (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
@@ -158,10 +120,10 @@ CREATE TABLE IF NOT EXISTS auth.mfa_factors (
     CONSTRAINT mfa_factors_pkey PRIMARY KEY (id),
     CONSTRAINT mfa_factors_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.mfa_factors IS 'auth: stores metadata about factors';
 COMMENT ON COLUMN auth.mfa_factors.last_webauthn_challenge_data IS 'Stores the latest WebAuthn challenge data including attestation/assertion for customer verification';
 
+-- Table: auth.oauth_authorizations
 CREATE TABLE IF NOT EXISTS auth.oauth_authorizations (
     id uuid NOT NULL,
     authorization_id text NOT NULL,
@@ -186,6 +148,7 @@ CREATE TABLE IF NOT EXISTS auth.oauth_authorizations (
     CONSTRAINT oauth_authorizations_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)
 );
 
+-- Table: auth.oauth_clients
 CREATE TABLE IF NOT EXISTS auth.oauth_clients (
     id uuid NOT NULL,
     client_secret_hash text,
@@ -202,6 +165,7 @@ CREATE TABLE IF NOT EXISTS auth.oauth_clients (
     CONSTRAINT oauth_clients_pkey PRIMARY KEY (id)
 );
 
+-- Table: auth.oauth_consents
 CREATE TABLE IF NOT EXISTS auth.oauth_consents (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
@@ -216,6 +180,7 @@ CREATE TABLE IF NOT EXISTS auth.oauth_consents (
     CONSTRAINT oauth_consents_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)
 );
 
+-- Table: auth.one_time_tokens
 CREATE TABLE IF NOT EXISTS auth.one_time_tokens (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
@@ -228,7 +193,8 @@ CREATE TABLE IF NOT EXISTS auth.one_time_tokens (
     CONSTRAINT one_time_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)
 );
 
--- Auth: Store of tokens used to refresh JWT tokens once they expire.
+-- Table: auth.refresh_tokens
+-- Description: Auth: Store of tokens used to refresh JWT tokens once they expire.
 CREATE TABLE IF NOT EXISTS auth.refresh_tokens (
     instance_id uuid,
     id bigint(64) NOT NULL DEFAULT nextval('auth.refresh_tokens_id_seq'::regclass),
@@ -243,10 +209,10 @@ CREATE TABLE IF NOT EXISTS auth.refresh_tokens (
     CONSTRAINT refresh_tokens_session_id_fkey FOREIGN KEY (session_id) REFERENCES None.None(None),
     CONSTRAINT refresh_tokens_token_unique UNIQUE (token)
 );
-
 COMMENT ON TABLE auth.refresh_tokens IS 'Auth: Store of tokens used to refresh JWT tokens once they expire.';
 
--- Auth: Manages SAML Identity Provider connections.
+-- Table: auth.saml_providers
+-- Description: Auth: Manages SAML Identity Provider connections.
 CREATE TABLE IF NOT EXISTS auth.saml_providers (
     id uuid NOT NULL,
     sso_provider_id uuid NOT NULL,
@@ -261,10 +227,10 @@ CREATE TABLE IF NOT EXISTS auth.saml_providers (
     CONSTRAINT saml_providers_pkey PRIMARY KEY (id),
     CONSTRAINT saml_providers_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.saml_providers IS 'Auth: Manages SAML Identity Provider connections.';
 
--- Auth: Contains SAML Relay State information for each Service Provider initiated login.
+-- Table: auth.saml_relay_states
+-- Description: Auth: Contains SAML Relay State information for each Service Provider initiated login.
 CREATE TABLE IF NOT EXISTS auth.saml_relay_states (
     id uuid NOT NULL,
     sso_provider_id uuid NOT NULL,
@@ -278,17 +244,17 @@ CREATE TABLE IF NOT EXISTS auth.saml_relay_states (
     CONSTRAINT saml_relay_states_pkey PRIMARY KEY (id),
     CONSTRAINT saml_relay_states_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.saml_relay_states IS 'Auth: Contains SAML Relay State information for each Service Provider initiated login.';
 
--- Auth: Manages updates to the auth system.
+-- Table: auth.schema_migrations
+-- Description: Auth: Manages updates to the auth system.
 CREATE TABLE IF NOT EXISTS auth.schema_migrations (
     version character varying(255) NOT NULL
 );
-
 COMMENT ON TABLE auth.schema_migrations IS 'Auth: Manages updates to the auth system.';
 
--- Auth: Stores session data associated to a user.
+-- Table: auth.sessions
+-- Description: Auth: Stores session data associated to a user.
 CREATE TABLE IF NOT EXISTS auth.sessions (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
@@ -308,13 +274,13 @@ CREATE TABLE IF NOT EXISTS auth.sessions (
     CONSTRAINT sessions_pkey PRIMARY KEY (id),
     CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.sessions IS 'Auth: Stores session data associated to a user.';
 COMMENT ON COLUMN auth.sessions.not_after IS 'Auth: Not after is a nullable column that contains a timestamp after which the session should be regarded as expired.';
 COMMENT ON COLUMN auth.sessions.refresh_token_hmac_key IS 'Holds a HMAC-SHA256 key used to sign refresh tokens for this session.';
 COMMENT ON COLUMN auth.sessions.refresh_token_counter IS 'Holds the ID (counter) of the last issued refresh token.';
 
--- Auth: Manages SSO email address domain mapping to an SSO Identity Provider.
+-- Table: auth.sso_domains
+-- Description: Auth: Manages SSO email address domain mapping to an SSO Identity Provider.
 CREATE TABLE IF NOT EXISTS auth.sso_domains (
     id uuid NOT NULL,
     sso_provider_id uuid NOT NULL,
@@ -324,10 +290,10 @@ CREATE TABLE IF NOT EXISTS auth.sso_domains (
     CONSTRAINT sso_domains_pkey PRIMARY KEY (id),
     CONSTRAINT sso_domains_sso_provider_id_fkey FOREIGN KEY (sso_provider_id) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE auth.sso_domains IS 'Auth: Manages SSO email address domain mapping to an SSO Identity Provider.';
 
--- Auth: Manages SSO identity provider information; see saml_providers for SAML.
+-- Table: auth.sso_providers
+-- Description: Auth: Manages SSO identity provider information; see saml_providers for SAML.
 CREATE TABLE IF NOT EXISTS auth.sso_providers (
     id uuid NOT NULL,
     resource_id text,
@@ -336,11 +302,11 @@ CREATE TABLE IF NOT EXISTS auth.sso_providers (
     disabled boolean,
     CONSTRAINT sso_providers_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE auth.sso_providers IS 'Auth: Manages SSO identity provider information; see saml_providers for SAML.';
 COMMENT ON COLUMN auth.sso_providers.resource_id IS 'Auth: Uniquely identifies a SSO provider according to a user-chosen resource ID (case insensitive), useful in infrastructure as code.';
 
--- Auth: Stores user login data within a secure schema.
+-- Table: auth.users
+-- Description: Auth: Stores user login data within a secure schema.
 CREATE TABLE IF NOT EXISTS auth.users (
     instance_id uuid,
     id uuid NOT NULL,
@@ -380,22 +346,24 @@ CREATE TABLE IF NOT EXISTS auth.users (
     CONSTRAINT users_phone_key UNIQUE (phone),
     CONSTRAINT users_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE auth.users IS 'Auth: Stores user login data within a secure schema.';
 COMMENT ON COLUMN auth.users.is_sso_user IS 'Auth: Set this column to true when the account comes from SSO. These accounts can have duplicate emails.';
 
--- Справочник      
+-- Table: public.cost_categories
+-- Description: Справочник      
+
   категорий затрат
 CREATE TABLE IF NOT EXISTS public.cost_categories (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name text NOT NULL,
-    unit USER-DEFINED NOT NULL,
+    unit text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT cost_categories_pkey PRIMARY KEY (id)
+    CONSTRAINT cost_categories_pkey PRIMARY KEY (id),
+    CONSTRAINT cost_categories_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)
 );
+COMMENT ON TABLE public.cost_categories IS 'Справочник      
 
-COMMENT ON TABLE public.cost_categories IS 'Справочник      
   категорий затрат';
 COMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории (UUID)';
 COMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';
@@ -403,43 +371,48 @@ COMMENT ON COLUMN public.cost_categories.unit IS 'Единица измерен�
 COMMENT ON COLUMN public.cost_categories.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.cost_categories.updated_at IS 'Дата и время последнего обновления';
 
--- Детальные категории затрат по локациям
+-- Table: public.detail_cost_categories
+-- Description: Детальные категории затрат по локациям
 CREATE TABLE IF NOT EXISTS public.detail_cost_categories (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     cost_category_id uuid NOT NULL,
     location text NOT NULL,
     name text NOT NULL,
-    unit USER-DEFINED NOT NULL,
+    unit text NOT NULL,
     order_num integer(32) DEFAULT 0,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT detail_cost_categories_cost_category_id_fkey FOREIGN KEY (cost_category_id) REFERENCES None.None(None),
-    CONSTRAINT detail_cost_categories_pkey PRIMARY KEY (id)
+    CONSTRAINT detail_cost_categories_pkey PRIMARY KEY (id),
+    CONSTRAINT detail_cost_categories_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE public.detail_cost_categories IS 'Детальные категории затрат по локациям';
 COMMENT ON COLUMN public.detail_cost_categories.id IS 'Уникальный идентификатор детальной категории (UUID)';
 COMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылка на категорию затрат';
 COMMENT ON COLUMN public.detail_cost_categories.location IS 'Локация/местоположение';
 COMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детальной категории';
 COMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';
-COMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      
+COMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      
+
   номер для сортировки';
-COMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и
+COMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и
+
   время создания записи';
-COMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и
+COMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и
+
   время последнего обновления';
 
--- Справочник наименований материалов
+-- Table: public.material_names
+-- Description: Справочник наименований материалов
 CREATE TABLE IF NOT EXISTS public.material_names (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name text NOT NULL,
-    unit USER-DEFINED NOT NULL,
+    unit text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT material_names_pkey PRIMARY KEY (id)
+    CONSTRAINT material_names_pkey PRIMARY KEY (id),
+    CONSTRAINT material_names_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE public.material_names IS 'Справочник наименований материалов';
 COMMENT ON COLUMN public.material_names.id IS 'Уникальный идентификатор материала (UUID)';
 COMMENT ON COLUMN public.material_names.name IS 'Наименование материала';
@@ -447,7 +420,29 @@ COMMENT ON COLUMN public.material_names.unit IS 'Единица измерени
 COMMENT ON COLUMN public.material_names.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.material_names.updated_at IS 'Дата и время последнего обновления';
 
--- Основная таблица для хранения информации о тендерах
+-- Table: public.materials_library
+-- Description: Справочник материалов (Material library) с полной детализацией
+CREATE TABLE IF NOT EXISTS public.materials_library (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    material_type USER-DEFINED NOT NULL,
+    item_type USER-DEFINED NOT NULL,
+    consumption_coefficient numeric(10,4) DEFAULT 1.0000,
+    unit_rate numeric(15,2) NOT NULL,
+    currency_type USER-DEFINED NOT NULL DEFAULT 'RUB'::currency_type,
+    delivery_price_type USER-DEFINED NOT NULL DEFAULT 'в цене'::delivery_price_type,
+    delivery_amount numeric(15,2) DEFAULT 0.00,
+    detail_cost_category_id uuid,
+    material_name_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT materials_library_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),
+    CONSTRAINT materials_library_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),
+    CONSTRAINT materials_library_pkey PRIMARY KEY (id)
+);
+COMMENT ON TABLE public.materials_library IS 'Справочник материалов (Material library) с полной детализацией';
+
+-- Table: public.tenders
+-- Description: Основная таблица для хранения информации о тендерах
 CREATE TABLE IF NOT EXISTS public.tenders (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     title text NOT NULL,
@@ -472,7 +467,6 @@ CREATE TABLE IF NOT EXISTS public.tenders (
     CONSTRAINT tenders_pkey PRIMARY KEY (id),
     CONSTRAINT tenders_tender_number_key UNIQUE (tender_number)
 );
-
 COMMENT ON TABLE public.tenders IS 'Основная таблица для хранения информации о тендерах';
 COMMENT ON COLUMN public.tenders.id IS 'Уникальный идентификатор тендера (UUID)';
 COMMENT ON COLUMN public.tenders.title IS 'Название тендера';
@@ -494,16 +488,30 @@ COMMENT ON COLUMN public.tenders.created_at IS 'Дата и время созд�
 COMMENT ON COLUMN public.tenders.updated_at IS 'Дата и время последнего обновления';
 COMMENT ON COLUMN public.tenders.created_by IS 'ID пользователя, создавшего тендер';
 
--- Справочник наименований работ
+-- Table: public.units
+CREATE TABLE IF NOT EXISTS public.units (
+    code text NOT NULL,
+    name text NOT NULL,
+    description text,
+    category text,
+    sort_order integer(32) DEFAULT 0,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT units_pkey PRIMARY KEY (code)
+);
+
+-- Table: public.work_names
+-- Description: Справочник наименований работ
 CREATE TABLE IF NOT EXISTS public.work_names (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name text NOT NULL,
-    unit USER-DEFINED NOT NULL,
+    unit text NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT work_names_pkey PRIMARY KEY (id)
+    CONSTRAINT work_names_pkey PRIMARY KEY (id),
+    CONSTRAINT work_names_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)
 );
-
 COMMENT ON TABLE public.work_names IS 'Справочник наименований работ';
 COMMENT ON COLUMN public.work_names.id IS 'Уникальный идентификатор работы (UUID)';
 COMMENT ON COLUMN public.work_names.name IS 'Наименование работы';
@@ -511,6 +519,32 @@ COMMENT ON COLUMN public.work_names.unit IS 'Единица измерения �
 COMMENT ON COLUMN public.work_names.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.work_names.updated_at IS 'Дата и время последнего обновления';
 
+-- Table: public.works_library
+-- Description: Справочник работ (Works library) с полной детализацией
+CREATE TABLE IF NOT EXISTS public.works_library (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    work_name_id uuid NOT NULL,
+    item_type USER-DEFINED NOT NULL,
+    unit_rate numeric(15,2) NOT NULL,
+    currency_type USER-DEFINED NOT NULL DEFAULT 'RUB'::currency_type,
+    detail_cost_category_id uuid,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT works_library_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),
+    CONSTRAINT works_library_pkey PRIMARY KEY (id),
+    CONSTRAINT works_library_work_name_id_fkey FOREIGN KEY (work_name_id) REFERENCES None.None(None)
+);
+COMMENT ON TABLE public.works_library IS 'Справочник работ (Works library) с полной детализацией';
+COMMENT ON COLUMN public.works_library.id IS 'Уникальный идентификатор работы (UUID)';
+COMMENT ON COLUMN public.works_library.work_name_id IS 'Связь с наименованием работы (откуда берется название и единица измерения)';
+COMMENT ON COLUMN public.works_library.item_type IS 'Категория работы (раб/суб-раб/раб-комп.)';
+COMMENT ON COLUMN public.works_library.unit_rate IS 'Цена за единицу измерения';
+COMMENT ON COLUMN public.works_library.currency_type IS 'Тип валюты (RUB/USD/EUR/CNY)';
+COMMENT ON COLUMN public.works_library.detail_cost_category_id IS 'Связь с детализированной категорией затрат';
+COMMENT ON COLUMN public.works_library.created_at IS 'Дата и время создания записи';
+COMMENT ON COLUMN public.works_library.updated_at IS 'Дата и время последнего обновления';
+
+-- Table: realtime.messages
 CREATE TABLE IF NOT EXISTS realtime.messages (
     topic text NOT NULL,
     extension text NOT NULL,
@@ -524,15 +558,16 @@ CREATE TABLE IF NOT EXISTS realtime.messages (
     CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)
 );
 
--- Auth: Manages updates to the auth system.
+-- Table: realtime.schema_migrations
+-- Description: Auth: Manages updates to the auth system.
 CREATE TABLE IF NOT EXISTS realtime.schema_migrations (
     version bigint(64) NOT NULL,
     inserted_at timestamp without time zone,
     CONSTRAINT schema_migrations_pkey PRIMARY KEY (version)
 );
-
 COMMENT ON TABLE realtime.schema_migrations IS 'Auth: Manages updates to the auth system.';
 
+-- Table: realtime.subscription
 CREATE TABLE IF NOT EXISTS realtime.subscription (
     id bigint(64) NOT NULL,
     subscription_id uuid NOT NULL,
@@ -544,6 +579,7 @@ CREATE TABLE IF NOT EXISTS realtime.subscription (
     CONSTRAINT pk_subscription PRIMARY KEY (id)
 );
 
+-- Table: storage.buckets
 CREATE TABLE IF NOT EXISTS storage.buckets (
     id text NOT NULL,
     name text NOT NULL,
@@ -560,6 +596,7 @@ CREATE TABLE IF NOT EXISTS storage.buckets (
 );
 COMMENT ON COLUMN storage.buckets.owner IS 'Field is deprecated, use owner_id instead';
 
+-- Table: storage.buckets_analytics
 CREATE TABLE IF NOT EXISTS storage.buckets_analytics (
     id text NOT NULL,
     type USER-DEFINED NOT NULL DEFAULT 'ANALYTICS'::storage.buckettype,
@@ -569,6 +606,7 @@ CREATE TABLE IF NOT EXISTS storage.buckets_analytics (
     CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id)
 );
 
+-- Table: storage.migrations
 CREATE TABLE IF NOT EXISTS storage.migrations (
     id integer(32) NOT NULL,
     name character varying(100) NOT NULL,
@@ -576,6 +614,7 @@ CREATE TABLE IF NOT EXISTS storage.migrations (
     executed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table: storage.objects
 CREATE TABLE IF NOT EXISTS storage.objects (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     bucket_id text,
@@ -595,6 +634,7 @@ CREATE TABLE IF NOT EXISTS storage.objects (
 );
 COMMENT ON COLUMN storage.objects.owner IS 'Field is deprecated, use owner_id instead';
 
+-- Table: storage.prefixes
 CREATE TABLE IF NOT EXISTS storage.prefixes (
     bucket_id text NOT NULL,
     name text NOT NULL,
@@ -607,6 +647,7 @@ CREATE TABLE IF NOT EXISTS storage.prefixes (
     CONSTRAINT prefixes_pkey PRIMARY KEY (name)
 );
 
+-- Table: storage.s3_multipart_uploads
 CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads (
     id text NOT NULL,
     in_progress_size bigint(64) NOT NULL DEFAULT 0,
@@ -621,6 +662,7 @@ CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads (
     CONSTRAINT s3_multipart_uploads_pkey PRIMARY KEY (id)
 );
 
+-- Table: storage.s3_multipart_uploads_parts
 CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads_parts (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     upload_id text NOT NULL,
@@ -637,7 +679,8 @@ CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads_parts (
     CONSTRAINT s3_multipart_uploads_parts_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES None.None(None)
 );
 
--- Table with encrypted `secret` column for storing sensitive information on disk.
+-- Table: vault.secrets
+-- Description: Table with encrypted `secret` column for storing sensitive information on disk.
 CREATE TABLE IF NOT EXISTS vault.secrets (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     name text,
@@ -649,13 +692,55 @@ CREATE TABLE IF NOT EXISTS vault.secrets (
     updated_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT secrets_pkey PRIMARY KEY (id)
 );
-
 COMMENT ON TABLE vault.secrets IS 'Table with encrypted `secret` column for storing sensitive information on disk.';
 
 
+-- ============================================
+-- ENUM TYPES
+-- ============================================
+
+CREATE TYPE auth.aal_level AS ENUM ('aal1', 'aal2', 'aal3');
+
+CREATE TYPE auth.code_challenge_method AS ENUM ('s256', 'plain');
+
+CREATE TYPE auth.factor_status AS ENUM ('unverified', 'verified');
+
+CREATE TYPE auth.factor_type AS ENUM ('totp', 'webauthn', 'phone');
+
+CREATE TYPE auth.oauth_authorization_status AS ENUM ('pending', 'approved', 'denied', 'expired');
+
+CREATE TYPE auth.oauth_client_type AS ENUM ('public', 'confidential');
+
+CREATE TYPE auth.oauth_registration_type AS ENUM ('dynamic', 'manual');
+
+CREATE TYPE auth.oauth_response_type AS ENUM ('code');
+
+CREATE TYPE auth.one_time_token_type AS ENUM ('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');
+
+CREATE TYPE public.currency_type AS ENUM ('RUB', 'USD', 'EUR', 'CNY');
+
+CREATE TYPE public.delivery_price_type AS ENUM ('в цене', 'не в цене', 'суммой');
+
+CREATE TYPE public.item_type AS ENUM ('мат', 'суб-мат', 'мат-комп.');
+
+CREATE TYPE public.material_type AS ENUM ('основн.', 'вспомогат.');
+
+CREATE TYPE public.unit_type AS ENUM ('шт', 'м', 'м2', 'м3', 'кг', 'т', 'л', 'компл', 'м.п.', 'месяц', 'тн', 'тн/м пог');
+
+CREATE TYPE public.work_item_type AS ENUM ('раб', 'суб-раб', 'раб-комп.');
+
+CREATE TYPE realtime.action AS ENUM ('INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'ERROR');
+
+CREATE TYPE realtime.equality_op AS ENUM ('eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in');
+
+CREATE TYPE storage.buckettype AS ENUM ('STANDARD', 'ANALYTICS');
+
+
+-- ============================================
 -- VIEWS
 -- ============================================
 
+-- View: extensions.pg_stat_statements
 CREATE OR REPLACE VIEW extensions.pg_stat_statements AS
  SELECT userid,
     dbid,
@@ -708,11 +793,51 @@ CREATE OR REPLACE VIEW extensions.pg_stat_statements AS
     minmax_stats_since
    FROM pg_stat_statements(true) pg_stat_statements(userid, dbid, toplevel, queryid, query, plans, total_plan_time, min_plan_time, max_plan_time, mean_plan_time, stddev_plan_time, calls, total_exec_time, min_exec_time, max_exec_time, mean_exec_time, stddev_exec_time, rows, shared_blks_hit, shared_blks_read, shared_blks_dirtied, shared_blks_written, local_blks_hit, local_blks_read, local_blks_dirtied, local_blks_written, temp_blks_read, temp_blks_written, shared_blk_read_time, shared_blk_write_time, local_blk_read_time, local_blk_write_time, temp_blk_read_time, temp_blk_write_time, wal_records, wal_fpi, wal_bytes, jit_functions, jit_generation_time, jit_inlining_count, jit_inlining_time, jit_optimization_count, jit_optimization_time, jit_emission_count, jit_emission_time, jit_deform_count, jit_deform_time, stats_since, minmax_stats_since);
 
+-- View: extensions.pg_stat_statements_info
 CREATE OR REPLACE VIEW extensions.pg_stat_statements_info AS
  SELECT dealloc,
     stats_reset
    FROM pg_stat_statements_info() pg_stat_statements_info(dealloc, stats_reset);
 
+-- View: public.materials_library_full_view
+CREATE OR REPLACE VIEW public.materials_library_full_view AS
+ SELECT m.id,
+    m.material_type,
+    m.item_type,
+    mn.name AS material_name,
+    mn.unit,
+    m.consumption_coefficient,
+    m.unit_rate,
+    m.currency_type,
+    m.delivery_price_type,
+    m.delivery_amount,
+    dcc.name AS detail_cost_category_name,
+    cc.name AS cost_category_name,
+    m.created_at,
+    m.updated_at
+   FROM (((materials_library m
+     JOIN material_names mn ON ((m.material_name_id = mn.id)))
+     LEFT JOIN detail_cost_categories dcc ON ((m.detail_cost_category_id = dcc.id)))
+     LEFT JOIN cost_categories cc ON ((dcc.cost_category_id = cc.id)));
+
+-- View: public.works_library_full_view
+CREATE OR REPLACE VIEW public.works_library_full_view AS
+ SELECT w.id,
+    w.item_type,
+    wn.name AS work_name,
+    wn.unit,
+    w.unit_rate,
+    w.currency_type,
+    dcc.name AS detail_cost_category_name,
+    cc.name AS cost_category_name,
+    w.created_at,
+    w.updated_at
+   FROM (((works_library w
+     JOIN work_names wn ON ((w.work_name_id = wn.id)))
+     LEFT JOIN detail_cost_categories dcc ON ((w.detail_cost_category_id = dcc.id)))
+     LEFT JOIN cost_categories cc ON ((dcc.cost_category_id = cc.id)));
+
+-- View: vault.decrypted_secrets
 CREATE OR REPLACE VIEW vault.decrypted_secrets AS
  SELECT id,
     name,
@@ -726,9 +851,12 @@ CREATE OR REPLACE VIEW vault.decrypted_secrets AS
    FROM vault.secrets s;
 
 
+-- ============================================
 -- FUNCTIONS
 -- ============================================
 
+-- Function: auth.email
+-- Description: Deprecated. Use auth.jwt() -> 'email' instead.
 CREATE OR REPLACE FUNCTION auth.email()
  RETURNS text
  LANGUAGE sql
@@ -741,8 +869,8 @@ AS $function$
   )::text
 $function$
 
-;
 
+-- Function: auth.jwt
 CREATE OR REPLACE FUNCTION auth.jwt()
  RETURNS jsonb
  LANGUAGE sql
@@ -755,8 +883,9 @@ AS $function$
     )::jsonb
 $function$
 
-;
 
+-- Function: auth.role
+-- Description: Deprecated. Use auth.jwt() -> 'role' instead.
 CREATE OR REPLACE FUNCTION auth.role()
  RETURNS text
  LANGUAGE sql
@@ -769,8 +898,9 @@ AS $function$
   )::text
 $function$
 
-;
 
+-- Function: auth.uid
+-- Description: Deprecated. Use auth.jwt() -> 'sub' instead.
 CREATE OR REPLACE FUNCTION auth.uid()
  RETURNS uuid
  LANGUAGE sql
@@ -783,120 +913,121 @@ AS $function$
   )::uuid
 $function$
 
-;
 
+-- Function: extensions.armor
 CREATE OR REPLACE FUNCTION extensions.armor(bytea, text[], text[])
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_armor$function$
 
-;
 
+-- Function: extensions.armor
 CREATE OR REPLACE FUNCTION extensions.armor(bytea)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_armor$function$
 
-;
 
+-- Function: extensions.crypt
 CREATE OR REPLACE FUNCTION extensions.crypt(text, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_crypt$function$
 
-;
 
+-- Function: extensions.dearmor
 CREATE OR REPLACE FUNCTION extensions.dearmor(text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_dearmor$function$
 
-;
 
+-- Function: extensions.decrypt
 CREATE OR REPLACE FUNCTION extensions.decrypt(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_decrypt$function$
 
-;
 
+-- Function: extensions.decrypt_iv
 CREATE OR REPLACE FUNCTION extensions.decrypt_iv(bytea, bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_decrypt_iv$function$
 
-;
 
+-- Function: extensions.digest
 CREATE OR REPLACE FUNCTION extensions.digest(bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_digest$function$
 
-;
 
+-- Function: extensions.digest
 CREATE OR REPLACE FUNCTION extensions.digest(text, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_digest$function$
 
-;
 
+-- Function: extensions.encrypt
 CREATE OR REPLACE FUNCTION extensions.encrypt(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_encrypt$function$
 
-;
 
+-- Function: extensions.encrypt_iv
 CREATE OR REPLACE FUNCTION extensions.encrypt_iv(bytea, bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_encrypt_iv$function$
 
-;
 
+-- Function: extensions.gen_random_bytes
 CREATE OR REPLACE FUNCTION extensions.gen_random_bytes(integer)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_random_bytes$function$
 
-;
 
+-- Function: extensions.gen_random_uuid
 CREATE OR REPLACE FUNCTION extensions.gen_random_uuid()
  RETURNS uuid
  LANGUAGE c
  PARALLEL SAFE
 AS '$libdir/pgcrypto', $function$pg_random_uuid$function$
 
-;
 
+-- Function: extensions.gen_salt
 CREATE OR REPLACE FUNCTION extensions.gen_salt(text, integer)
  RETURNS text
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_gen_salt_rounds$function$
 
-;
 
+-- Function: extensions.gen_salt
 CREATE OR REPLACE FUNCTION extensions.gen_salt(text)
  RETURNS text
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_gen_salt$function$
 
-;
 
+-- Function: extensions.grant_pg_cron_access
+-- Description: Grants access to pg_cron
 CREATE OR REPLACE FUNCTION extensions.grant_pg_cron_access()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -930,8 +1061,9 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: extensions.grant_pg_graphql_access
+-- Description: Grants access to pg_graphql
 CREATE OR REPLACE FUNCTION extensions.grant_pg_graphql_access()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -986,8 +1118,9 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: extensions.grant_pg_net_access
+-- Description: Grants access to pg_net
 CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -1035,208 +1168,208 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: extensions.hmac
 CREATE OR REPLACE FUNCTION extensions.hmac(text, text, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_hmac$function$
 
-;
 
+-- Function: extensions.hmac
 CREATE OR REPLACE FUNCTION extensions.hmac(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pg_hmac$function$
 
-;
 
+-- Function: extensions.pg_stat_statements
 CREATE OR REPLACE FUNCTION extensions.pg_stat_statements(showtext boolean, OUT userid oid, OUT dbid oid, OUT toplevel boolean, OUT queryid bigint, OUT query text, OUT plans bigint, OUT total_plan_time double precision, OUT min_plan_time double precision, OUT max_plan_time double precision, OUT mean_plan_time double precision, OUT stddev_plan_time double precision, OUT calls bigint, OUT total_exec_time double precision, OUT min_exec_time double precision, OUT max_exec_time double precision, OUT mean_exec_time double precision, OUT stddev_exec_time double precision, OUT rows bigint, OUT shared_blks_hit bigint, OUT shared_blks_read bigint, OUT shared_blks_dirtied bigint, OUT shared_blks_written bigint, OUT local_blks_hit bigint, OUT local_blks_read bigint, OUT local_blks_dirtied bigint, OUT local_blks_written bigint, OUT temp_blks_read bigint, OUT temp_blks_written bigint, OUT shared_blk_read_time double precision, OUT shared_blk_write_time double precision, OUT local_blk_read_time double precision, OUT local_blk_write_time double precision, OUT temp_blk_read_time double precision, OUT temp_blk_write_time double precision, OUT wal_records bigint, OUT wal_fpi bigint, OUT wal_bytes numeric, OUT jit_functions bigint, OUT jit_generation_time double precision, OUT jit_inlining_count bigint, OUT jit_inlining_time double precision, OUT jit_optimization_count bigint, OUT jit_optimization_time double precision, OUT jit_emission_count bigint, OUT jit_emission_time double precision, OUT jit_deform_count bigint, OUT jit_deform_time double precision, OUT stats_since timestamp with time zone, OUT minmax_stats_since timestamp with time zone)
  RETURNS SETOF record
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pg_stat_statements', $function$pg_stat_statements_1_11$function$
 
-;
 
+-- Function: extensions.pg_stat_statements_info
 CREATE OR REPLACE FUNCTION extensions.pg_stat_statements_info(OUT dealloc bigint, OUT stats_reset timestamp with time zone)
  RETURNS record
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pg_stat_statements', $function$pg_stat_statements_info$function$
 
-;
 
+-- Function: extensions.pg_stat_statements_reset
 CREATE OR REPLACE FUNCTION extensions.pg_stat_statements_reset(userid oid DEFAULT 0, dbid oid DEFAULT 0, queryid bigint DEFAULT 0, minmax_only boolean DEFAULT false)
  RETURNS timestamp with time zone
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pg_stat_statements', $function$pg_stat_statements_reset_1_11$function$
 
-;
 
+-- Function: extensions.pgp_armor_headers
 CREATE OR REPLACE FUNCTION extensions.pgp_armor_headers(text, OUT key text, OUT value text)
  RETURNS SETOF record
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_armor_headers$function$
 
-;
 
+-- Function: extensions.pgp_key_id
 CREATE OR REPLACE FUNCTION extensions.pgp_key_id(bytea)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_key_id_w$function$
 
-;
 
+-- Function: extensions.pgp_pub_decrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_pub_decrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_pub_decrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_pub_decrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt_bytea(bytea, bytea)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_pub_decrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt_bytea(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_pub_decrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt_bytea(bytea, bytea, text, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_pub_encrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_pub_encrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_pub_encrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_pub_encrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt_bytea(bytea, bytea)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_sym_decrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_sym_decrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_sym_decrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_sym_decrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt_bytea(bytea, text)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_sym_encrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_sym_encrypt
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt(text, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_text$function$
 
-;
 
+-- Function: extensions.pgp_sym_encrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgp_sym_encrypt_bytea
 CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_bytea$function$
 
-;
 
+-- Function: extensions.pgrst_ddl_watch
 CREATE OR REPLACE FUNCTION extensions.pgrst_ddl_watch()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -1266,8 +1399,8 @@ BEGIN
   END LOOP;
 END; $function$
 
-;
 
+-- Function: extensions.pgrst_drop_watch
 CREATE OR REPLACE FUNCTION extensions.pgrst_drop_watch()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -1295,8 +1428,9 @@ BEGIN
   END LOOP;
 END; $function$
 
-;
 
+-- Function: extensions.set_graphql_placeholder
+-- Description: Reintroduces placeholder function for graphql_public.graphql
 CREATE OR REPLACE FUNCTION extensions.set_graphql_placeholder()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -1350,95 +1484,95 @@ AS $function$
     END;
 $function$
 
-;
 
+-- Function: extensions.uuid_generate_v1
 CREATE OR REPLACE FUNCTION extensions.uuid_generate_v1()
  RETURNS uuid
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_generate_v1$function$
 
-;
 
+-- Function: extensions.uuid_generate_v1mc
 CREATE OR REPLACE FUNCTION extensions.uuid_generate_v1mc()
  RETURNS uuid
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_generate_v1mc$function$
 
-;
 
+-- Function: extensions.uuid_generate_v3
 CREATE OR REPLACE FUNCTION extensions.uuid_generate_v3(namespace uuid, name text)
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_generate_v3$function$
 
-;
 
+-- Function: extensions.uuid_generate_v4
 CREATE OR REPLACE FUNCTION extensions.uuid_generate_v4()
  RETURNS uuid
  LANGUAGE c
  PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_generate_v4$function$
 
-;
 
+-- Function: extensions.uuid_generate_v5
 CREATE OR REPLACE FUNCTION extensions.uuid_generate_v5(namespace uuid, name text)
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_generate_v5$function$
 
-;
 
+-- Function: extensions.uuid_nil
 CREATE OR REPLACE FUNCTION extensions.uuid_nil()
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_nil$function$
 
-;
 
+-- Function: extensions.uuid_ns_dns
 CREATE OR REPLACE FUNCTION extensions.uuid_ns_dns()
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_ns_dns$function$
 
-;
 
+-- Function: extensions.uuid_ns_oid
 CREATE OR REPLACE FUNCTION extensions.uuid_ns_oid()
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_ns_oid$function$
 
-;
 
+-- Function: extensions.uuid_ns_url
 CREATE OR REPLACE FUNCTION extensions.uuid_ns_url()
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_ns_url$function$
 
-;
 
+-- Function: extensions.uuid_ns_x500
 CREATE OR REPLACE FUNCTION extensions.uuid_ns_x500()
  RETURNS uuid
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
 AS '$libdir/uuid-ossp', $function$uuid_ns_x500$function$
 
-;
 
+-- Function: graphql._internal_resolve
 CREATE OR REPLACE FUNCTION graphql._internal_resolve(query text, variables jsonb DEFAULT '{}'::jsonb, "operationName" text DEFAULT NULL::text, extensions jsonb DEFAULT NULL::jsonb)
  RETURNS jsonb
  LANGUAGE c
 AS '$libdir/pg_graphql', $function$resolve_wrapper$function$
 
-;
 
+-- Function: graphql.comment_directive
 CREATE OR REPLACE FUNCTION graphql.comment_directive(comment_ text)
  RETURNS jsonb
  LANGUAGE sql
@@ -1459,8 +1593,8 @@ AS $function$
         )
 $function$
 
-;
 
+-- Function: graphql.exception
 CREATE OR REPLACE FUNCTION graphql.exception(message text)
  RETURNS text
  LANGUAGE plpgsql
@@ -1470,8 +1604,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: graphql.get_schema_version
 CREATE OR REPLACE FUNCTION graphql.get_schema_version()
  RETURNS integer
  LANGUAGE sql
@@ -1480,8 +1614,8 @@ AS $function$
     select last_value from graphql.seq_schema_version;
 $function$
 
-;
 
+-- Function: graphql.increment_schema_version
 CREATE OR REPLACE FUNCTION graphql.increment_schema_version()
  RETURNS event_trigger
  LANGUAGE plpgsql
@@ -1492,8 +1626,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: graphql.resolve
 CREATE OR REPLACE FUNCTION graphql.resolve(query text, variables jsonb DEFAULT '{}'::jsonb, "operationName" text DEFAULT NULL::text, extensions jsonb DEFAULT NULL::jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1518,8 +1652,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: graphql_public.graphql
 CREATE OR REPLACE FUNCTION graphql_public.graphql("operationName" text DEFAULT NULL::text, query text DEFAULT NULL::text, variables jsonb DEFAULT NULL::jsonb, extensions jsonb DEFAULT NULL::jsonb)
  RETURNS jsonb
  LANGUAGE sql
@@ -1532,8 +1666,8 @@ AS $function$
             );
         $function$
 
-;
 
+-- Function: pgbouncer.get_auth
 CREATE OR REPLACE FUNCTION pgbouncer.get_auth(p_usename text)
  RETURNS TABLE(username text, password text)
  LANGUAGE plpgsql
@@ -1554,8 +1688,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: public.update_updated_at_column
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -1566,8 +1700,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: realtime.apply_rls
 CREATE OR REPLACE FUNCTION realtime.apply_rls(wal jsonb, max_record_bytes integer DEFAULT (1024 * 1024))
  RETURNS SETOF realtime.wal_rls
  LANGUAGE plpgsql
@@ -1869,8 +2003,8 @@ perform set_config('role', null, true);
 end;
 $function$
 
-;
 
+-- Function: realtime.broadcast_changes
 CREATE OR REPLACE FUNCTION realtime.broadcast_changes(topic_name text, event_name text, operation text, table_name text, table_schema text, new record, old record, level text DEFAULT 'ROW'::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -1896,8 +2030,8 @@ END;
 
 $function$
 
-;
 
+-- Function: realtime.build_prepared_statement_sql
 CREATE OR REPLACE FUNCTION realtime.build_prepared_statement_sql(prepared_statement_name text, entity regclass, columns realtime.wal_column[])
  RETURNS text
  LANGUAGE sql
@@ -1927,8 +2061,8 @@ AS $function$
               entity
       $function$
 
-;
 
+-- Function: realtime.cast
 CREATE OR REPLACE FUNCTION realtime."cast"(val text, type_ regtype)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1942,8 +2076,8 @@ AS $function$
     end
     $function$
 
-;
 
+-- Function: realtime.check_equality_op
 CREATE OR REPLACE FUNCTION realtime.check_equality_op(op realtime.equality_op, type_ regtype, val_1 text, val_2 text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1980,8 +2114,8 @@ AS $function$
       end;
       $function$
 
-;
 
+-- Function: realtime.is_visible_through_filters
 CREATE OR REPLACE FUNCTION realtime.is_visible_through_filters(columns realtime.wal_column[], filters realtime.user_defined_filter[])
  RETURNS boolean
  LANGUAGE sql
@@ -2015,8 +2149,8 @@ AS $function$
                 on f.column_name = col.name;
     $function$
 
-;
 
+-- Function: realtime.list_changes
 CREATE OR REPLACE FUNCTION realtime.list_changes(publication name, slot_name name, max_changes integer, max_record_bytes integer)
  RETURNS SETOF realtime.wal_rls
  LANGUAGE sql
@@ -2079,8 +2213,8 @@ AS $function$
         and xyz.subscription_ids[1] is not null
     $function$
 
-;
 
+-- Function: realtime.quote_wal2json
 CREATE OR REPLACE FUNCTION realtime.quote_wal2json(entity regclass)
  RETURNS text
  LANGUAGE sql
@@ -2116,8 +2250,8 @@ AS $function$
         pc.oid = entity
     $function$
 
-;
 
+-- Function: realtime.send
 CREATE OR REPLACE FUNCTION realtime.send(payload jsonb, event text, topic text, private boolean DEFAULT true)
  RETURNS void
  LANGUAGE plpgsql
@@ -2138,8 +2272,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: realtime.subscription_check_filters
 CREATE OR REPLACE FUNCTION realtime.subscription_check_filters()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2210,16 +2344,16 @@ AS $function$
     end;
     $function$
 
-;
 
+-- Function: realtime.to_regrole
 CREATE OR REPLACE FUNCTION realtime.to_regrole(role_name text)
  RETURNS regrole
  LANGUAGE sql
  IMMUTABLE
 AS $function$ select role_name::regrole $function$
 
-;
 
+-- Function: realtime.topic
 CREATE OR REPLACE FUNCTION realtime.topic()
  RETURNS text
  LANGUAGE sql
@@ -2228,8 +2362,8 @@ AS $function$
 select nullif(current_setting('realtime.topic', true), '')::text;
 $function$
 
-;
 
+-- Function: storage.add_prefixes
 CREATE OR REPLACE FUNCTION storage.add_prefixes(_bucket_id text, _name text)
  RETURNS void
  LANGUAGE plpgsql
@@ -2247,8 +2381,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.can_insert_object
 CREATE OR REPLACE FUNCTION storage.can_insert_object(bucketid text, name text, owner uuid, metadata jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -2262,8 +2396,8 @@ BEGIN
 END
 $function$
 
-;
 
+-- Function: storage.delete_leaf_prefixes
 CREATE OR REPLACE FUNCTION storage.delete_leaf_prefixes(bucket_ids text[], names text[])
  RETURNS void
  LANGUAGE plpgsql
@@ -2326,8 +2460,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.delete_prefix
 CREATE OR REPLACE FUNCTION storage.delete_prefix(_bucket_id text, _name text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -2361,8 +2495,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.delete_prefix_hierarchy_trigger
 CREATE OR REPLACE FUNCTION storage.delete_prefix_hierarchy_trigger()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2380,8 +2514,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.enforce_bucket_name_length
 CREATE OR REPLACE FUNCTION storage.enforce_bucket_name_length()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2394,8 +2528,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: storage.extension
 CREATE OR REPLACE FUNCTION storage.extension(name text)
  RETURNS text
  LANGUAGE plpgsql
@@ -2411,8 +2545,8 @@ BEGIN
 END
 $function$
 
-;
 
+-- Function: storage.filename
 CREATE OR REPLACE FUNCTION storage.filename(name text)
  RETURNS text
  LANGUAGE plpgsql
@@ -2425,8 +2559,8 @@ BEGIN
 END
 $function$
 
-;
 
+-- Function: storage.foldername
 CREATE OR REPLACE FUNCTION storage.foldername(name text)
  RETURNS text[]
  LANGUAGE plpgsql
@@ -2442,8 +2576,8 @@ BEGIN
 END
 $function$
 
-;
 
+-- Function: storage.get_level
 CREATE OR REPLACE FUNCTION storage.get_level(name text)
  RETURNS integer
  LANGUAGE sql
@@ -2452,8 +2586,8 @@ AS $function$
 SELECT array_length(string_to_array("name", '/'), 1);
 $function$
 
-;
 
+-- Function: storage.get_prefix
 CREATE OR REPLACE FUNCTION storage.get_prefix(name text)
  RETURNS text
  LANGUAGE sql
@@ -2467,8 +2601,8 @@ SELECT
         END;
 $function$
 
-;
 
+-- Function: storage.get_prefixes
 CREATE OR REPLACE FUNCTION storage.get_prefixes(name text)
  RETURNS text[]
  LANGUAGE plpgsql
@@ -2493,8 +2627,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.get_size_by_bucket
 CREATE OR REPLACE FUNCTION storage.get_size_by_bucket()
  RETURNS TABLE(size bigint, bucket_id text)
  LANGUAGE plpgsql
@@ -2508,8 +2642,8 @@ BEGIN
 END
 $function$
 
-;
 
+-- Function: storage.list_multipart_uploads_with_delimiter
 CREATE OR REPLACE FUNCTION storage.list_multipart_uploads_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, next_key_token text DEFAULT ''::text, next_upload_token text DEFAULT ''::text)
  RETURNS TABLE(key text, id text, created_at timestamp with time zone)
  LANGUAGE plpgsql
@@ -2552,8 +2686,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.list_objects_with_delimiter
 CREATE OR REPLACE FUNCTION storage.list_objects_with_delimiter(bucket_id text, prefix_param text, delimiter_param text, max_keys integer DEFAULT 100, start_after text DEFAULT ''::text, next_token text DEFAULT ''::text)
  RETURNS TABLE(name text, id uuid, metadata jsonb, updated_at timestamp with time zone)
  LANGUAGE plpgsql
@@ -2594,8 +2728,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.lock_top_prefixes
 CREATE OR REPLACE FUNCTION storage.lock_top_prefixes(bucket_ids text[], names text[])
  RETURNS void
  LANGUAGE plpgsql
@@ -2617,8 +2751,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.objects_delete_cleanup
 CREATE OR REPLACE FUNCTION storage.objects_delete_cleanup()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2647,8 +2781,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.objects_insert_prefix_trigger
 CREATE OR REPLACE FUNCTION storage.objects_insert_prefix_trigger()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2661,8 +2795,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.objects_update_cleanup
 CREATE OR REPLACE FUNCTION storage.objects_update_cleanup()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2752,8 +2886,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.objects_update_level_trigger
 CREATE OR REPLACE FUNCTION storage.objects_update_level_trigger()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2768,8 +2902,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.objects_update_prefix_trigger
 CREATE OR REPLACE FUNCTION storage.objects_update_prefix_trigger()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2808,8 +2942,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.operation
 CREATE OR REPLACE FUNCTION storage.operation()
  RETURNS text
  LANGUAGE plpgsql
@@ -2820,8 +2954,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.prefixes_delete_cleanup
 CREATE OR REPLACE FUNCTION storage.prefixes_delete_cleanup()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2850,8 +2984,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.prefixes_insert_trigger
 CREATE OR REPLACE FUNCTION storage.prefixes_insert_trigger()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2862,8 +2996,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.search
 CREATE OR REPLACE FUNCTION storage.search(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text)
  RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
  LANGUAGE plpgsql
@@ -2884,8 +3018,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: storage.search_legacy_v1
 CREATE OR REPLACE FUNCTION storage.search_legacy_v1(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text)
  RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
  LANGUAGE plpgsql
@@ -2952,8 +3086,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: storage.search_v1_optimised
 CREATE OR REPLACE FUNCTION storage.search_v1_optimised(prefix text, bucketname text, limits integer DEFAULT 100, levels integer DEFAULT 1, offsets integer DEFAULT 0, search text DEFAULT ''::text, sortcolumn text DEFAULT 'name'::text, sortorder text DEFAULT 'asc'::text)
  RETURNS TABLE(name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
  LANGUAGE plpgsql
@@ -3019,8 +3153,8 @@ begin
 end;
 $function$
 
-;
 
+-- Function: storage.search_v2
 CREATE OR REPLACE FUNCTION storage.search_v2(prefix text, bucket_name text, limits integer DEFAULT 100, levels integer DEFAULT 1, start_after text DEFAULT ''::text, sort_order text DEFAULT 'asc'::text, sort_column text DEFAULT 'name'::text, sort_column_after text DEFAULT ''::text)
  RETURNS TABLE(key text, name text, id uuid, updated_at timestamp with time zone, created_at timestamp with time zone, last_accessed_at timestamp with time zone, metadata jsonb)
  LANGUAGE plpgsql
@@ -3114,8 +3248,8 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: storage.update_updated_at_column
 CREATE OR REPLACE FUNCTION storage.update_updated_at_column()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -3126,32 +3260,32 @@ BEGIN
 END;
 $function$
 
-;
 
+-- Function: vault._crypto_aead_det_decrypt
 CREATE OR REPLACE FUNCTION vault._crypto_aead_det_decrypt(message bytea, additional bytea, key_id bigint, context bytea DEFAULT '\x7067736f6469756d'::bytea, nonce bytea DEFAULT NULL::bytea)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE
 AS '$libdir/supabase_vault', $function$pgsodium_crypto_aead_det_decrypt_by_id$function$
 
-;
 
+-- Function: vault._crypto_aead_det_encrypt
 CREATE OR REPLACE FUNCTION vault._crypto_aead_det_encrypt(message bytea, additional bytea, key_id bigint, context bytea DEFAULT '\x7067736f6469756d'::bytea, nonce bytea DEFAULT NULL::bytea)
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE
 AS '$libdir/supabase_vault', $function$pgsodium_crypto_aead_det_encrypt_by_id$function$
 
-;
 
+-- Function: vault._crypto_aead_det_noncegen
 CREATE OR REPLACE FUNCTION vault._crypto_aead_det_noncegen()
  RETURNS bytea
  LANGUAGE c
  IMMUTABLE
 AS '$libdir/supabase_vault', $function$pgsodium_crypto_aead_det_noncegen$function$
 
-;
 
+-- Function: vault.create_secret
 CREATE OR REPLACE FUNCTION vault.create_secret(new_secret text, new_name text DEFAULT NULL::text, new_description text DEFAULT ''::text, new_key_id uuid DEFAULT NULL::uuid)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -3181,8 +3315,8 @@ BEGIN
 END
 $function$
 
-;
 
+-- Function: vault.update_secret
 CREATE OR REPLACE FUNCTION vault.update_secret(secret_id uuid, new_secret text DEFAULT NULL::text, new_name text DEFAULT NULL::text, new_description text DEFAULT NULL::text, new_key_id uuid DEFAULT NULL::uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -3209,312 +3343,669 @@ BEGIN
 END
 $function$
 
-;
 
 
+-- ============================================
 -- TRIGGERS
 -- ============================================
 
+-- Trigger: update_cost_categories_updated_at on public.cost_categories
 CREATE TRIGGER update_cost_categories_updated_at BEFORE UPDATE ON public.cost_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
-;
 
+-- Trigger: update_detail_cost_categories_updated_at on public.detail_cost_categories
 CREATE TRIGGER update_detail_cost_categories_updated_at BEFORE UPDATE ON public.detail_cost_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
-;
 
+-- Trigger: update_material_names_updated_at on public.material_names
 CREATE TRIGGER update_material_names_updated_at BEFORE UPDATE ON public.material_names FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
-;
 
+-- Trigger: update_materials_library_updated_at on public.materials_library
+CREATE TRIGGER update_materials_library_updated_at BEFORE UPDATE ON public.materials_library FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+-- Trigger: update_tenders_updated_at on public.tenders
 CREATE TRIGGER update_tenders_updated_at BEFORE UPDATE ON public.tenders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
-;
 
+-- Trigger: update_units_updated_at on public.units
+CREATE TRIGGER update_units_updated_at BEFORE UPDATE ON public.units FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+-- Trigger: update_work_names_updated_at on public.work_names
 CREATE TRIGGER update_work_names_updated_at BEFORE UPDATE ON public.work_names FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
-;
 
+-- Trigger: update_works_library_updated_at on public.works_library
+CREATE TRIGGER update_works_library_updated_at BEFORE UPDATE ON public.works_library FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
+-- Trigger: tr_check_filters on realtime.subscription
 CREATE TRIGGER tr_check_filters BEFORE INSERT OR UPDATE ON realtime.subscription FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters()
-;
 
+-- Trigger: enforce_bucket_name_length_trigger on storage.buckets
 CREATE TRIGGER enforce_bucket_name_length_trigger BEFORE INSERT OR UPDATE OF name ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_bucket_name_length()
-;
 
+-- Trigger: objects_delete_delete_prefix on storage.objects
 CREATE TRIGGER objects_delete_delete_prefix AFTER DELETE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.delete_prefix_hierarchy_trigger()
-;
 
+-- Trigger: objects_insert_create_prefix on storage.objects
 CREATE TRIGGER objects_insert_create_prefix BEFORE INSERT ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.objects_insert_prefix_trigger()
-;
 
+-- Trigger: objects_update_create_prefix on storage.objects
 CREATE TRIGGER objects_update_create_prefix BEFORE UPDATE ON storage.objects FOR EACH ROW WHEN (((new.name <> old.name) OR (new.bucket_id <> old.bucket_id))) EXECUTE FUNCTION storage.objects_update_prefix_trigger()
-;
 
+-- Trigger: update_objects_updated_at on storage.objects
 CREATE TRIGGER update_objects_updated_at BEFORE UPDATE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column()
-;
 
+-- Trigger: prefixes_create_hierarchy on storage.prefixes
 CREATE TRIGGER prefixes_create_hierarchy BEFORE INSERT ON storage.prefixes FOR EACH ROW WHEN ((pg_trigger_depth() < 1)) EXECUTE FUNCTION storage.prefixes_insert_trigger()
-;
 
+-- Trigger: prefixes_delete_hierarchy on storage.prefixes
 CREATE TRIGGER prefixes_delete_hierarchy AFTER DELETE ON storage.prefixes FOR EACH ROW EXECUTE FUNCTION storage.delete_prefix_hierarchy_trigger()
-;
 
 
+-- ============================================
 -- INDEXES
 -- ============================================
 
-CREATE INDEX audit_logs_instance_id_idx ON auth.audit_log_entries USING btree (instance_id)
-;
+-- Index on auth.audit_log_entries
+CREATE INDEX audit_logs_instance_id_idx ON auth.audit_log_entries USING btree (instance_id);
 
-CREATE INDEX flow_state_created_at_idx ON auth.flow_state USING btree (created_at DESC)
-;
+-- Index on auth.flow_state
+CREATE INDEX flow_state_created_at_idx ON auth.flow_state USING btree (created_at DESC);
 
-CREATE INDEX idx_auth_code ON auth.flow_state USING btree (auth_code)
-;
+-- Index on auth.flow_state
+CREATE INDEX idx_auth_code ON auth.flow_state USING btree (auth_code);
 
-CREATE INDEX idx_user_id_auth_method ON auth.flow_state USING btree (user_id, authentication_method)
-;
+-- Index on auth.flow_state
+CREATE INDEX idx_user_id_auth_method ON auth.flow_state USING btree (user_id, authentication_method);
 
-CREATE INDEX identities_email_idx ON auth.identities USING btree (email text_pattern_ops)
-;
+-- Index on auth.identities
+CREATE INDEX identities_email_idx ON auth.identities USING btree (email text_pattern_ops);
 
-CREATE UNIQUE INDEX identities_provider_id_provider_unique ON auth.identities USING btree (provider_id, provider)
-;
+-- Index on auth.identities
+CREATE UNIQUE INDEX identities_provider_id_provider_unique ON auth.identities USING btree (provider_id, provider);
 
-CREATE INDEX identities_user_id_idx ON auth.identities USING btree (user_id)
-;
+-- Index on auth.identities
+CREATE INDEX identities_user_id_idx ON auth.identities USING btree (user_id);
 
-CREATE UNIQUE INDEX amr_id_pk ON auth.mfa_amr_claims USING btree (id)
-;
+-- Index on auth.mfa_amr_claims
+CREATE UNIQUE INDEX amr_id_pk ON auth.mfa_amr_claims USING btree (id);
 
-CREATE INDEX mfa_challenge_created_at_idx ON auth.mfa_challenges USING btree (created_at DESC)
-;
+-- Index on auth.mfa_challenges
+CREATE INDEX mfa_challenge_created_at_idx ON auth.mfa_challenges USING btree (created_at DESC);
 
-CREATE INDEX factor_id_created_at_idx ON auth.mfa_factors USING btree (user_id, created_at)
-;
+-- Index on auth.mfa_factors
+CREATE INDEX factor_id_created_at_idx ON auth.mfa_factors USING btree (user_id, created_at);
 
-CREATE UNIQUE INDEX mfa_factors_last_challenged_at_key ON auth.mfa_factors USING btree (last_challenged_at)
-;
+-- Index on auth.mfa_factors
+CREATE UNIQUE INDEX mfa_factors_last_challenged_at_key ON auth.mfa_factors USING btree (last_challenged_at);
 
-CREATE UNIQUE INDEX mfa_factors_user_friendly_name_unique ON auth.mfa_factors USING btree (friendly_name, user_id) WHERE (TRIM(BOTH FROM friendly_name) <> ''::text)
-;
+-- Index on auth.mfa_factors
+CREATE UNIQUE INDEX mfa_factors_user_friendly_name_unique ON auth.mfa_factors USING btree (friendly_name, user_id) WHERE (TRIM(BOTH FROM friendly_name) <> ''::text);
 
-CREATE INDEX mfa_factors_user_id_idx ON auth.mfa_factors USING btree (user_id)
-;
+-- Index on auth.mfa_factors
+CREATE INDEX mfa_factors_user_id_idx ON auth.mfa_factors USING btree (user_id);
 
-CREATE UNIQUE INDEX unique_phone_factor_per_user ON auth.mfa_factors USING btree (user_id, phone)
-;
+-- Index on auth.mfa_factors
+CREATE UNIQUE INDEX unique_phone_factor_per_user ON auth.mfa_factors USING btree (user_id, phone);
 
-CREATE INDEX oauth_auth_pending_exp_idx ON auth.oauth_authorizations USING btree (expires_at) WHERE (status = 'pending'::auth.oauth_authorization_status)
-;
+-- Index on auth.oauth_authorizations
+CREATE INDEX oauth_auth_pending_exp_idx ON auth.oauth_authorizations USING btree (expires_at) WHERE (status = 'pending'::auth.oauth_authorization_status);
 
-CREATE UNIQUE INDEX oauth_authorizations_authorization_code_key ON auth.oauth_authorizations USING btree (authorization_code)
-;
+-- Index on auth.oauth_authorizations
+CREATE UNIQUE INDEX oauth_authorizations_authorization_code_key ON auth.oauth_authorizations USING btree (authorization_code);
 
-CREATE UNIQUE INDEX oauth_authorizations_authorization_id_key ON auth.oauth_authorizations USING btree (authorization_id)
-;
+-- Index on auth.oauth_authorizations
+CREATE UNIQUE INDEX oauth_authorizations_authorization_id_key ON auth.oauth_authorizations USING btree (authorization_id);
 
-CREATE INDEX oauth_clients_deleted_at_idx ON auth.oauth_clients USING btree (deleted_at)
-;
+-- Index on auth.oauth_clients
+CREATE INDEX oauth_clients_deleted_at_idx ON auth.oauth_clients USING btree (deleted_at);
 
-CREATE INDEX oauth_consents_active_client_idx ON auth.oauth_consents USING btree (client_id) WHERE (revoked_at IS NULL)
-;
+-- Index on auth.oauth_consents
+CREATE INDEX oauth_consents_active_client_idx ON auth.oauth_consents USING btree (client_id) WHERE (revoked_at IS NULL);
 
-CREATE INDEX oauth_consents_active_user_client_idx ON auth.oauth_consents USING btree (user_id, client_id) WHERE (revoked_at IS NULL)
-;
+-- Index on auth.oauth_consents
+CREATE INDEX oauth_consents_active_user_client_idx ON auth.oauth_consents USING btree (user_id, client_id) WHERE (revoked_at IS NULL);
 
-CREATE UNIQUE INDEX oauth_consents_user_client_unique ON auth.oauth_consents USING btree (user_id, client_id)
-;
+-- Index on auth.oauth_consents
+CREATE UNIQUE INDEX oauth_consents_user_client_unique ON auth.oauth_consents USING btree (user_id, client_id);
 
-CREATE INDEX oauth_consents_user_order_idx ON auth.oauth_consents USING btree (user_id, granted_at DESC)
-;
+-- Index on auth.oauth_consents
+CREATE INDEX oauth_consents_user_order_idx ON auth.oauth_consents USING btree (user_id, granted_at DESC);
 
-CREATE INDEX one_time_tokens_relates_to_hash_idx ON auth.one_time_tokens USING hash (relates_to)
-;
+-- Index on auth.one_time_tokens
+CREATE INDEX one_time_tokens_relates_to_hash_idx ON auth.one_time_tokens USING hash (relates_to);
 
-CREATE INDEX one_time_tokens_token_hash_hash_idx ON auth.one_time_tokens USING hash (token_hash)
-;
+-- Index on auth.one_time_tokens
+CREATE INDEX one_time_tokens_token_hash_hash_idx ON auth.one_time_tokens USING hash (token_hash);
 
-CREATE UNIQUE INDEX one_time_tokens_user_id_token_type_key ON auth.one_time_tokens USING btree (user_id, token_type)
-;
+-- Index on auth.one_time_tokens
+CREATE UNIQUE INDEX one_time_tokens_user_id_token_type_key ON auth.one_time_tokens USING btree (user_id, token_type);
 
-CREATE INDEX refresh_tokens_instance_id_idx ON auth.refresh_tokens USING btree (instance_id)
-;
+-- Index on auth.refresh_tokens
+CREATE INDEX refresh_tokens_instance_id_idx ON auth.refresh_tokens USING btree (instance_id);
 
-CREATE INDEX refresh_tokens_instance_id_user_id_idx ON auth.refresh_tokens USING btree (instance_id, user_id)
-;
+-- Index on auth.refresh_tokens
+CREATE INDEX refresh_tokens_instance_id_user_id_idx ON auth.refresh_tokens USING btree (instance_id, user_id);
 
-CREATE INDEX refresh_tokens_parent_idx ON auth.refresh_tokens USING btree (parent)
-;
+-- Index on auth.refresh_tokens
+CREATE INDEX refresh_tokens_parent_idx ON auth.refresh_tokens USING btree (parent);
 
-CREATE INDEX refresh_tokens_session_id_revoked_idx ON auth.refresh_tokens USING btree (session_id, revoked)
-;
+-- Index on auth.refresh_tokens
+CREATE INDEX refresh_tokens_session_id_revoked_idx ON auth.refresh_tokens USING btree (session_id, revoked);
 
-CREATE UNIQUE INDEX refresh_tokens_token_unique ON auth.refresh_tokens USING btree (token)
-;
+-- Index on auth.refresh_tokens
+CREATE UNIQUE INDEX refresh_tokens_token_unique ON auth.refresh_tokens USING btree (token);
 
-CREATE INDEX refresh_tokens_updated_at_idx ON auth.refresh_tokens USING btree (updated_at DESC)
-;
+-- Index on auth.refresh_tokens
+CREATE INDEX refresh_tokens_updated_at_idx ON auth.refresh_tokens USING btree (updated_at DESC);
 
-CREATE UNIQUE INDEX saml_providers_entity_id_key ON auth.saml_providers USING btree (entity_id)
-;
+-- Index on auth.saml_providers
+CREATE UNIQUE INDEX saml_providers_entity_id_key ON auth.saml_providers USING btree (entity_id);
 
-CREATE INDEX saml_providers_sso_provider_id_idx ON auth.saml_providers USING btree (sso_provider_id)
-;
+-- Index on auth.saml_providers
+CREATE INDEX saml_providers_sso_provider_id_idx ON auth.saml_providers USING btree (sso_provider_id);
 
-CREATE INDEX saml_relay_states_created_at_idx ON auth.saml_relay_states USING btree (created_at DESC)
-;
+-- Index on auth.saml_relay_states
+CREATE INDEX saml_relay_states_created_at_idx ON auth.saml_relay_states USING btree (created_at DESC);
 
-CREATE INDEX saml_relay_states_for_email_idx ON auth.saml_relay_states USING btree (for_email)
-;
+-- Index on auth.saml_relay_states
+CREATE INDEX saml_relay_states_for_email_idx ON auth.saml_relay_states USING btree (for_email);
 
-CREATE INDEX saml_relay_states_sso_provider_id_idx ON auth.saml_relay_states USING btree (sso_provider_id)
-;
+-- Index on auth.saml_relay_states
+CREATE INDEX saml_relay_states_sso_provider_id_idx ON auth.saml_relay_states USING btree (sso_provider_id);
 
-CREATE INDEX sessions_not_after_idx ON auth.sessions USING btree (not_after DESC)
-;
+-- Index on auth.sessions
+CREATE INDEX sessions_not_after_idx ON auth.sessions USING btree (not_after DESC);
 
-CREATE INDEX sessions_oauth_client_id_idx ON auth.sessions USING btree (oauth_client_id)
-;
+-- Index on auth.sessions
+CREATE INDEX sessions_oauth_client_id_idx ON auth.sessions USING btree (oauth_client_id);
 
-CREATE INDEX sessions_user_id_idx ON auth.sessions USING btree (user_id)
-;
+-- Index on auth.sessions
+CREATE INDEX sessions_user_id_idx ON auth.sessions USING btree (user_id);
 
-CREATE INDEX user_id_created_at_idx ON auth.sessions USING btree (user_id, created_at)
-;
+-- Index on auth.sessions
+CREATE INDEX user_id_created_at_idx ON auth.sessions USING btree (user_id, created_at);
 
-CREATE UNIQUE INDEX sso_domains_domain_idx ON auth.sso_domains USING btree (lower(domain))
-;
+-- Index on auth.sso_domains
+CREATE UNIQUE INDEX sso_domains_domain_idx ON auth.sso_domains USING btree (lower(domain));
 
-CREATE INDEX sso_domains_sso_provider_id_idx ON auth.sso_domains USING btree (sso_provider_id)
-;
+-- Index on auth.sso_domains
+CREATE INDEX sso_domains_sso_provider_id_idx ON auth.sso_domains USING btree (sso_provider_id);
 
-CREATE UNIQUE INDEX sso_providers_resource_id_idx ON auth.sso_providers USING btree (lower(resource_id))
-;
+-- Index on auth.sso_providers
+CREATE UNIQUE INDEX sso_providers_resource_id_idx ON auth.sso_providers USING btree (lower(resource_id));
 
-CREATE INDEX sso_providers_resource_id_pattern_idx ON auth.sso_providers USING btree (resource_id text_pattern_ops)
-;
+-- Index on auth.sso_providers
+CREATE INDEX sso_providers_resource_id_pattern_idx ON auth.sso_providers USING btree (resource_id text_pattern_ops);
 
-CREATE UNIQUE INDEX confirmation_token_idx ON auth.users USING btree (confirmation_token) WHERE ((confirmation_token)::text !~ '^[0-9 ]*$'::text)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX confirmation_token_idx ON auth.users USING btree (confirmation_token) WHERE ((confirmation_token)::text !~ '^[0-9 ]*$'::text);
 
-CREATE UNIQUE INDEX email_change_token_current_idx ON auth.users USING btree (email_change_token_current) WHERE ((email_change_token_current)::text !~ '^[0-9 ]*$'::text)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX email_change_token_current_idx ON auth.users USING btree (email_change_token_current) WHERE ((email_change_token_current)::text !~ '^[0-9 ]*$'::text);
 
-CREATE UNIQUE INDEX email_change_token_new_idx ON auth.users USING btree (email_change_token_new) WHERE ((email_change_token_new)::text !~ '^[0-9 ]*$'::text)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX email_change_token_new_idx ON auth.users USING btree (email_change_token_new) WHERE ((email_change_token_new)::text !~ '^[0-9 ]*$'::text);
 
-CREATE UNIQUE INDEX reauthentication_token_idx ON auth.users USING btree (reauthentication_token) WHERE ((reauthentication_token)::text !~ '^[0-9 ]*$'::text)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX reauthentication_token_idx ON auth.users USING btree (reauthentication_token) WHERE ((reauthentication_token)::text !~ '^[0-9 ]*$'::text);
 
-CREATE UNIQUE INDEX recovery_token_idx ON auth.users USING btree (recovery_token) WHERE ((recovery_token)::text !~ '^[0-9 ]*$'::text)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX recovery_token_idx ON auth.users USING btree (recovery_token) WHERE ((recovery_token)::text !~ '^[0-9 ]*$'::text);
 
-CREATE UNIQUE INDEX users_email_partial_key ON auth.users USING btree (email) WHERE (is_sso_user = false)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX users_email_partial_key ON auth.users USING btree (email) WHERE (is_sso_user = false);
 
-CREATE INDEX users_instance_id_email_idx ON auth.users USING btree (instance_id, lower((email)::text))
-;
+-- Index on auth.users
+CREATE INDEX users_instance_id_email_idx ON auth.users USING btree (instance_id, lower((email)::text));
 
-CREATE INDEX users_instance_id_idx ON auth.users USING btree (instance_id)
-;
+-- Index on auth.users
+CREATE INDEX users_instance_id_idx ON auth.users USING btree (instance_id);
 
-CREATE INDEX users_is_anonymous_idx ON auth.users USING btree (is_anonymous)
-;
+-- Index on auth.users
+CREATE INDEX users_is_anonymous_idx ON auth.users USING btree (is_anonymous);
 
-CREATE UNIQUE INDEX users_phone_key ON auth.users USING btree (phone)
-;
+-- Index on auth.users
+CREATE UNIQUE INDEX users_phone_key ON auth.users USING btree (phone);
 
-CREATE INDEX idx_cost_categories_created_at ON public.cost_categories USING btree (created_at DESC)
-;
+-- Index on public.cost_categories
+CREATE INDEX idx_cost_categories_created_at ON public.cost_categories USING btree (created_at DESC);
 
-CREATE INDEX idx_cost_categories_name ON public.cost_categories USING btree (name)
-;
+-- Index on public.cost_categories
+CREATE INDEX idx_cost_categories_name ON public.cost_categories USING btree (name);
 
-CREATE INDEX idx_cost_categories_unit ON public.cost_categories USING btree (unit)
-;
+-- Index on public.cost_categories
+CREATE INDEX idx_cost_categories_unit ON public.cost_categories USING btree (unit);
 
-CREATE INDEX idx_detail_cost_categories_category_id ON public.detail_cost_categories USING btree (cost_category_id)
-;
+-- Index on public.detail_cost_categories
+CREATE INDEX idx_detail_cost_categories_category_id ON public.detail_cost_categories USING btree (cost_category_id);
 
-CREATE INDEX idx_detail_cost_categories_composite ON public.detail_cost_categories USING btree (cost_category_id, location)
-;
+-- Index on public.detail_cost_categories
+CREATE INDEX idx_detail_cost_categories_composite ON public.detail_cost_categories USING btree (cost_category_id, location);
 
-CREATE INDEX idx_detail_cost_categories_location ON public.detail_cost_categories USING btree (location)
-;
+-- Index on public.detail_cost_categories
+CREATE INDEX idx_detail_cost_categories_location ON public.detail_cost_categories USING btree (location);
 
-CREATE INDEX idx_detail_cost_categories_name ON public.detail_cost_categories USING btree (name)
-;
+-- Index on public.detail_cost_categories
+CREATE INDEX idx_detail_cost_categories_name ON public.detail_cost_categories USING btree (name);
 
-CREATE INDEX idx_detail_cost_categories_order_num ON public.detail_cost_categories USING btree (order_num)
-;
+-- Index on public.detail_cost_categories
+CREATE INDEX idx_detail_cost_categories_order_num ON public.detail_cost_categories USING btree (order_num);
 
-CREATE INDEX idx_detail_cost_categories_unit ON public.detail_cost_categories USING btree (unit)
-;
+-- Index on public.detail_cost_categories
+CREATE INDEX idx_detail_cost_categories_unit ON public.detail_cost_categories USING btree (unit);
 
-CREATE INDEX idx_material_names_name ON public.material_names USING btree (name)
-;
+-- Index on public.material_names
+CREATE INDEX idx_material_names_name ON public.material_names USING btree (name);
 
-CREATE INDEX idx_material_names_unit ON public.material_names USING btree (unit)
-;
+-- Index on public.material_names
+CREATE INDEX idx_material_names_unit ON public.material_names USING btree (unit);
 
-CREATE INDEX idx_tenders_client_name ON public.tenders USING btree (client_name)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_created_at ON public.materials_library USING btree (created_at DESC);
 
-CREATE INDEX idx_tenders_created_at ON public.tenders USING btree (created_at DESC)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_currency_type ON public.materials_library USING btree (currency_type);
 
-CREATE INDEX idx_tenders_submission_deadline ON public.tenders USING btree (submission_deadline)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_delivery_price_type ON public.materials_library USING btree (delivery_price_type);
 
-CREATE INDEX idx_tenders_tender_number ON public.tenders USING btree (tender_number)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_detail_cost_category_id ON public.materials_library USING btree (detail_cost_category_id);
 
-CREATE UNIQUE INDEX tenders_tender_number_key ON public.tenders USING btree (tender_number)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_item_type ON public.materials_library USING btree (item_type);
 
-CREATE INDEX idx_work_names_name ON public.work_names USING btree (name)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_material_name_id ON public.materials_library USING btree (material_name_id);
 
-CREATE INDEX idx_work_names_unit ON public.work_names USING btree (unit)
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_material_type ON public.materials_library USING btree (material_type);
 
-CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))
-;
+-- Index on public.materials_library
+CREATE INDEX idx_materials_library_type_currency ON public.materials_library USING btree (material_type, currency_type);
 
-CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity)
-;
+-- Index on public.tenders
+CREATE INDEX idx_tenders_client_name ON public.tenders USING btree (client_name);
 
-CREATE UNIQUE INDEX pk_subscription ON realtime.subscription USING btree (id)
-;
+-- Index on public.tenders
+CREATE INDEX idx_tenders_created_at ON public.tenders USING btree (created_at DESC);
 
-CREATE UNIQUE INDEX subscription_subscription_id_entity_filters_key ON realtime.subscription USING btree (subscription_id, entity, filters)
-;
+-- Index on public.tenders
+CREATE INDEX idx_tenders_submission_deadline ON public.tenders USING btree (submission_deadline);
 
-CREATE UNIQUE INDEX bname ON storage.buckets USING btree (name)
-;
+-- Index on public.tenders
+CREATE INDEX idx_tenders_tender_number ON public.tenders USING btree (tender_number);
 
-CREATE UNIQUE INDEX migrations_name_key ON storage.migrations USING btree (name)
-;
+-- Index on public.tenders
+CREATE UNIQUE INDEX tenders_tender_number_key ON public.tenders USING btree (tender_number);
 
-CREATE UNIQUE INDEX bucketid_objname ON storage.objects USING btree (bucket_id, name)
-;
+-- Index on public.units
+CREATE INDEX idx_units_category ON public.units USING btree (category);
 
-CREATE UNIQUE INDEX idx_name_bucket_level_unique ON storage.objects USING btree (name COLLATE "C", bucket_id, level)
-;
+-- Index on public.units
+CREATE INDEX idx_units_is_active ON public.units USING btree (is_active);
 
-CREATE INDEX idx_objects_bucket_id_name ON storage.objects USING btree (bucket_id, name COLLATE "C")
-;
+-- Index on public.units
+CREATE INDEX idx_units_sort_order ON public.units USING btree (sort_order);
 
-CREATE INDEX idx_objects_lower_name ON storage.objects USING btree ((path_tokens[level]), lower(name) text_pattern_ops, bucket_id, level)
-;
+-- Index on public.work_names
+CREATE INDEX idx_work_names_name ON public.work_names USING btree (name);
 
-CREATE INDEX name_prefix_search ON storage.objects USING btree (name text_pattern_ops)
-;
+-- Index on public.work_names
+CREATE INDEX idx_work_names_unit ON public.work_names USING btree (unit);
 
-CREATE UNIQUE INDEX objects_bucket_id_level_idx ON storage.objects USING btree (bucket_id, level, name COLLATE "C")
-;
+-- Index on public.works_library
+CREATE INDEX idx_works_library_created_at ON public.works_library USING btree (created_at DESC);
 
-CREATE INDEX idx_prefixes_lower_name ON storage.prefixes USING btree (bucket_id, level, ((string_to_array(name, '/'::text))[level]), lower(name) text_pattern_ops)
-;
+-- Index on public.works_library
+CREATE INDEX idx_works_library_currency_type ON public.works_library USING btree (currency_type);
 
-CREATE INDEX idx_multipart_uploads_list ON storage.s3_multipart_uploads USING btree (bucket_id, key, created_at)
-;
+-- Index on public.works_library
+CREATE INDEX idx_works_library_detail_cost_category_id ON public.works_library USING btree (detail_cost_category_id);
 
-CREATE UNIQUE INDEX secrets_name_idx ON vault.secrets USING btree (name) WHERE (name IS NOT NULL)
-;
+-- Index on public.works_library
+CREATE INDEX idx_works_library_item_type ON public.works_library USING btree (item_type);
+
+-- Index on public.works_library
+CREATE INDEX idx_works_library_type_currency ON public.works_library USING btree (item_type, currency_type);
+
+-- Index on public.works_library
+CREATE INDEX idx_works_library_work_name_id ON public.works_library USING btree (work_name_id);
+
+-- Index on realtime.messages
+CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.subscription
+CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity);
+
+-- Index on realtime.subscription
+CREATE UNIQUE INDEX pk_subscription ON realtime.subscription USING btree (id);
+
+-- Index on realtime.subscription
+CREATE UNIQUE INDEX subscription_subscription_id_entity_filters_key ON realtime.subscription USING btree (subscription_id, entity, filters);
+
+-- Index on storage.buckets
+CREATE UNIQUE INDEX bname ON storage.buckets USING btree (name);
+
+-- Index on storage.migrations
+CREATE UNIQUE INDEX migrations_name_key ON storage.migrations USING btree (name);
+
+-- Index on storage.objects
+CREATE UNIQUE INDEX bucketid_objname ON storage.objects USING btree (bucket_id, name);
+
+-- Index on storage.objects
+CREATE UNIQUE INDEX idx_name_bucket_level_unique ON storage.objects USING btree (name COLLATE "C", bucket_id, level);
+
+-- Index on storage.objects
+CREATE INDEX idx_objects_bucket_id_name ON storage.objects USING btree (bucket_id, name COLLATE "C");
+
+-- Index on storage.objects
+CREATE INDEX idx_objects_lower_name ON storage.objects USING btree ((path_tokens[level]), lower(name) text_pattern_ops, bucket_id, level);
+
+-- Index on storage.objects
+CREATE INDEX name_prefix_search ON storage.objects USING btree (name text_pattern_ops);
+
+-- Index on storage.objects
+CREATE UNIQUE INDEX objects_bucket_id_level_idx ON storage.objects USING btree (bucket_id, level, name COLLATE "C");
+
+-- Index on storage.prefixes
+CREATE INDEX idx_prefixes_lower_name ON storage.prefixes USING btree (bucket_id, level, ((string_to_array(name, '/'::text))[level]), lower(name) text_pattern_ops);
+
+-- Index on storage.s3_multipart_uploads
+CREATE INDEX idx_multipart_uploads_list ON storage.s3_multipart_uploads USING btree (bucket_id, key, created_at);
+
+-- Index on vault.secrets
+CREATE UNIQUE INDEX secrets_name_idx ON vault.secrets USING btree (name) WHERE (name IS NOT NULL);
+
+
+-- ============================================
+-- ROLES AND PRIVILEGES
+-- ============================================
+
+-- Role: anon
+CREATE ROLE anon;
+-- Members of role anon:
+-- - authenticator
+-- - postgres (WITH ADMIN OPTION)
+-- Database privileges for anon:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO anon;
+-- Schema privileges for anon:
+-- GRANT USAGE ON SCHEMA auth TO anon;
+-- GRANT USAGE ON SCHEMA extensions TO anon;
+-- GRANT USAGE ON SCHEMA graphql TO anon;
+-- GRANT USAGE ON SCHEMA graphql_public TO anon;
+-- GRANT USAGE ON SCHEMA public TO anon;
+-- GRANT USAGE ON SCHEMA realtime TO anon;
+-- GRANT USAGE ON SCHEMA storage TO anon;
+
+-- Role: authenticated
+CREATE ROLE authenticated;
+-- Members of role authenticated:
+-- - authenticator
+-- - postgres (WITH ADMIN OPTION)
+-- Database privileges for authenticated:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO authenticated;
+-- Schema privileges for authenticated:
+-- GRANT USAGE ON SCHEMA auth TO authenticated;
+-- GRANT USAGE ON SCHEMA extensions TO authenticated;
+-- GRANT USAGE ON SCHEMA graphql TO authenticated;
+-- GRANT USAGE ON SCHEMA graphql_public TO authenticated;
+-- GRANT USAGE ON SCHEMA public TO authenticated;
+-- GRANT USAGE ON SCHEMA realtime TO authenticated;
+-- GRANT USAGE ON SCHEMA storage TO authenticated;
+
+-- Role: authenticator
+CREATE ROLE authenticator WITH LOGIN NOINHERIT;
+GRANT anon TO authenticator;
+GRANT authenticated TO authenticator;
+GRANT service_role TO authenticator;
+-- Members of role authenticator:
+-- - postgres (WITH ADMIN OPTION)
+-- - supabase_storage_admin
+-- Database privileges for authenticator:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO authenticator;
+-- Schema privileges for authenticator:
+-- GRANT USAGE ON SCHEMA public TO authenticator;
+
+-- Role: dashboard_user
+CREATE ROLE dashboard_user WITH CREATEDB CREATEROLE REPLICATION;
+-- Database privileges for dashboard_user:
+-- GRANT CONNECT, CREATE, TEMP ON DATABASE postgres TO dashboard_user;
+-- Schema privileges for dashboard_user:
+-- GRANT CREATE, USAGE ON SCHEMA auth TO dashboard_user;
+-- GRANT CREATE, USAGE ON SCHEMA extensions TO dashboard_user;
+-- GRANT USAGE ON SCHEMA public TO dashboard_user;
+-- GRANT CREATE, USAGE ON SCHEMA storage TO dashboard_user;
+
+-- Role: postgres
+CREATE ROLE postgres WITH CREATEDB CREATEROLE LOGIN REPLICATION BYPASSRLS;
+GRANT anon TO postgres WITH ADMIN OPTION;
+GRANT authenticated TO postgres WITH ADMIN OPTION;
+GRANT authenticator TO postgres WITH ADMIN OPTION;
+GRANT pg_create_subscription TO postgres WITH ADMIN OPTION;
+GRANT pg_monitor TO postgres WITH ADMIN OPTION;
+GRANT pg_read_all_data TO postgres WITH ADMIN OPTION;
+GRANT pg_signal_backend TO postgres WITH ADMIN OPTION;
+GRANT service_role TO postgres WITH ADMIN OPTION;
+GRANT supabase_realtime_admin TO postgres;
+-- Database privileges for postgres:
+-- GRANT CONNECT, CREATE, TEMP ON DATABASE postgres TO postgres;
+-- Schema privileges for postgres:
+-- GRANT USAGE ON SCHEMA auth TO postgres;
+-- GRANT CREATE, USAGE ON SCHEMA extensions TO postgres;
+-- GRANT USAGE ON SCHEMA graphql TO postgres;
+-- GRANT USAGE ON SCHEMA graphql_public TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_1 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_11 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_17 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_2 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_20 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_24 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_36 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_38 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_40 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_46 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_49 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_52 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_58 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_7 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_1 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_11 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_17 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_2 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_20 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_24 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_36 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_38 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_40 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_46 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_49 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_52 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_58 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_7 TO postgres;
+-- GRANT USAGE ON SCHEMA pgbouncer TO postgres;
+-- GRANT CREATE, USAGE ON SCHEMA public TO postgres;
+-- GRANT CREATE, USAGE ON SCHEMA realtime TO postgres;
+-- GRANT USAGE ON SCHEMA storage TO postgres;
+-- GRANT USAGE ON SCHEMA vault TO postgres;
+
+-- Role: service_role
+CREATE ROLE service_role WITH BYPASSRLS;
+-- Members of role service_role:
+-- - authenticator
+-- - postgres (WITH ADMIN OPTION)
+-- Database privileges for service_role:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO service_role;
+-- Schema privileges for service_role:
+-- GRANT USAGE ON SCHEMA auth TO service_role;
+-- GRANT USAGE ON SCHEMA extensions TO service_role;
+-- GRANT USAGE ON SCHEMA graphql TO service_role;
+-- GRANT USAGE ON SCHEMA graphql_public TO service_role;
+-- GRANT USAGE ON SCHEMA public TO service_role;
+-- GRANT USAGE ON SCHEMA realtime TO service_role;
+-- GRANT USAGE ON SCHEMA storage TO service_role;
+-- GRANT USAGE ON SCHEMA vault TO service_role;
+
+-- Role: supabase_admin
+CREATE ROLE supabase_admin WITH SUPERUSER CREATEDB CREATEROLE LOGIN REPLICATION BYPASSRLS;
+-- Database privileges for supabase_admin:
+-- GRANT CONNECT, CREATE, TEMP ON DATABASE postgres TO supabase_admin;
+-- Schema privileges for supabase_admin:
+-- GRANT CREATE, USAGE ON SCHEMA auth TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA extensions TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA graphql TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA graphql_public TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_1 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_11 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_17 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_2 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_20 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_24 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_36 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_38 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_40 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_46 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_49 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_52 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_58 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_7 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_1 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_11 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_17 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_2 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_20 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_24 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_36 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_38 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_40 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_46 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_49 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_52 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_58 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_7 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pgbouncer TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA public TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA realtime TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA storage TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA vault TO supabase_admin;
+
+-- Role: supabase_auth_admin
+CREATE ROLE supabase_auth_admin WITH CREATEROLE LOGIN NOINHERIT;
+-- Database privileges for supabase_auth_admin:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO supabase_auth_admin;
+-- Schema privileges for supabase_auth_admin:
+-- GRANT CREATE, USAGE ON SCHEMA auth TO supabase_auth_admin;
+-- GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
+
+-- Role: supabase_etl_admin
+CREATE ROLE supabase_etl_admin WITH LOGIN REPLICATION;
+GRANT pg_monitor TO supabase_etl_admin;
+GRANT pg_read_all_data TO supabase_etl_admin;
+-- Database privileges for supabase_etl_admin:
+-- GRANT CONNECT, CREATE, TEMP ON DATABASE postgres TO supabase_etl_admin;
+-- Schema privileges for supabase_etl_admin:
+-- GRANT USAGE ON SCHEMA auth TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA extensions TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA graphql TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA graphql_public TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_1 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_11 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_17 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_2 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_20 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_24 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_36 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_38 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_40 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_46 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_49 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_52 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_58 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_7 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_1 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_11 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_17 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_2 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_20 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_24 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_36 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_38 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_40 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_46 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_49 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_52 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_58 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_7 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pgbouncer TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA public TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA realtime TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA storage TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA vault TO supabase_etl_admin;
+
+-- Role: supabase_read_only_user
+CREATE ROLE supabase_read_only_user WITH LOGIN BYPASSRLS;
+GRANT pg_monitor TO supabase_read_only_user;
+GRANT pg_read_all_data TO supabase_read_only_user;
+-- Database privileges for supabase_read_only_user:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO supabase_read_only_user;
+-- Schema privileges for supabase_read_only_user:
+-- GRANT USAGE ON SCHEMA auth TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA extensions TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA graphql TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA graphql_public TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_1 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_11 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_17 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_2 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_20 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_24 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_36 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_38 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_40 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_46 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_49 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_52 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_58 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_7 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_1 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_11 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_17 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_2 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_20 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_24 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_36 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_38 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_40 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_46 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_49 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_52 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_58 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_7 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pgbouncer TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA public TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA realtime TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA storage TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA vault TO supabase_read_only_user;
+
+-- Role: supabase_realtime_admin
+CREATE ROLE supabase_realtime_admin WITH NOINHERIT;
+-- Members of role supabase_realtime_admin:
+-- - postgres
+-- Database privileges for supabase_realtime_admin:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO supabase_realtime_admin;
+-- Schema privileges for supabase_realtime_admin:
+-- GRANT USAGE ON SCHEMA public TO supabase_realtime_admin;
+-- GRANT CREATE, USAGE ON SCHEMA realtime TO supabase_realtime_admin;
+
+-- Role: supabase_replication_admin
+CREATE ROLE supabase_replication_admin WITH LOGIN REPLICATION;
+-- Database privileges for supabase_replication_admin:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO supabase_replication_admin;
+-- Schema privileges for supabase_replication_admin:
+-- GRANT USAGE ON SCHEMA public TO supabase_replication_admin;
+
+-- Role: supabase_storage_admin
+CREATE ROLE supabase_storage_admin WITH CREATEROLE LOGIN NOINHERIT;
+GRANT authenticator TO supabase_storage_admin;
+-- Database privileges for supabase_storage_admin:
+-- GRANT CONNECT, TEMP ON DATABASE postgres TO supabase_storage_admin;
+-- Schema privileges for supabase_storage_admin:
+-- GRANT USAGE ON SCHEMA public TO supabase_storage_admin;
+-- GRANT CREATE, USAGE ON SCHEMA storage TO supabase_storage_admin;

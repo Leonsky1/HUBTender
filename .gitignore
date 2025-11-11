@@ -153,4 +153,7 @@ dist-ssr
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# MCP wrapper script (auto-generated)
+mcp-supabase.js
 .git-credentials
