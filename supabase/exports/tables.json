@@ -3173,7 +3173,7 @@
       },
       {
         "name": "unit",
-        "data_type": "USER-DEFINED",
+        "data_type": "text",
         "max_length": null,
         "numeric_precision": null,
         "numeric_scale": null,
@@ -3234,9 +3234,17 @@
         "foreign_table_schema": "public",
         "foreign_table": "cost_categories",
         "foreign_column": "id"
+      },
+      {
+        "name": "cost_categories_unit_fkey",
+        "type": "FOREIGN KEY",
+        "column": "unit",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
       }
     ],
-    "sql": "-- Справочник      \r\n  категорий затрат\nCREATE TABLE IF NOT EXISTS public.cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT cost_categories_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.cost_categories IS 'Справочник      \r\n  категорий затрат';\nCOMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории (UUID)';\nCOMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';\nCOMMENT ON COLUMN public.cost_categories.unit IS 'Единица измерения категории';\nCOMMENT ON COLUMN public.cost_categories.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.cost_categories.updated_at IS 'Дата и время последнего обновления';"
+    "sql": "-- Справочник      \r\n  категорий затрат\nCREATE TABLE IF NOT EXISTS public.cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit text NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT cost_categories_pkey PRIMARY KEY (id),\n    CONSTRAINT cost_categories_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.cost_categories IS 'Справочник      \r\n  категорий затрат';\nCOMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории (UUID)';\nCOMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';\nCOMMENT ON COLUMN public.cost_categories.unit IS 'Единица измерения категории';\nCOMMENT ON COLUMN public.cost_categories.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.cost_categories.updated_at IS 'Дата и время последнего обновления';"
   },
   "public.detail_cost_categories": {
     "schema": "public",
@@ -3285,7 +3293,7 @@
       },
       {
         "name": "unit",
-        "data_type": "USER-DEFINED",
+        "data_type": "text",
         "max_length": null,
         "numeric_precision": null,
         "numeric_scale": null,
@@ -3380,9 +3388,147 @@
         "foreign_table_schema": "public",
         "foreign_table": "detail_cost_categories",
         "foreign_column": "id"
+      },
+      {
+        "name": "detail_cost_categories_unit_fkey",
+        "type": "FOREIGN KEY",
+        "column": "unit",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
       }
     ],
-    "sql": "-- Детальные категории затрат по локациям\nCREATE TABLE IF NOT EXISTS public.detail_cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    cost_category_id uuid NOT NULL,\n    location text NOT NULL,\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    order_num integer(32) DEFAULT 0,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT detail_cost_categories_cost_category_id_fkey FOREIGN KEY (cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT detail_cost_categories_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.detail_cost_categories IS 'Детальные категории затрат по локациям';\nCOMMENT ON COLUMN public.detail_cost_categories.id IS 'Уникальный идентификатор детальной категории (UUID)';\nCOMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылка на категорию затрат';\nCOMMENT ON COLUMN public.detail_cost_categories.location IS 'Локация/местоположение';\nCOMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детальной категории';\nCOMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';\nCOMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      \r\n  номер для сортировки';\nCOMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и\r\n  время создания записи';\nCOMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и\r\n  время последнего обновления';"
+    "sql": "-- Детальные категории затрат по локациям\nCREATE TABLE IF NOT EXISTS public.detail_cost_categories (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    cost_category_id uuid NOT NULL,\n    location text NOT NULL,\n    name text NOT NULL,\n    unit text NOT NULL,\n    order_num integer(32) DEFAULT 0,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT detail_cost_categories_cost_category_id_fkey FOREIGN KEY (cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT detail_cost_categories_pkey PRIMARY KEY (id),\n    CONSTRAINT detail_cost_categories_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.detail_cost_categories IS 'Детальные категории затрат по локациям';\nCOMMENT ON COLUMN public.detail_cost_categories.id IS 'Уникальный идентификатор детальной категории (UUID)';\nCOMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылка на категорию затрат';\nCOMMENT ON COLUMN public.detail_cost_categories.location IS 'Локация/местоположение';\nCOMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детальной категории';\nCOMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';\nCOMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      \r\n  номер для сортировки';\nCOMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и\r\n  время создания записи';\nCOMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и\r\n  время последнего обновления';"
+  },
+  "public.markup_tactics": {
+    "schema": "public",
+    "name": "markup_tactics",
+    "comment": "Хранение тактик наценок для конструктора наценок",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": null
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "sequences",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'{\"мат\": [], \"раб\": [], \"суб-мат\": [], \"суб-раб\": [], \"мат-комп.\": [], \"раб-комп.\": []}'::jsonb",
+        "comment": "JSON с последовательностями операций наценок для каждого типа позиций"
+      },
+      {
+        "name": "base_costs",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'{\"мат\": 0, \"раб\": 0, \"суб-мат\": 0, \"суб-раб\": 0, \"мат-комп.\": 0, \"раб-комп.\": 0}'::jsonb",
+        "comment": "JSON с базовыми стоимостями для каждого типа позиций"
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "is_global",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": "Глобальная тактика, доступная всем пользователям"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_20872_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_20872_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_20872_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "markup_tactics_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "markup_tactics",
+        "foreign_column": "id"
+      },
+      {
+        "name": "markup_tactics_user_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "user_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "-- Хранение тактик наценок для конструктора наценок\nCREATE TABLE IF NOT EXISTS public.markup_tactics (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text,\n    sequences jsonb NOT NULL DEFAULT '{\"мат\": [], \"раб\": [], \"суб-мат\": [], \"суб-раб\": [], \"мат-комп.\": [], \"раб-комп.\": []}'::jsonb,\n    base_costs jsonb NOT NULL DEFAULT '{\"мат\": 0, \"раб\": 0, \"суб-мат\": 0, \"суб-раб\": 0, \"мат-комп.\": 0, \"раб-комп.\": 0}'::jsonb,\n    user_id uuid,\n    is_global boolean DEFAULT false,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT markup_tactics_pkey PRIMARY KEY (id),\n    CONSTRAINT markup_tactics_user_id_fkey FOREIGN KEY (user_id) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.markup_tactics IS 'Хранение тактик наценок для конструктора наценок';\nCOMMENT ON COLUMN public.markup_tactics.sequences IS 'JSON с последовательностями операций наценок для каждого типа позиций';\nCOMMENT ON COLUMN public.markup_tactics.base_costs IS 'JSON с базовыми стоимостями для каждого типа позиций';\nCOMMENT ON COLUMN public.markup_tactics.is_global IS 'Глобальная тактика, доступная всем пользователям';"
   },
   "public.material_names": {
     "schema": "public",
@@ -3411,7 +3557,7 @@
       },
       {
         "name": "unit",
-        "data_type": "USER-DEFINED",
+        "data_type": "text",
         "max_length": null,
         "numeric_precision": null,
         "numeric_scale": null,
@@ -3472,9 +3618,471 @@
         "foreign_table_schema": "public",
         "foreign_table": "material_names",
         "foreign_column": "id"
+      },
+      {
+        "name": "material_names_unit_fkey",
+        "type": "FOREIGN KEY",
+        "column": "unit",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
       }
     ],
-    "sql": "-- Справочник наименований материалов\nCREATE TABLE IF NOT EXISTS public.material_names (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT material_names_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.material_names IS 'Справочник наименований материалов';\nCOMMENT ON COLUMN public.material_names.id IS 'Уникальный идентификатор материала (UUID)';\nCOMMENT ON COLUMN public.material_names.name IS 'Наименование материала';\nCOMMENT ON COLUMN public.material_names.unit IS 'Единица измерения материала';\nCOMMENT ON COLUMN public.material_names.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.material_names.updated_at IS 'Дата и время последнего обновления';"
+    "sql": "-- Справочник наименований материалов\nCREATE TABLE IF NOT EXISTS public.material_names (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit text NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT material_names_pkey PRIMARY KEY (id),\n    CONSTRAINT material_names_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.material_names IS 'Справочник наименований материалов';\nCOMMENT ON COLUMN public.material_names.id IS 'Уникальный идентификатор материала (UUID)';\nCOMMENT ON COLUMN public.material_names.name IS 'Наименование материала';\nCOMMENT ON COLUMN public.material_names.unit IS 'Единица измерения материала';\nCOMMENT ON COLUMN public.material_names.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.material_names.updated_at IS 'Дата и время последнего обновления';"
+  },
+  "public.materials_library": {
+    "schema": "public",
+    "name": "materials_library",
+    "comment": "Справочник материалов (Material library) с полной детализацией",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": "Уникальный идентификатор работы (UUID)"
+      },
+      {
+        "name": "material_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Тип материала (основной/вспомогательный)"
+      },
+      {
+        "name": "item_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Вид материала (мат, суб-мат, мат-комп)"
+      },
+      {
+        "name": "consumption_coefficient",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 10,
+        "numeric_scale": 4,
+        "is_nullable": "YES",
+        "default": "1.0000",
+        "comment": "Коэффициент расхода"
+      },
+      {
+        "name": "unit_rate",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 15,
+        "numeric_scale": 2,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Цена материала за единицу"
+      },
+      {
+        "name": "currency_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'RUB'::currency_type",
+        "comment": "Тип валюты (рубли, евро, доллары, юани)"
+      },
+      {
+        "name": "delivery_price_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'в цене'::delivery_price_type",
+        "comment": "Тип доставки (в цене, не в цене, суммой)"
+      },
+      {
+        "name": "delivery_amount",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 15,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0.00",
+        "comment": "Сумма доставки"
+      },
+      {
+        "name": "material_name_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Связь с наименованием материала (откуда берется название и единица измерения)"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": "Дата создания"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": "Дата изменения"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_18348_10_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18348_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18348_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18348_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18348_5_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18348_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18348_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "materials_library_material_name_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "material_name_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "materials_library_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "materials_library",
+        "foreign_column": "id"
+      }
+    ],
+    "sql": "-- Справочник материалов (Material library) с полной детализацией\nCREATE TABLE IF NOT EXISTS public.materials_library (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    material_type USER-DEFINED NOT NULL,\n    item_type USER-DEFINED NOT NULL,\n    consumption_coefficient numeric(10,4) DEFAULT 1.0000,\n    unit_rate numeric(15,2) NOT NULL,\n    currency_type USER-DEFINED NOT NULL DEFAULT 'RUB'::currency_type,\n    delivery_price_type USER-DEFINED NOT NULL DEFAULT 'в цене'::delivery_price_type,\n    delivery_amount numeric(15,2) DEFAULT 0.00,\n    material_name_id uuid NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT materials_library_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),\n    CONSTRAINT materials_library_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.materials_library IS 'Справочник материалов (Material library) с полной детализацией';\nCOMMENT ON COLUMN public.materials_library.id IS 'Уникальный идентификатор работы (UUID)';\nCOMMENT ON COLUMN public.materials_library.material_type IS 'Тип материала (основной/вспомогательный)';\nCOMMENT ON COLUMN public.materials_library.item_type IS 'Вид материала (мат, суб-мат, мат-комп)';\nCOMMENT ON COLUMN public.materials_library.consumption_coefficient IS 'Коэффициент расхода';\nCOMMENT ON COLUMN public.materials_library.unit_rate IS 'Цена материала за единицу';\nCOMMENT ON COLUMN public.materials_library.currency_type IS 'Тип валюты (рубли, евро, доллары, юани)';\nCOMMENT ON COLUMN public.materials_library.delivery_price_type IS 'Тип доставки (в цене, не в цене, суммой)';\nCOMMENT ON COLUMN public.materials_library.delivery_amount IS 'Сумма доставки';\nCOMMENT ON COLUMN public.materials_library.material_name_id IS 'Связь с наименованием материала (откуда берется название и единица измерения)';\nCOMMENT ON COLUMN public.materials_library.created_at IS 'Дата создания';\nCOMMENT ON COLUMN public.materials_library.updated_at IS 'Дата изменения';"
+  },
+  "public.tender_markup_percentage": {
+    "schema": "public",
+    "name": "tender_markup_percentage",
+    "comment": "Проценты наценки и коммерческие расчеты по тендерам",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": "Уникальный идентификатор записи"
+      },
+      {
+        "name": "tender_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Ссылка на тендер"
+      },
+      {
+        "name": "works_16_markup",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Работы 1,6 (%)"
+      },
+      {
+        "name": "works_cost_growth",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Рост стоимости Работ (%)"
+      },
+      {
+        "name": "material_cost_growth",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Рост стоимости Материалов (%)"
+      },
+      {
+        "name": "subcontract_works_cost_growth",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Рост стоимости Работ субподряда (%)"
+      },
+      {
+        "name": "subcontract_materials_cost_growth",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Рост стоимости Материалов Субподряда (%)"
+      },
+      {
+        "name": "contingency_costs",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Непредвиденные затраты (%)"
+      },
+      {
+        "name": "overhead_own_forces",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "ООЗ - Общестроительные затраты (%)"
+      },
+      {
+        "name": "overhead_subcontract",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "ООЗ Субподряда (%)"
+      },
+      {
+        "name": "general_costs_without_subcontract",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "ОФЗ без субподряда - Общефирменные затраты (%)"
+      },
+      {
+        "name": "profit_own_forces",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Прибыль собственными силами (%)"
+      },
+      {
+        "name": "profit_subcontract",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Прибыль субподряда (%)"
+      },
+      {
+        "name": "mechanization_service",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Служба механизации (%)"
+      },
+      {
+        "name": "mbp_gsm",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "МБП и ГСМ - Малоценные быстроизнашивающиеся предметы и горюче-смазочные материалы (%)"
+      },
+      {
+        "name": "warranty_period",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Гарантийный период (%)"
+      },
+      {
+        "name": "notes",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Примечания"
+      },
+      {
+        "name": "is_active",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "true",
+        "comment": "Активность записи (только одна активная запись на тендер)"
+      },
+      {
+        "name": "commercial_total_value",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 15,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Итоговая коммерческая стоимость (руб)"
+      },
+      {
+        "name": "commercial_total_calculated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Время последнего расчета итоговой стоимости"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": "Дата создания записи"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": "Дата последнего обновления"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_20814_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_20814_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "tender_markup_percentage_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_markup_percentage",
+        "foreign_column": "id"
+      },
+      {
+        "name": "tender_markup_percentage_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "-- Проценты наценки и коммерческие расчеты по тендерам\nCREATE TABLE IF NOT EXISTS public.tender_markup_percentage (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    tender_id uuid NOT NULL,\n    works_16_markup numeric(5,2) DEFAULT 0,\n    works_cost_growth numeric(5,2) DEFAULT 0,\n    material_cost_growth numeric(5,2) DEFAULT 0,\n    subcontract_works_cost_growth numeric(5,2) DEFAULT 0,\n    subcontract_materials_cost_growth numeric(5,2) DEFAULT 0,\n    contingency_costs numeric(5,2) DEFAULT 0,\n    overhead_own_forces numeric(5,2) DEFAULT 0,\n    overhead_subcontract numeric(5,2) DEFAULT 0,\n    general_costs_without_subcontract numeric(5,2) DEFAULT 0,\n    profit_own_forces numeric(5,2) DEFAULT 0,\n    profit_subcontract numeric(5,2) DEFAULT 0,\n    mechanization_service numeric(5,2) DEFAULT 0,\n    mbp_gsm numeric(5,2) DEFAULT 0,\n    warranty_period numeric(5,2) DEFAULT 0,\n    notes text,\n    is_active boolean DEFAULT true,\n    commercial_total_value numeric(15,2),\n    commercial_total_calculated_at timestamp with time zone,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT tender_markup_percentage_pkey PRIMARY KEY (id),\n    CONSTRAINT tender_markup_percentage_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.tender_markup_percentage IS 'Проценты наценки и коммерческие расчеты по тендерам';\nCOMMENT ON COLUMN public.tender_markup_percentage.id IS 'Уникальный идентификатор записи';\nCOMMENT ON COLUMN public.tender_markup_percentage.tender_id IS 'Ссылка на тендер';\nCOMMENT ON COLUMN public.tender_markup_percentage.works_16_markup IS 'Работы 1,6 (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.works_cost_growth IS 'Рост стоимости Работ (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.material_cost_growth IS 'Рост стоимости Материалов (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.subcontract_works_cost_growth IS 'Рост стоимости Работ субподряда (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.subcontract_materials_cost_growth IS 'Рост стоимости Материалов Субподряда (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.contingency_costs IS 'Непредвиденные затраты (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.overhead_own_forces IS 'ООЗ - Общестроительные затраты (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.overhead_subcontract IS 'ООЗ Субподряда (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.general_costs_without_subcontract IS 'ОФЗ без субподряда - Общефирменные затраты (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.profit_own_forces IS 'Прибыль собственными силами (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.profit_subcontract IS 'Прибыль субподряда (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.mechanization_service IS 'Служба механизации (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.mbp_gsm IS 'МБП и ГСМ - Малоценные быстроизнашивающиеся предметы и горюче-смазочные материалы (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.warranty_period IS 'Гарантийный период (%)';\nCOMMENT ON COLUMN public.tender_markup_percentage.notes IS 'Примечания';\nCOMMENT ON COLUMN public.tender_markup_percentage.is_active IS 'Активность записи (только одна активная запись на тендер)';\nCOMMENT ON COLUMN public.tender_markup_percentage.commercial_total_value IS 'Итоговая коммерческая стоимость (руб)';\nCOMMENT ON COLUMN public.tender_markup_percentage.commercial_total_calculated_at IS 'Время последнего расчета итоговой стоимости';\nCOMMENT ON COLUMN public.tender_markup_percentage.created_at IS 'Дата создания записи';\nCOMMENT ON COLUMN public.tender_markup_percentage.updated_at IS 'Дата последнего обновления';"
   },
   "public.tenders": {
     "schema": "public",
@@ -3732,6 +4340,120 @@
     ],
     "sql": "-- Основная таблица для хранения информации о тендерах\nCREATE TABLE IF NOT EXISTS public.tenders (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    title text NOT NULL,\n    description text,\n    client_name text NOT NULL,\n    tender_number text NOT NULL,\n    submission_deadline timestamp with time zone,\n    version integer(32) DEFAULT 1,\n    area_client numeric(12,2),\n    area_sp numeric(12,2),\n    usd_rate numeric(10,4),\n    eur_rate numeric(10,4),\n    cny_rate numeric(10,4),\n    upload_folder text,\n    bsm_link text,\n    tz_link text,\n    qa_form_link text,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    created_by uuid,\n    CONSTRAINT tenders_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),\n    CONSTRAINT tenders_pkey PRIMARY KEY (id),\n    CONSTRAINT tenders_tender_number_key UNIQUE (tender_number)\n);\n\nCOMMENT ON TABLE public.tenders IS 'Основная таблица для хранения информации о тендерах';\nCOMMENT ON COLUMN public.tenders.id IS 'Уникальный идентификатор тендера (UUID)';\nCOMMENT ON COLUMN public.tenders.title IS 'Название тендера';\nCOMMENT ON COLUMN public.tenders.description IS 'Подробное описание тендера';\nCOMMENT ON COLUMN public.tenders.client_name IS 'Наименование заказчика';\nCOMMENT ON COLUMN public.tenders.tender_number IS 'Номер тендера (уникальный, текст+цифры)';\nCOMMENT ON COLUMN public.tenders.submission_deadline IS 'Дата и время окончания приема заявок';\nCOMMENT ON COLUMN public.tenders.version IS 'Версия тендера';\nCOMMENT ON COLUMN public.tenders.area_client IS 'Площадь объекта заказчика (м²)';\nCOMMENT ON COLUMN public.tenders.area_sp IS 'Площадь СП (м²)';\nCOMMENT ON COLUMN public.tenders.usd_rate IS 'Курс доллара США';\nCOMMENT ON COLUMN public.tenders.eur_rate IS 'Курс евро';\nCOMMENT ON COLUMN public.tenders.cny_rate IS 'Курс китайского юаня';\nCOMMENT ON COLUMN public.tenders.upload_folder IS 'Ссылка на папку с загруженными файлами';\nCOMMENT ON COLUMN public.tenders.bsm_link IS 'Ссылка на БСМ (Bill of Materials)';\nCOMMENT ON COLUMN public.tenders.tz_link IS 'Ссылка на техническое задание';\nCOMMENT ON COLUMN public.tenders.qa_form_link IS 'Ссылка на форму вопросов и ответов';\nCOMMENT ON COLUMN public.tenders.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.tenders.updated_at IS 'Дата и время последнего обновления';\nCOMMENT ON COLUMN public.tenders.created_by IS 'ID пользователя, создавшего тендер';"
   },
+  "public.units": {
+    "schema": "public",
+    "name": "units",
+    "comment": null,
+    "columns": [
+      {
+        "name": "code",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "description",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "category",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "sort_order",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": null
+      },
+      {
+        "name": "is_active",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "true",
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_18074_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18074_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "units_pkey",
+        "type": "PRIMARY KEY",
+        "column": "code",
+        "foreign_table_schema": "public",
+        "foreign_table": "units",
+        "foreign_column": "code"
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS public.units (\n    code text NOT NULL,\n    name text NOT NULL,\n    description text,\n    category text,\n    sort_order integer(32) DEFAULT 0,\n    is_active boolean DEFAULT true,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT units_pkey PRIMARY KEY (code)\n);"
+  },
   "public.work_names": {
     "schema": "public",
     "name": "work_names",
@@ -3759,7 +4481,7 @@
       },
       {
         "name": "unit",
-        "data_type": "USER-DEFINED",
+        "data_type": "text",
         "max_length": null,
         "numeric_precision": null,
         "numeric_scale": null,
@@ -3820,9 +4542,153 @@
         "foreign_table_schema": "public",
         "foreign_table": "work_names",
         "foreign_column": "id"
+      },
+      {
+        "name": "work_names_unit_fkey",
+        "type": "FOREIGN KEY",
+        "column": "unit",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
       }
     ],
-    "sql": "-- Справочник наименований работ\nCREATE TABLE IF NOT EXISTS public.work_names (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit USER-DEFINED NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT work_names_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.work_names IS 'Справочник наименований работ';\nCOMMENT ON COLUMN public.work_names.id IS 'Уникальный идентификатор работы (UUID)';\nCOMMENT ON COLUMN public.work_names.name IS 'Наименование работы';\nCOMMENT ON COLUMN public.work_names.unit IS 'Единица измерения работы';\nCOMMENT ON COLUMN public.work_names.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.work_names.updated_at IS 'Дата и время последнего обновления';"
+    "sql": "-- Справочник наименований работ\nCREATE TABLE IF NOT EXISTS public.work_names (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    unit text NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT work_names_pkey PRIMARY KEY (id),\n    CONSTRAINT work_names_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.work_names IS 'Справочник наименований работ';\nCOMMENT ON COLUMN public.work_names.id IS 'Уникальный идентификатор работы (UUID)';\nCOMMENT ON COLUMN public.work_names.name IS 'Наименование работы';\nCOMMENT ON COLUMN public.work_names.unit IS 'Единица измерения работы';\nCOMMENT ON COLUMN public.work_names.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.work_names.updated_at IS 'Дата и время последнего обновления';"
+  },
+  "public.works_library": {
+    "schema": "public",
+    "name": "works_library",
+    "comment": "Справочник работ (Works library) с полной детализацией",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": "Уникальный идентификатор работы (UUID)"
+      },
+      {
+        "name": "work_name_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Связь с наименованием работы (откуда берется название и единица измерения)"
+      },
+      {
+        "name": "item_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Категория работы (раб/суб-раб/раб-комп.)"
+      },
+      {
+        "name": "unit_rate",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 15,
+        "numeric_scale": 2,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Цена за единицу измерения"
+      },
+      {
+        "name": "currency_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'RUB'::currency_type",
+        "comment": "Тип валюты (RUB/USD/EUR/CNY)"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": "Дата и время создания записи"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": "Дата и время последнего обновления"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_18437_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18437_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18437_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18437_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_18437_5_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "works_library_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "works_library",
+        "foreign_column": "id"
+      },
+      {
+        "name": "works_library_work_name_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "work_name_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "-- Справочник работ (Works library) с полной детализацией\nCREATE TABLE IF NOT EXISTS public.works_library (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    work_name_id uuid NOT NULL,\n    item_type USER-DEFINED NOT NULL,\n    unit_rate numeric(15,2) NOT NULL,\n    currency_type USER-DEFINED NOT NULL DEFAULT 'RUB'::currency_type,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT works_library_pkey PRIMARY KEY (id),\n    CONSTRAINT works_library_work_name_id_fkey FOREIGN KEY (work_name_id) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.works_library IS 'Справочник работ (Works library) с полной детализацией';\nCOMMENT ON COLUMN public.works_library.id IS 'Уникальный идентификатор работы (UUID)';\nCOMMENT ON COLUMN public.works_library.work_name_id IS 'Связь с наименованием работы (откуда берется название и единица измерения)';\nCOMMENT ON COLUMN public.works_library.item_type IS 'Категория работы (раб/суб-раб/раб-комп.)';\nCOMMENT ON COLUMN public.works_library.unit_rate IS 'Цена за единицу измерения';\nCOMMENT ON COLUMN public.works_library.currency_type IS 'Тип валюты (RUB/USD/EUR/CNY)';\nCOMMENT ON COLUMN public.works_library.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.works_library.updated_at IS 'Дата и время последнего обновления';"
   },
   "realtime.messages": {
     "schema": "realtime",

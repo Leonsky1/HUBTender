@@ -1,0 +1,46 @@
+/* Убираем все отступы между табами и содержимым */
+.markup-constructor .ant-tabs-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Убираем padding у tabpanel */
+.markup-constructor .ant-tabs-tabpane {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Разрешаем прокрутку для всех табов */
+.markup-constructor .ant-tabs {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.markup-constructor .ant-tabs-content-holder {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Убираем отступы между элементами внутри вкладки */
+.markup-constructor .ant-space-vertical {
+  gap: 0 !important;
+}
+
+/* Убираем отступы у Divider */
+.markup-constructor .ant-divider {
+  margin: 8px 0 !important;
+}
+
+/* Уменьшаем отступы у главного Card */
+.markup-constructor > .ant-card {
+  padding: 16px !important;
+}
+
+.markup-constructor > .ant-card > .ant-card-body {
+  padding: 12px !important;
+}
+
+/* Уменьшаем расстояние между заголовком и табами внутри */
+.markup-constructor .ant-card .ant-card-body > .ant-space {
+  gap: 8px !important;
+}

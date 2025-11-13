@@ -17,6 +17,15 @@
     "comment": null,
     "sql": "CREATE TRIGGER update_detail_cost_categories_updated_at BEFORE UPDATE ON public.detail_cost_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
+  "public.markup_tactics.trigger_update_markup_tactics_updated_at": {
+    "schema": "public",
+    "name": "trigger_update_markup_tactics_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER trigger_update_markup_tactics_updated_at BEFORE UPDATE ON public.markup_tactics FOR EACH ROW EXECUTE FUNCTION update_markup_tactics_updated_at()"
+  },
   "public.material_names.update_material_names_updated_at": {
     "schema": "public",
     "name": "update_material_names_updated_at",
@@ -25,6 +34,24 @@
     "timing": null,
     "comment": null,
     "sql": "CREATE TRIGGER update_material_names_updated_at BEFORE UPDATE ON public.material_names FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  "public.materials_library.update_materials_library_updated_at": {
+    "schema": "public",
+    "name": "update_materials_library_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER update_materials_library_updated_at BEFORE UPDATE ON public.materials_library FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  "public.tender_markup_percentage.trigger_update_tender_markup_percentage_updated_at": {
+    "schema": "public",
+    "name": "trigger_update_tender_markup_percentage_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER trigger_update_tender_markup_percentage_updated_at BEFORE UPDATE ON public.tender_markup_percentage FOR EACH ROW EXECUTE FUNCTION update_tender_markup_percentage_updated_at()"
   },
   "public.tenders.update_tenders_updated_at": {
     "schema": "public",
@@ -35,6 +62,15 @@
     "comment": null,
     "sql": "CREATE TRIGGER update_tenders_updated_at BEFORE UPDATE ON public.tenders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
+  "public.units.update_units_updated_at": {
+    "schema": "public",
+    "name": "update_units_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER update_units_updated_at BEFORE UPDATE ON public.units FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
   "public.work_names.update_work_names_updated_at": {
     "schema": "public",
     "name": "update_work_names_updated_at",
@@ -43,6 +79,15 @@
     "timing": null,
     "comment": null,
     "sql": "CREATE TRIGGER update_work_names_updated_at BEFORE UPDATE ON public.work_names FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  "public.works_library.update_works_library_updated_at": {
+    "schema": "public",
+    "name": "update_works_library_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER update_works_library_updated_at BEFORE UPDATE ON public.works_library FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
   "realtime.subscription.tr_check_filters": {
     "schema": "realtime",

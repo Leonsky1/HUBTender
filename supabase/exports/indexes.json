@@ -503,6 +503,30 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_detail_cost_categories_unit ON public.detail_cost_categories USING btree (unit)"
   },
+  "public.markup_tactics.idx_markup_tactics_created_at": {
+    "schema": "public",
+    "name": "idx_markup_tactics_created_at",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_markup_tactics_created_at ON public.markup_tactics USING btree (created_at DESC)"
+  },
+  "public.markup_tactics.idx_markup_tactics_is_global": {
+    "schema": "public",
+    "name": "idx_markup_tactics_is_global",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_markup_tactics_is_global ON public.markup_tactics USING btree (is_global)"
+  },
+  "public.markup_tactics.idx_markup_tactics_user_id": {
+    "schema": "public",
+    "name": "idx_markup_tactics_user_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_markup_tactics_user_id ON public.markup_tactics USING btree (user_id)"
+  },
   "public.material_names.idx_material_names_name": {
     "schema": "public",
     "name": "idx_material_names_name",
@@ -518,6 +542,86 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX idx_material_names_unit ON public.material_names USING btree (unit)"
+  },
+  "public.materials_library.idx_materials_library_created_at": {
+    "schema": "public",
+    "name": "idx_materials_library_created_at",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_created_at ON public.materials_library USING btree (created_at DESC)"
+  },
+  "public.materials_library.idx_materials_library_currency_type": {
+    "schema": "public",
+    "name": "idx_materials_library_currency_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_currency_type ON public.materials_library USING btree (currency_type)"
+  },
+  "public.materials_library.idx_materials_library_delivery_price_type": {
+    "schema": "public",
+    "name": "idx_materials_library_delivery_price_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_delivery_price_type ON public.materials_library USING btree (delivery_price_type)"
+  },
+  "public.materials_library.idx_materials_library_item_type": {
+    "schema": "public",
+    "name": "idx_materials_library_item_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_item_type ON public.materials_library USING btree (item_type)"
+  },
+  "public.materials_library.idx_materials_library_material_name_id": {
+    "schema": "public",
+    "name": "idx_materials_library_material_name_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_material_name_id ON public.materials_library USING btree (material_name_id)"
+  },
+  "public.materials_library.idx_materials_library_material_type": {
+    "schema": "public",
+    "name": "idx_materials_library_material_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_material_type ON public.materials_library USING btree (material_type)"
+  },
+  "public.materials_library.idx_materials_library_type_currency": {
+    "schema": "public",
+    "name": "idx_materials_library_type_currency",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_materials_library_type_currency ON public.materials_library USING btree (material_type, currency_type)"
+  },
+  "public.tender_markup_percentage.idx_tender_markup_percentage_is_active": {
+    "schema": "public",
+    "name": "idx_tender_markup_percentage_is_active",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_markup_percentage_is_active ON public.tender_markup_percentage USING btree (is_active)"
+  },
+  "public.tender_markup_percentage.idx_tender_markup_percentage_tender_id": {
+    "schema": "public",
+    "name": "idx_tender_markup_percentage_tender_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_markup_percentage_tender_id ON public.tender_markup_percentage USING btree (tender_id)"
+  },
+  "public.tender_markup_percentage.idx_tender_markup_percentage_unique_active": {
+    "schema": "public",
+    "name": "idx_tender_markup_percentage_unique_active",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX idx_tender_markup_percentage_unique_active ON public.tender_markup_percentage USING btree (tender_id) WHERE (is_active = true)"
   },
   "public.tenders.idx_tenders_client_name": {
     "schema": "public",
@@ -559,6 +663,30 @@
     "is_primary": false,
     "sql": "CREATE UNIQUE INDEX tenders_tender_number_key ON public.tenders USING btree (tender_number)"
   },
+  "public.units.idx_units_category": {
+    "schema": "public",
+    "name": "idx_units_category",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_units_category ON public.units USING btree (category)"
+  },
+  "public.units.idx_units_is_active": {
+    "schema": "public",
+    "name": "idx_units_is_active",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_units_is_active ON public.units USING btree (is_active)"
+  },
+  "public.units.idx_units_sort_order": {
+    "schema": "public",
+    "name": "idx_units_sort_order",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_units_sort_order ON public.units USING btree (sort_order)"
+  },
   "public.work_names.idx_work_names_name": {
     "schema": "public",
     "name": "idx_work_names_name",
@@ -574,6 +702,46 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX idx_work_names_unit ON public.work_names USING btree (unit)"
+  },
+  "public.works_library.idx_works_library_created_at": {
+    "schema": "public",
+    "name": "idx_works_library_created_at",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_works_library_created_at ON public.works_library USING btree (created_at DESC)"
+  },
+  "public.works_library.idx_works_library_currency_type": {
+    "schema": "public",
+    "name": "idx_works_library_currency_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_works_library_currency_type ON public.works_library USING btree (currency_type)"
+  },
+  "public.works_library.idx_works_library_item_type": {
+    "schema": "public",
+    "name": "idx_works_library_item_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_works_library_item_type ON public.works_library USING btree (item_type)"
+  },
+  "public.works_library.idx_works_library_type_currency": {
+    "schema": "public",
+    "name": "idx_works_library_type_currency",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_works_library_type_currency ON public.works_library USING btree (item_type, currency_type)"
+  },
+  "public.works_library.idx_works_library_work_name_id": {
+    "schema": "public",
+    "name": "idx_works_library_work_name_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_works_library_work_name_id ON public.works_library USING btree (work_name_id)"
   },
   "realtime.messages.messages_inserted_at_topic_index": {
     "schema": "realtime",

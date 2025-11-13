@@ -187,3 +187,137 @@ export interface WorkLibraryFull extends WorkLibrary {
   work_name: string;
   unit: UnitType;
 }
+
+// =============================================
+// Типы для таблицы tender_markup_percentage
+// =============================================
+
+export interface TenderMarkupPercentageInsert {
+  tender_id: string;
+  works_16_markup?: number;
+  works_cost_growth?: number;
+  material_cost_growth?: number;
+  subcontract_works_cost_growth?: number;
+  subcontract_materials_cost_growth?: number;
+  contingency_costs?: number;
+  overhead_own_forces?: number;
+  overhead_subcontract?: number;
+  general_costs_without_subcontract?: number;
+  profit_own_forces?: number;
+  profit_subcontract?: number;
+  mechanization_service?: number;
+  mbp_gsm?: number;
+  warranty_period?: number;
+  notes?: string;
+  is_active?: boolean;
+  commercial_total_value?: number;
+  commercial_total_calculated_at?: string;
+}
+
+export interface TenderMarkupPercentage extends TenderMarkupPercentageInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// =============================================
+// Markup Tactics (Тактики наценок)
+// =============================================
+
+// Структура шага наценки
+export interface MarkupStep {
+  name?: string; // Название пункта
+  baseIndex: number; // -1 для базовой стоимости, или индекс пункта в массиве
+
+  // Первая операция (обязательная)
+  action1: 'multiply' | 'divide' | 'add' | 'subtract';
+  operand1Type: 'markup' | 'step' | 'number'; // наценка, результат другого шага или число
+  operand1Key?: string | number; // ключ наценки (если operand1Type = 'markup') или число (если operand1Type = 'number')
+  operand1Index?: number; // индекс шага (если operand1Type = 'step')
+  operand1MultiplyFormat?: 'addOne' | 'direct'; // формат умножения: 'addOne' = (1 + %), 'direct' = %
+
+  // Вторая операция (опциональная)
+  action2?: 'multiply' | 'divide' | 'add' | 'subtract';
+  operand2Type?: 'markup' | 'step';
+  operand2Key?: string;
+  operand2Index?: number;
+  operand2MultiplyFormat?: 'addOne' | 'direct';
+
+  // Третья операция (опциональная)
+  action3?: 'multiply' | 'divide' | 'add' | 'subtract';
+  operand3Type?: 'markup' | 'step';
+  operand3Key?: string;
+  operand3Index?: number;
+  operand3MultiplyFormat?: 'addOne' | 'direct';
+
+  // Четвертая операция (опциональная)
+  action4?: 'multiply' | 'divide' | 'add' | 'subtract';
+  operand4Type?: 'markup' | 'step';
+  operand4Key?: string;
+  operand4Index?: number;
+  operand4MultiplyFormat?: 'addOne' | 'direct';
+
+  // Пятая операция (опциональная)
+  action5?: 'multiply' | 'divide' | 'add' | 'subtract';
+  operand5Type?: 'markup' | 'step';
+  operand5Key?: string;
+  operand5Index?: number;
+  operand5MultiplyFormat?: 'addOne' | 'direct';
+}
+
+// Маппинг UI ключей вкладок на boq_item_type
+export type TabKey = 'works' | 'materials' | 'subcontract_works' | 'subcontract_materials' | 'work_comp' | 'material_comp';
+
+export const TAB_TO_BOQ_TYPE: Record<TabKey, BoqItemType> = {
+  works: 'раб',
+  materials: 'мат',
+  subcontract_works: 'суб-раб',
+  subcontract_materials: 'суб-мат',
+  work_comp: 'раб-комп.',
+  material_comp: 'мат-комп.',
+};
+
+export const BOQ_TYPE_TO_TAB: Record<BoqItemType, TabKey> = {
+  'раб': 'works',
+  'мат': 'materials',
+  'суб-раб': 'subcontract_works',
+  'суб-мат': 'subcontract_materials',
+  'раб-комп.': 'work_comp',
+  'мат-комп.': 'material_comp',
+};
+
+// Структура последовательностей наценок (используем boq_item_type)
+export interface MarkupSequences {
+  'раб': MarkupStep[];
+  'мат': MarkupStep[];
+  'суб-раб': MarkupStep[];
+  'суб-мат': MarkupStep[];
+  'раб-комп.': MarkupStep[];
+  'мат-комп.': MarkupStep[];
+}
+
+// Структура базовых стоимостей (используем boq_item_type)
+export interface BaseCosts {
+  'раб': number;
+  'мат': number;
+  'суб-раб': number;
+  'суб-мат': number;
+  'раб-комп.': number;
+  'мат-комп.': number;
+}
+
+// Вставка новой тактики
+export interface MarkupTacticInsert {
+  name?: string;
+  sequences: MarkupSequences;
+  base_costs: BaseCosts;
+  user_id?: string;
+  is_global?: boolean;
+}
+
+// Полная тактика наценок
+export interface MarkupTactic extends MarkupTacticInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}

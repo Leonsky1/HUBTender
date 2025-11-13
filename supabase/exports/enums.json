@@ -96,22 +96,52 @@
     "comment": null,
     "sql": "CREATE TYPE auth.one_time_token_type AS ENUM ('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');"
   },
-  "public.unit_type": {
+  "public.boq_item_type": {
     "schema": "public",
-    "name": "unit_type",
+    "name": "boq_item_type",
     "values": [
-      "шт",
-      "м",
-      "м2",
-      "м3",
-      "кг",
-      "т",
-      "л",
-      "компл",
-      "м.п."
+      "мат",
+      "суб-мат",
+      "мат-комп.",
+      "раб",
+      "суб-раб",
+      "раб-комп."
+    ],
+    "comment": "Тип позиции в BOQ: материалы (мат, суб-мат, мат-комп.) и работы (раб, суб-раб, раб-комп.)",
+    "sql": "CREATE TYPE public.boq_item_type AS ENUM ('мат', 'суб-мат', 'мат-комп.', 'раб', 'суб-раб', 'раб-комп.');\nCOMMENT ON TYPE public.boq_item_type IS 'Тип позиции в BOQ: материалы (мат, суб-мат, мат-комп.) и работы (раб, суб-раб, раб-комп.)';"
+  },
+  "public.currency_type": {
+    "schema": "public",
+    "name": "currency_type",
+    "values": [
+      "RUB",
+      "USD",
+      "EUR",
+      "CNY"
     ],
     "comment": null,
-    "sql": "CREATE TYPE public.unit_type AS ENUM ('шт', 'м', 'м2', 'м3', 'кг', 'т', 'л', 'компл', 'м.п.');"
+    "sql": "CREATE TYPE public.currency_type AS ENUM ('RUB', 'USD', 'EUR', 'CNY');"
+  },
+  "public.delivery_price_type": {
+    "schema": "public",
+    "name": "delivery_price_type",
+    "values": [
+      "в цене",
+      "не в цене",
+      "суммой"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.delivery_price_type AS ENUM ('в цене', 'не в цене', 'суммой');"
+  },
+  "public.material_type": {
+    "schema": "public",
+    "name": "material_type",
+    "values": [
+      "основн.",
+      "вспомогат."
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.material_type AS ENUM ('основн.', 'вспомогат.');"
   },
   "realtime.action": {
     "schema": "realtime",
