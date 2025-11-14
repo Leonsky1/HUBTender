@@ -34,7 +34,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import TenderModal from './TenderModal';
-import { supabase, type Tender, type TenderInsert } from '../../../lib/supabase';
+import { supabase, type Tender, type TenderInsert, type MarkupParameter, type TenderMarkupPercentageInsert } from '../../../lib/supabase';
 import dayjs from 'dayjs';
 import './Tenders.css';
 
@@ -538,6 +538,33 @@ const Tenders: React.FC = () => {
           console.error('Ошибка сохранения тендера:', error);
           message.error(`Ошибка при создании тендера: ${error.message}`);
         } else if (data) {
+          // Автоматически копируем базовые проценты наценок для нового тендера
+          try {
+            const { data: markupParams, error: paramsError } = await supabase
+              .from('markup_parameters')
+              .select('*')
+              .eq('is_active', true);
+
+            if (!paramsError && markupParams && markupParams.length > 0) {
+              const markupRecords: TenderMarkupPercentageInsert[] = markupParams.map((param: MarkupParameter) => ({
+                tender_id: data.id,
+                markup_parameter_id: param.id,
+                value: param.default_value || 0,
+              }));
+
+              const { error: insertError } = await supabase
+                .from('tender_markup_percentage')
+                .insert(markupRecords);
+
+              if (insertError) {
+                console.error('Ошибка копирования базовых процентов:', insertError);
+                // Не показываем ошибку пользователю, т.к. тендер уже создан
+              }
+            }
+          } catch (markupError) {
+            console.error('Ошибка при копировании базовых процентов:', markupError);
+          }
+
           message.success(`Тендер "${values.title}" успешно создан`);
           form.resetFields();
           setIsModalVisible(false);

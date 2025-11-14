@@ -94,6 +94,14 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
           label: 'Затраты строительства',
         },
         {
+          key: '/admin/markup',
+          icon: <PercentageOutlined />,
+          label: 'Проценты наценок',
+        },
+        {
+          type: 'divider',
+        },
+        {
           key: '/admin/markup_constructor',
           icon: <PercentageOutlined />,
           label: 'Конструктор наценок',

@@ -198,12 +198,14 @@ export interface MarkupParameterInsert {
   label: string;
   is_active?: boolean;
   order_num?: number;
+  default_value?: number;
 }
 
 export interface MarkupParameter extends MarkupParameterInsert {
   id: string;
   created_at: string;
   updated_at: string;
+  default_value: number;
 }
 
 // =============================================

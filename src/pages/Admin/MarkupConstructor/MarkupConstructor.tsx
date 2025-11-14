@@ -18,7 +18,9 @@ import {
   theme,
   Radio,
   Modal,
-  List
+  List,
+  AutoComplete,
+  App
 } from 'antd';
 import { SaveOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined, EditOutlined, CopyOutlined, CloseOutlined } from '@ant-design/icons';
 import { supabase, Tender, TenderMarkupPercentageInsert, MarkupParameter, MarkupParameterInsert, MarkupTactic } from '../../../lib/supabase';
@@ -79,6 +81,7 @@ const ACTIONS = [
 const MarkupConstructor: React.FC = () => {
   const [form] = Form.useForm();
   const { token } = theme.useToken();
+  const { modal } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [tenders, setTenders] = useState<Tender[]>([]);
@@ -102,6 +105,10 @@ const MarkupConstructor: React.FC = () => {
   // Состояния для inline редактирования параметров
   const [editingParameterId, setEditingParameterId] = useState<string | null>(null);
   const [editingParameterLabel, setEditingParameterLabel] = useState('');
+
+  // Состояния для базовых процентов
+  const [basePercentagesForm] = Form.useForm();
+  const [savingBasePercentages, setSavingBasePercentages] = useState(false);
 
   // Состояния для порядка наценок на каждой вкладке
   const [markupSequences, setMarkupSequences] = useState<Record<TabKey, MarkupStep[]>>({
@@ -492,7 +499,7 @@ const MarkupConstructor: React.FC = () => {
           material_comp: data.base_costs['мат-комп.'] || 0,
         };
 
-        return { sequences: sequencesEn, baseCosts: baseCostsEn };
+        return { sequences: sequencesEn, baseCosts: baseCostsEn, tacticId: data.id };
       }
 
       return null;
@@ -516,6 +523,13 @@ const MarkupConstructor: React.FC = () => {
 
       if (data) {
         setMarkupParameters(data);
+
+        // Инициализируем форму базовых процентов значениями из default_value
+        const initialValues: Record<string, number> = {};
+        data.forEach((param) => {
+          initialValues[param.key] = param.default_value || 0;
+        });
+        basePercentagesForm.setFieldsValue(initialValues);
       }
     } catch (error) {
       console.error('Ошибка загрузки параметров наценок:', error);
@@ -523,6 +537,49 @@ const MarkupConstructor: React.FC = () => {
     } finally {
       setLoadingParameters(false);
     }
+  };
+
+  // Сохранение базовых процентов
+  const handleSaveBasePercentages = async () => {
+    try {
+      await basePercentagesForm.validateFields();
+      const values = basePercentagesForm.getFieldsValue();
+      setSavingBasePercentages(true);
+
+      // Обновляем default_value для каждого параметра
+      const updatePromises = markupParameters.map(async (param) => {
+        const { error } = await supabase
+          .from('markup_parameters')
+          .update({
+            default_value: values[param.key] || 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', param.id);
+
+        if (error) throw error;
+      });
+
+      await Promise.all(updatePromises);
+
+      message.success('Базовые проценты успешно сохранены');
+
+      // Перезагружаем параметры для обновления локального состояния
+      await fetchMarkupParameters();
+    } catch (error) {
+      console.error('Ошибка сохранения базовых процентов:', error);
+      message.error('Не удалось сохранить базовые проценты');
+    } finally {
+      setSavingBasePercentages(false);
+    }
+  };
+
+  // Сброс формы базовых процентов
+  const handleResetBasePercentages = () => {
+    const initialValues: Record<string, number> = {};
+    markupParameters.forEach((param) => {
+      initialValues[param.key] = param.default_value || 0;
+    });
+    basePercentagesForm.setFieldsValue(initialValues);
   };
 
   // Загрузка списка тендеров и тактик
@@ -673,7 +730,7 @@ const MarkupConstructor: React.FC = () => {
     if (tacticFromDb) {
       setMarkupSequences(tacticFromDb.sequences);
       setBaseCosts(tacticFromDb.baseCosts);
-      setSelectedTacticId(currentTacticId); // Устанавливаем выбранную тактику
+      setSelectedTacticId(tacticFromDb.tacticId); // Устанавливаем сохраненную тактику тендера
     }
 
     // Загружаем данные наценок для тендера
@@ -761,6 +818,16 @@ const MarkupConstructor: React.FC = () => {
         .insert(markupRecords);
 
       if (insertError) throw insertError;
+
+      // Обновляем порядок расчета в тендере, если он был изменен
+      if (selectedTacticId) {
+        const { error: updateTenderError } = await supabase
+          .from('tenders')
+          .update({ markup_tactic_id: selectedTacticId })
+          .eq('id', selectedTenderId);
+
+        if (updateTenderError) throw updateTenderError;
+      }
 
       setCurrentMarkupId(selectedTenderId);
       message.success('Данные успешно обновлены');
@@ -868,7 +935,7 @@ const MarkupConstructor: React.FC = () => {
 
   // Удаление параметра наценки
   const handleDeleteParameter = async (parameter: MarkupParameter) => {
-    Modal.confirm({
+    modal.confirm({
       title: 'Удаление параметра',
       content: `Вы уверены, что хотите удалить параметр "${parameter.label}"? Это действие необратимо.`,
       okText: 'Удалить',
@@ -1069,6 +1136,65 @@ const MarkupConstructor: React.FC = () => {
       console.error('Ошибка сохранения порядка расчета:', error);
       message.error('Не удалось сохранить порядок расчета');
     }
+  };
+
+  // Удаление порядка расчета
+  const handleDeleteTactic = async () => {
+    if (!currentTacticId) {
+      message.warning('Выберите порядок расчета для удаления');
+      return;
+    }
+
+    // Найдем название тактики для отображения в подтверждении
+    const tacticToDelete = tactics.find(t => t.id === currentTacticId);
+    const tacticName = tacticToDelete?.name || 'Без названия';
+
+    modal.confirm({
+      title: 'Удаление порядка расчета',
+      content: `Вы уверены, что хотите удалить порядок расчета "${tacticName}"? Это действие необратимо.`,
+      okText: 'Удалить',
+      okType: 'danger',
+      cancelText: 'Отмена',
+      onOk: async () => {
+        try {
+          const { error } = await supabase
+            .from('markup_tactics')
+            .delete()
+            .eq('id', currentTacticId);
+
+          if (error) throw error;
+
+          message.success(`Порядок расчета "${tacticName}" удален`);
+
+          // Очищаем форму и состояние
+          setSelectedTacticId(null);
+          setCurrentTacticId(null);
+          setCurrentTacticName('');
+          setMarkupSequences({
+            works: [],
+            materials: [],
+            subcontract_works: [],
+            subcontract_materials: [],
+            work_comp: [],
+            material_comp: [],
+          });
+          setBaseCosts({
+            works: 0,
+            materials: 0,
+            subcontract_works: 0,
+            subcontract_materials: 0,
+            work_comp: 0,
+            material_comp: 0,
+          });
+
+          // Обновляем список тактик
+          await fetchTactics();
+        } catch (error) {
+          console.error('Ошибка удаления порядка расчета:', error);
+          message.error('Не удалось удалить порядок расчета');
+        }
+      }
+    });
   };
 
   // Функции для управления порядком наценок
@@ -2615,180 +2741,41 @@ const MarkupConstructor: React.FC = () => {
   return (
     <div style={{ minHeight: '100%', overflow: 'visible' }} className="markup-constructor">
       <Tabs
-        defaultActiveKey="percentages"
+        defaultActiveKey="tactics"
         items={[
-          {
-            key: 'percentages',
-            label: 'Проценты наценок',
-            children: (
-              <Card
-                title={
-                  <Space direction="vertical" size={0}>
-                    <Title level={4} style={{ margin: 0 }}>
-                      Проценты наценок
-                    </Title>
-                    <Text type="secondary" style={{ fontSize: '14px' }}>
-                      Задайте значения процентов
-                    </Text>
-                  </Space>
-                }
-                extra={
-                  <Space>
-                    <Button
-                      icon={<ReloadOutlined />}
-                      onClick={handleReset}
-                      disabled={!selectedTenderId}
-                    >
-                      Сбросить
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<SaveOutlined />}
-                      onClick={handleSave}
-                      loading={saving}
-                      disabled={!selectedTenderId}
-                    >
-                      Сохранить
-                    </Button>
-                  </Space>
-                }
-              >
-            <Spin spinning={loading || loadingParameters}>
-              {loadingParameters ? (
-                <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                  <Text>Загрузка параметров наценок...</Text>
-                </div>
-              ) : markupParameters.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                  <Text type="danger">Параметры наценок не найдены. Проверьте базу данных.</Text>
-                </div>
-              ) : (
-                <Form
-                  form={form}
-                  layout="horizontal"
-                  labelCol={{ style: { width: '250px', textAlign: 'left' } }}
-                  wrapperCol={{ style: { flex: 1 } }}
-                  initialValues={{
-                    ...markupParameters.reduce((acc, param) => ({
-                      ...acc,
-                      [param.key]: 0
-                    }), {}),
-                    tender_id: undefined
-                  }}
-                >
-                  {/* Выбор тендера и тактики */}
-                  <Row gutter={16} style={{ marginBottom: '24px' }}>
-                    <Col>
-                      <Form.Item
-                        label="Тендер"
-                        name="tender_id"
-                        rules={[{ required: true, message: 'Выберите тендер' }]}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Select
-                          placeholder="Выберите тендер"
-                          onChange={handleTenderChange}
-                          showSearch
-                          optionFilterProp="children"
-                          filterOption={(input, option) =>
-                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                          }
-                          options={tenders.map(tender => ({
-                            label: tender.title,
-                            value: tender.id,
-                          }))}
-                          style={{ width: '250px' }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col>
-                      <Form.Item
-                        label="Порядок расчета"
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Select
-                          placeholder="Выберите порядок расчета"
-                          value={selectedTacticId}
-                          onChange={handleTacticChange}
-                          showSearch
-                          optionFilterProp="children"
-                          filterOption={(input, option) =>
-                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                          }
-                          options={tactics.map(tactic => ({
-                            label: tactic.name || 'Без названия',
-                            value: tactic.id,
-                          }))}
-                          style={{ width: '250px' }}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={[16, 0]}>
-                    {markupParameters.map((param) => (
-                      <Col span={24} key={param.id}>
-                        <Form.Item
-                          label={param.label}
-                          name={param.key}
-                          style={{ marginBottom: '4px' }}
-                        >
-                          <InputNumber
-                            min={0}
-                            max={999.99}
-                            step={0.01}
-                            addonAfter="%"
-                            style={{ width: '120px' }}
-                            precision={2}
-                          />
-                        </Form.Item>
-                      </Col>
-                    ))}
-                  </Row>
-                </Form>
-              )}
-              </Spin>
-              </Card>
-            ),
-          },
           {
             key: 'tactics',
             label: 'Порядок применения наценок',
             children: (
               <div style={{ minHeight: '100%', overflow: 'visible' }}>
                 <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, maxWidth: '600px' }}>
+                  <div style={{ flex: 1, maxWidth: '300px' }}>
                     <Title level={4} style={{ margin: 0 }}>
                       Порядок применения наценок
                     </Title>
                     <Text type="secondary" style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
                       Настройте последовательность расчета для каждого типа позиций
                     </Text>
-                    <Space direction="vertical" style={{ width: '100%' }} size="small">
-                      <Select
-                        placeholder="Выберите порядок расчета для редактирования"
-                        value={selectedTacticId}
-                        onChange={handleTacticChange}
-                        showSearch
-                        optionFilterProp="children"
-                        filterOption={(input, option) =>
-                          (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    <AutoComplete
+                      placeholder="Выберите или введите название порядка расчета"
+                      value={currentTacticName}
+                      onChange={(value) => setCurrentTacticName(value)}
+                      onSelect={(value, option) => {
+                        // Загружаем выбранную тактику
+                        if (option && option.tacticId) {
+                          handleTacticChange(option.tacticId);
                         }
-                        options={tactics.map(tactic => ({
-                          label: tactic.name || 'Без названия',
-                          value: tactic.id,
-                        }))}
-                        style={{ width: '100%' }}
-                      />
-                      {selectedTacticId && (
-                        <Input
-                          placeholder="Название порядка расчета"
-                          value={currentTacticName}
-                          onChange={(e) => setCurrentTacticName(e.target.value)}
-                          style={{ width: '100%' }}
-                        />
-                      )}
-                    </Space>
+                      }}
+                      options={tactics.map(tactic => ({
+                        label: tactic.name || 'Без названия',
+                        value: tactic.name || 'Без названия',
+                        tacticId: tactic.id,
+                      }))}
+                      filterOption={(input, option) =>
+                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      }
+                      style={{ width: '100%' }}
+                    />
                   </div>
                   <Space>
                     <Button
@@ -2819,12 +2806,21 @@ const MarkupConstructor: React.FC = () => {
                     >
                       Создать новый
                     </Button>
+                    {currentTacticId && (
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={handleDeleteTactic}
+                      >
+                        Удалить
+                      </Button>
+                    )}
                     <Button
                       type="primary"
                       icon={<SaveOutlined />}
                       onClick={handleSaveTactic}
                     >
-                      Сохранить порядок расчета
+                      Сохранить
                     </Button>
                   </Space>
                 </div>
@@ -2866,6 +2862,82 @@ const MarkupConstructor: React.FC = () => {
                   ]}
                 />
               </div>
+            ),
+          },
+          {
+            key: 'base_percentages',
+            label: 'Базовые проценты',
+            children: (
+              <Card
+                title={
+                  <Space direction="vertical" size={0}>
+                    <Title level={4} style={{ margin: 0 }}>
+                      Базовые проценты наценок
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: '14px' }}>
+                      Задайте базовые значения процентов по умолчанию
+                    </Text>
+                  </Space>
+                }
+                extra={
+                  <Space>
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={handleResetBasePercentages}
+                    >
+                      Сбросить
+                    </Button>
+                    <Button
+                      type="primary"
+                      icon={<SaveOutlined />}
+                      onClick={handleSaveBasePercentages}
+                      loading={savingBasePercentages}
+                    >
+                      Сохранить
+                    </Button>
+                  </Space>
+                }
+              >
+                <Spin spinning={loadingParameters}>
+                  {loadingParameters ? (
+                    <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                      <Text>Загрузка параметров наценок...</Text>
+                    </div>
+                  ) : markupParameters.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                      <Text type="danger">Параметры наценок не найдены. Проверьте базу данных.</Text>
+                    </div>
+                  ) : (
+                    <Form
+                      form={basePercentagesForm}
+                      layout="horizontal"
+                      labelCol={{ style: { width: '250px', textAlign: 'left' } }}
+                      wrapperCol={{ style: { flex: 1 } }}
+                    >
+                      <Row gutter={[16, 0]}>
+                        {markupParameters.map((param, index) => (
+                          <Col span={24} key={param.id}>
+                            <Form.Item
+                              label={`${index + 1}. ${param.label}`}
+                              name={param.key}
+                              style={{ marginBottom: '4px' }}
+                            >
+                              <InputNumber
+                                min={0}
+                                max={999.99}
+                                step={0.01}
+                                addonAfter="%"
+                                style={{ width: '120px' }}
+                                precision={2}
+                              />
+                            </Form.Item>
+                          </Col>
+                        ))}
+                      </Row>
+                    </Form>
+                  )}
+                </Spin>
+              </Card>
             ),
           },
           {
