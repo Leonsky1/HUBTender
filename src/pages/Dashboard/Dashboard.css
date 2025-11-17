@@ -1,307 +1,144 @@
 /* Dashboard Container */
 .dashboard-container {
-  min-height: calc(100vh - 112px);
-  margin: -24px;
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+  background: transparent;
+}
+
+/* Search Input Styles */
+.dashboard-search-input {
+  transition: all 0.3s ease;
   border-radius: 8px;
-  transition: background 0.3s;
 }
 
-/* Theme Backgrounds */
-.dashboard-dark {
-  background: #000000;
+.dashboard-search-input:focus {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
 }
 
-.dashboard-light {
-  background: #f0f2f5;
+/* Table Container */
+.dashboard-table-wrapper {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-/* Header Section with Modern Gradient */
-.dashboard-header-section {
-  padding: 60px 48px;
-  margin: 0 24px 48px 24px;
-  border-radius: 24px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+/* Dark Theme Table Container */
+.dark .dashboard-table-wrapper {
+  background: #141414;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Dark Theme Header - Darker Green/Teal Gradient with overlay */
-.dashboard-dark .dashboard-header-section {
-  background: linear-gradient(135deg, #0d3542 0%, #0b4d2e 100%);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  position: relative;
+/* Table Header Styles */
+.ant-table-thead > tr > th {
+  background-color: #fafafa !important;
+  font-weight: 600;
+  border-bottom: 2px solid #f0f0f0;
+  color: #262626;
 }
 
-/* Additional overlay for depth in dark mode */
-.dashboard-dark .dashboard-header-section::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(8, 145, 178, 0.15) 100%);
-  pointer-events: none;
+/* Dark Theme Table Header */
+.dark .ant-table-thead > tr > th {
+  background-color: #1f1f1f !important;
+  border-bottom: 2px solid #303030;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* Light Theme Header - Green/Teal Gradient */
-.dashboard-light .dashboard-header-section {
-  background: linear-gradient(135deg, #0891b2 0%, #10b981 100%);
+/* Table Row Hover */
+.ant-table-tbody > tr:hover > td {
+  background-color: #f5f5f5 !important;
 }
 
-.dashboard-header-content {
-  text-align: center;
-  position: relative;
-  z-index: 1;
+.dark .ant-table-tbody > tr:hover > td {
+  background-color: #262626 !important;
 }
 
-/* Header Shimmer Animation */
-.dashboard-header-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    45deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 70%
-  );
-  transform: translateX(-100%);
-  animation: shimmer 6s infinite;
+/* Table Pagination */
+.ant-pagination {
+  margin-top: 16px;
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
+/* Status Tag Styles */
+.status-tag-completed {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.status-tag-pending {
+  background: #f5f5f5;
+  border-color: #d4d4d8;
+  color: #71717a;
+}
+
+/* Dark Theme Status Tags */
+.dark .status-tag-completed {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.dark .status-tag-pending {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Update Button Animation */
+.update-calculation-btn {
+  transition: all 0.3s ease;
+  color: #10b981;
+}
+
+.update-calculation-btn:hover {
+  color: #059669;
+}
+
+.update-calculation-btn:hover .anticon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-  100% {
-    transform: translateX(100%);
+  to {
+    transform: rotate(360deg);
   }
 }
 
-.header-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-/* Content Section */
-.dashboard-content {
-  padding: 0 48px 48px 48px;
-}
-
-/* Modern Dashboard Card */
-.dashboard-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dashboard-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.dashboard-card:hover {
-  transform: translateY(-6px);
-}
-
-/* Dark Theme Card Hover */
-.dashboard-dark .dashboard-card:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Light Theme Card Hover */
-.dashboard-light .dashboard-card:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-  border-color: rgba(16, 185, 129, 0.3) !important;
-}
-
-.dashboard-card:hover::before {
-  opacity: 1;
-}
-
-/* Modern Icon Container with Circular Gradient Background */
-.icon-container {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-/* Icon inside container */
-.icon-container .anticon {
-  font-size: 28px;
-  color: #ffffff;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Hover effect for icon container */
-.dashboard-card:hover .icon-container {
-  transform: scale(1.08) rotate(5deg);
-}
-
-.dashboard-card:hover .icon-container .anticon {
-  transform: scale(1.1);
-}
-
-/* Gradient Background Colors for Each Card Type */
-
-/* 1. Dashboard - Primary Green/Teal */
-.icon-container-dashboard {
-  background: linear-gradient(135deg, #1a5f7a 0%, #159957 100%);
-  box-shadow: 0 4px 12px rgba(26, 95, 122, 0.25);
-}
-
-.dashboard-card:hover .icon-container-dashboard {
-  box-shadow: 0 8px 24px rgba(26, 95, 122, 0.35);
-}
-
-/* 2. Positions - Emerald */
-.icon-container-positions {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-}
-
-.dashboard-card:hover .icon-container-positions {
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-}
-
-/* 3. Commerce - Cyan */
-.icon-container-commerce {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
-}
-
-.dashboard-card:hover .icon-container-commerce {
-  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35);
-}
-
-/* 4. Libraries - Teal */
-.icon-container-libraries {
-  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25);
-}
-
-.dashboard-card:hover .icon-container-libraries {
-  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.35);
-}
-
-/* 5. Costs - Mint */
-.icon-container-costs {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.25);
-}
-
-.dashboard-card:hover .icon-container-costs {
-  box-shadow: 0 8px 24px rgba(52, 211, 153, 0.35);
-}
-
-/* 6. Administration - Ocean */
-.icon-container-admin {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-}
-
-.dashboard-card:hover .icon-container-admin {
-  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
-}
-
-/* 7. Users - Blue-Green */
-.icon-container-users {
-  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
-  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
-}
-
-.dashboard-card:hover .icon-container-users {
-  box-shadow: 0 8px 24px rgba(8, 145, 178, 0.35);
-}
-
-/* 8. Settings - Sage */
-.icon-container-settings {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
-}
-
-.dashboard-card:hover .icon-container-settings {
-  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
-}
-
-/* Dark Theme Icon Container Adjustments */
-.dashboard-dark .icon-container {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.dashboard-dark .dashboard-card:hover .icon-container {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+/* Number Formatting */
+.number-cell {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: 24px;
+    padding: 16px;
   }
 
-  .dashboard-header-section {
-    padding: 40px 24px;
-    margin: 0 16px 32px 16px;
+  .dashboard-table-wrapper {
+    padding: 12px;
   }
 
-  .dashboard-content {
-    padding: 0 24px 24px 24px;
-  }
-
-  .header-icon {
-    font-size: 48px;
-  }
-
-  .icon-container {
-    width: 56px;
-    height: 56px;
-  }
-
-  .icon-container .anticon {
-    font-size: 24px;
+  .ant-table {
+    font-size: 13px;
   }
 }
 
 @media (max-width: 576px) {
-  .dashboard-header-section {
-    padding: 32px 16px;
+  .dashboard-container {
+    padding: 12px;
   }
 
-  .dashboard-content {
-    padding: 0 16px 16px 16px;
+  .dashboard-table-wrapper {
+    padding: 8px;
   }
 
-  .icon-container {
-    width: 52px;
-    height: 52px;
-  }
-
-  .icon-container .anticon {
-    font-size: 22px;
+  .ant-table {
+    font-size: 12px;
   }
 }
