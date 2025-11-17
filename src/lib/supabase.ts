@@ -427,3 +427,76 @@ export interface MarkupTactic extends MarkupTacticInsert {
   created_at: string;
   updated_at: string;
 }
+
+// =============================================
+// Типы для таблицы boq_items (элементы позиций заказчика)
+// =============================================
+
+export interface BoqItemInsert {
+  // Связи
+  tender_id: string;
+  client_position_id: string;
+
+  // Сортировка
+  sort_number?: number;
+
+  // Типы элементов
+  boq_item_type: BoqItemType;
+  material_type?: MaterialType | null;
+
+  // Наименования
+  material_name_id?: string | null;
+  work_name_id?: string | null;
+
+  // Единица измерения
+  unit_code?: string | null;
+
+  // Количественные показатели
+  quantity?: number | null;
+  base_quantity?: number | null;
+  consumption_coefficient?: number | null;
+  conversion_coefficient?: number | null;
+
+  // Доставка
+  delivery_price_type?: DeliveryPriceType | null;
+  delivery_amount?: number | null;
+
+  // Валюта и суммы
+  currency_type?: CurrencyType;
+  total_amount?: number | null;
+
+  // Затрата на строительство
+  detail_cost_category_id?: string | null;
+
+  // Примечание
+  quote_link?: string | null;
+
+  // Коммерческие показатели
+  commercial_markup?: number | null;
+  total_commercial_material_cost?: number | null;
+  total_commercial_work_cost?: number | null;
+}
+
+export interface BoqItem extends BoqItemInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Расширенный тип с JOIN данными
+export interface BoqItemFull extends BoqItem {
+  // Данные из material_names
+  material_name?: string;
+  material_unit?: UnitType;
+
+  // Данные из work_names
+  work_name?: string;
+  work_unit?: UnitType;
+
+  // Данные из detail_cost_categories
+  detail_cost_category_name?: string;
+  detail_cost_category_full?: string; // Format: "Category / Detail / Location"
+
+  // Данные из units
+  unit_name?: string;
+}
