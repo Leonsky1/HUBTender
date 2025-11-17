@@ -23,6 +23,7 @@ import {
   QuestionCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, type Tender, type ClientPosition } from '../../lib/supabase';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -45,6 +46,8 @@ const currencySymbols: Record<string, string> = {
 };
 
 const ClientPositions: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
@@ -52,6 +55,7 @@ const ClientPositions: React.FC = () => {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [clientPositions, setClientPositions] = useState<ClientPosition[]>([]);
   const [loading, setLoading] = useState(false);
+  const [scrollToPositionId, setScrollToPositionId] = useState<string | null>(null);
 
   // Загрузка тендеров
   useEffect(() => {
@@ -72,6 +76,29 @@ const ClientPositions: React.FC = () => {
     }
   };
 
+  // Восстановление состояния из URL при возврате
+  useEffect(() => {
+    if (tenders.length > 0) {
+      const tenderId = searchParams.get('tenderId');
+      const positionId = searchParams.get('positionId');
+
+      if (tenderId) {
+        const tender = tenders.find(t => t.id === tenderId);
+        if (tender) {
+          setSelectedTender(tender);
+          setSelectedTenderId(tender.id);
+          setSelectedClientName(tender.client_name);
+          setSelectedVersion(tender.version || 1);
+          fetchClientPositions(tender.id);
+
+          if (positionId) {
+            setScrollToPositionId(positionId);
+          }
+        }
+      }
+    }
+  }, [tenders, searchParams]);
+
   // Загрузка позиций заказчика
   const fetchClientPositions = async (tenderId: string) => {
     setLoading(true);
@@ -90,6 +117,22 @@ const ClientPositions: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Прокрутка к позиции после загрузки данных
+  useEffect(() => {
+    if (scrollToPositionId && clientPositions.length > 0 && !loading) {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-row-key="${scrollToPositionId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        setTimeout(() => {
+          setScrollToPositionId(null);
+          setSearchParams({});
+        }, 2000);
+      }, 300);
+    }
+  }, [scrollToPositionId, clientPositions, loading]);
 
   // Получение уникальных названий заказчиков
   const getClientNames = (): TenderOption[] => {
@@ -252,7 +295,16 @@ const ClientPositions: React.FC = () => {
         const sectionColor = isLeaf ? '#52c41a' : '#ff7875'; // Зеленый для конечных, бледно-красный для неконечных
 
         return (
-          <div>
+          <div
+            onClick={() => {
+              if (isLeaf && selectedTender) {
+                navigate(`/positions/${record.id}/items?tenderId=${selectedTender.id}&positionId=${record.id}`);
+              }
+            }}
+            style={{
+              cursor: isLeaf ? 'pointer' : 'default',
+            }}
+          >
             {record.item_no && (
               <Text strong style={{ color: sectionColor, marginRight: 8 }}>
                 {record.item_no}
@@ -527,13 +579,11 @@ const ClientPositions: React.FC = () => {
             dataSource={clientPositions}
             rowKey="id"
             loading={loading}
-            pagination={{
-              defaultPageSize: 100,
-              showSizeChanger: true,
-              pageSizeOptions: ['100', '250', '500', '1000'],
-              showTotal: (total) => `Всего позиций: ${total}`,
-            }}
-            scroll={{ x: 1200 }}
+            rowClassName={(record) =>
+              scrollToPositionId === record.id ? 'highlight-row' : ''
+            }
+            pagination={false}
+            scroll={{ x: 1200, y: 'calc(100vh - 400px)' }}
             size="small"
           />
         </Card>
