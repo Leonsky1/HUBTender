@@ -1253,6 +1253,9 @@ const MarkupConstructor: React.FC = () => {
 
           // Обновляем список тактик
           await fetchTactics();
+
+          // Возвращаемся к списку схем
+          setIsTacticSelected(false);
         } catch (error) {
           console.error('Ошибка удаления порядка расчета:', error);
           message.error('Не удалось удалить порядок расчета');
@@ -1268,63 +1271,166 @@ const MarkupConstructor: React.FC = () => {
       return;
     }
 
-    try {
-      // Найдем текущую тактику
-      const tacticToCopy = tactics.find(t => t.id === currentTacticId);
-      if (!tacticToCopy) {
-        message.error('Схема не найдена');
-        return;
-      }
+    // Определяем новое название с версионированием
+    let baseName = currentTacticName || 'Схема';
+    let version = 2;
 
-      // Определяем новое название с версионированием
-      let baseName = tacticToCopy.name || 'Схема';
-      let version = 2;
-
-      // Проверяем, есть ли уже версия в названии
-      const versionMatch = baseName.match(/^(.+)_v(\d+)$/);
-      if (versionMatch) {
-        baseName = versionMatch[1];
-        version = parseInt(versionMatch[2]) + 1;
-      }
-
-      // Находим следующую доступную версию
-      let newName = `${baseName}_v${version}`;
-      while (tactics.some(t => t.name === newName)) {
-        version++;
-        newName = `${baseName}_v${version}`;
-      }
-
-      // Создаем копию тактики
-      const { data: newTactic, error: tacticError } = await supabase
-        .from('markup_tactics')
-        .insert({
-          name: newName,
-          is_global: false, // Копии никогда не глобальные
-          works: tacticToCopy.works,
-          materials: tacticToCopy.materials,
-          subcontract_works: tacticToCopy.subcontract_works,
-          subcontract_materials: tacticToCopy.subcontract_materials,
-          work_comp: tacticToCopy.work_comp,
-          material_comp: tacticToCopy.material_comp,
-        })
-        .select()
-        .single();
-
-      if (tacticError) throw tacticError;
-
-      message.success(`Создана копия схемы: ${newName}`);
-
-      // Обновляем список тактик
-      await fetchTactics();
-
-      // Открываем новую схему для редактирования
-      if (newTactic) {
-        handleTacticChange(newTactic.id);
-      }
-    } catch (error) {
-      console.error('Ошибка копирования схемы:', error);
-      message.error('Не удалось создать копию схемы');
+    // Проверяем, есть ли уже версия в названии
+    const versionMatch = baseName.match(/^(.+)_v(\d+)$/);
+    if (versionMatch) {
+      baseName = versionMatch[1];
+      version = parseInt(versionMatch[2]) + 1;
     }
+
+    // Находим следующую доступную версию
+    let defaultNewName = `${baseName}_v${version}`;
+    while (tactics.some(t => t.name === defaultNewName)) {
+      version++;
+      defaultNewName = `${baseName}_v${version}`;
+    }
+
+    // Показываем модальное окно с возможностью изменить название
+    let newName = defaultNewName;
+
+    modal.confirm({
+      title: 'Создание копии схемы',
+      icon: <CopyOutlined />,
+      content: (
+        <div style={{ marginTop: 16 }}>
+          <Text style={{ display: 'block', marginBottom: 8 }}>
+            Будет создана копия схемы "{currentTacticName}" со всеми настройками порядка расчета.
+          </Text>
+          <Text strong style={{ display: 'block', marginBottom: 8 }}>
+            Название новой схемы:
+          </Text>
+          <Input
+            defaultValue={defaultNewName}
+            onChange={(e) => { newName = e.target.value; }}
+            placeholder="Введите название схемы"
+            style={{ marginBottom: 8 }}
+          />
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            Совет: Используйте суффикс _v2, _v3 для версионирования
+          </Text>
+        </div>
+      ),
+      okText: 'Создать копию',
+      cancelText: 'Отмена',
+      onOk: async () => {
+        if (!newName || !newName.trim()) {
+          message.warning('Название схемы не может быть пустым');
+          return Promise.reject();
+        }
+
+        // Проверяем уникальность имени
+        if (tactics.some(t => t.name === newName.trim())) {
+          message.warning('Схема с таким названием уже существует');
+          return Promise.reject();
+        }
+
+        try {
+          message.loading('Создание копии...', 0);
+
+          // Получаем актуальные данные схемы из БД
+          const { data: tacticToCopy, error: fetchError } = await supabase
+            .from('markup_tactics')
+            .select('*')
+            .eq('id', currentTacticId)
+            .single();
+
+          if (fetchError || !tacticToCopy) {
+            message.destroy();
+            message.error('Схема не найдена');
+            return;
+          }
+
+          // Подготавливаем данные для копирования
+          // Используем текущие данные из состояния или данные из БД
+          let sequencesToCopy: Record<string, any>;
+          let baseCostsToCopy: Record<string, any>;
+
+          if (currentTacticId && isDataLoaded) {
+            // Если схема активна и загружена, используем текущие данные из состояния
+            // Преобразуем в русский формат для БД
+            sequencesToCopy = {
+              'раб': markupSequences.works,
+              'мат': markupSequences.materials,
+              'суб-раб': markupSequences.subcontract_works,
+              'суб-мат': markupSequences.subcontract_materials,
+              'раб-комп.': markupSequences.work_comp,
+              'мат-комп.': markupSequences.material_comp,
+            };
+
+            baseCostsToCopy = {
+              'раб': baseCosts.works,
+              'мат': baseCosts.materials,
+              'суб-раб': baseCosts.subcontract_works,
+              'суб-мат': baseCosts.subcontract_materials,
+              'раб-комп.': baseCosts.work_comp,
+              'мат-комп.': baseCosts.material_comp,
+            };
+          } else {
+            // Используем данные из БД
+            sequencesToCopy = tacticToCopy.sequences || {
+              'раб': [],
+              'мат': [],
+              'суб-раб': [],
+              'суб-мат': [],
+              'раб-комп.': [],
+              'мат-комп.': [],
+            };
+
+            baseCostsToCopy = tacticToCopy.base_costs || {
+              'раб': 0,
+              'мат': 0,
+              'суб-раб': 0,
+              'суб-мат': 0,
+              'раб-комп.': 0,
+              'мат-комп.': 0,
+            };
+          }
+
+          const dataToCopy = {
+            name: newName.trim(),
+            is_global: false, // Копии никогда не глобальные
+            sequences: sequencesToCopy,
+            base_costs: baseCostsToCopy,
+          };
+
+          // Создаем копию тактики
+          const { data: newTactic, error: tacticError } = await supabase
+            .from('markup_tactics')
+            .insert(dataToCopy)
+            .select()
+            .single();
+
+          message.destroy();
+
+          if (tacticError) throw tacticError;
+
+          message.success(`Создана копия схемы: ${newName.trim()}`);
+
+          // Обновляем список тактик
+          await fetchTactics();
+
+          // Переключаемся на новую схему для редактирования
+          if (newTactic) {
+            // Сбрасываем флаг выбора, чтобы вернуться к списку
+            setIsTacticSelected(false);
+            // Ждем немного для обновления UI
+            setTimeout(() => {
+              handleTacticChange(newTactic.id);
+              setIsTacticSelected(true);
+            }, 100);
+          }
+        } catch (error) {
+          message.destroy();
+          console.error('Ошибка копирования схемы:', error);
+          message.error('Не удалось создать копию схемы');
+          return Promise.reject(error);
+        }
+      }
+    });
   };
 
   // Функции для управления порядком наценок
