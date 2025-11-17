@@ -12,7 +12,6 @@ import MarkupPercentages from './pages/Admin/MarkupPercentages/MarkupPercentages
 import Library from './pages/Library';
 import Templates from './pages/Library/Templates';
 import ClientPositions from './pages/ClientPositions/ClientPositions';
-import Settings from './pages/Settings/Settings';
 import './App.css';
 
 // Временный импорт для тестирования Supabase (удалить после проверки)
@@ -51,7 +50,7 @@ function AppContent() {
               <Route path="markup" element={<MarkupPercentages />} />
             </Route>
             <Route path="users" element={<div>Пользователи</div>} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="settings" element={<div>Настройки</div>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -7,7 +7,6 @@ max_rows = 1000
 
 [db]
 port = 54322
-pool_size = 10
 
 [studio]
 enabled = true
@@ -27,5 +26,3 @@ enabled = true
 enabled = true
 
 # Project specific settings
-[functions]
-enabled = true

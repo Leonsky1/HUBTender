@@ -34,3 +34,17 @@
   transition: transform 0.15s cubic-bezier(0.215, 0.61, 0.355, 1),
     opacity 0.15s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
+
+/* Подсветка строки при возврате */
+@keyframes highlight-fade {
+  0% {
+    background-color: rgba(16, 185, 129, 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.highlight-row {
+  animation: highlight-fade 2s ease-in-out;
+}

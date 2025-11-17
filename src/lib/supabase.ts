@@ -457,6 +457,9 @@ export interface BoqItemInsert {
   consumption_coefficient?: number | null;
   conversion_coefficient?: number | null;
 
+  // Привязка материала к работе
+  parent_work_item_id?: string | null;
+
   // Доставка
   delivery_price_type?: DeliveryPriceType | null;
   delivery_amount?: number | null;
@@ -499,6 +502,14 @@ export interface BoqItemFull extends BoqItem {
 
   // Данные из units
   unit_name?: string;
+
+  // Данные родительской работы (для привязанных материалов)
+  parent_work_name?: string;
+  parent_work_unit?: UnitType;
+  parent_work_quantity?: number;
+
+  // Цена за единицу из библиотеки
+  unit_rate?: number;
 }
 
 // =============================================
