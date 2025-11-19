@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Tabs, Table, Button, Space, Input, Tag, Tooltip, message, Modal, Form, InputNumber, Switch, Select, AutoComplete } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import type { TabsProps, ColumnsType } from 'antd/es';
+import type { TabsProps } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { supabase } from '../../../lib/supabase';
 
 const { confirm } = Modal;

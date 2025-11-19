@@ -3146,6 +3146,782 @@
     ],
     "sql": "-- Auth: Stores user login data within a secure schema.\nCREATE TABLE IF NOT EXISTS auth.users (\n    instance_id uuid,\n    id uuid NOT NULL,\n    aud character varying(255),\n    role character varying(255),\n    email character varying(255),\n    encrypted_password character varying(255),\n    email_confirmed_at timestamp with time zone,\n    invited_at timestamp with time zone,\n    confirmation_token character varying(255),\n    confirmation_sent_at timestamp with time zone,\n    recovery_token character varying(255),\n    recovery_sent_at timestamp with time zone,\n    email_change_token_new character varying(255),\n    email_change character varying(255),\n    email_change_sent_at timestamp with time zone,\n    last_sign_in_at timestamp with time zone,\n    raw_app_meta_data jsonb,\n    raw_user_meta_data jsonb,\n    is_super_admin boolean,\n    created_at timestamp with time zone,\n    updated_at timestamp with time zone,\n    phone text DEFAULT NULL::character varying,\n    phone_confirmed_at timestamp with time zone,\n    phone_change text DEFAULT ''::character varying,\n    phone_change_token character varying(255) DEFAULT ''::character varying,\n    phone_change_sent_at timestamp with time zone,\n    confirmed_at timestamp with time zone,\n    email_change_token_current character varying(255) DEFAULT ''::character varying,\n    email_change_confirm_status smallint(16) DEFAULT 0,\n    banned_until timestamp with time zone,\n    reauthentication_token character varying(255) DEFAULT ''::character varying,\n    reauthentication_sent_at timestamp with time zone,\n    is_sso_user boolean NOT NULL DEFAULT false,\n    deleted_at timestamp with time zone,\n    is_anonymous boolean NOT NULL DEFAULT false,\n    CONSTRAINT users_phone_key UNIQUE (phone),\n    CONSTRAINT users_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE auth.users IS 'Auth: Stores user login data within a secure schema.';\nCOMMENT ON COLUMN auth.users.is_sso_user IS 'Auth: Set this column to true when the account comes from SSO. These accounts can have duplicate emails.';"
   },
+  "public.boq_items": {
+    "schema": "public",
+    "name": "boq_items",
+    "comment": "Элементы позиций заказчика (Bill of Quantities Items)",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": "Уникальный идентификатор элемента позиции (UUID)"
+      },
+      {
+        "name": "tender_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Привязка к таблице tenders"
+      },
+      {
+        "name": "client_position_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Привязка к таблице client_positions"
+      },
+      {
+        "name": "sort_number",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": "0",
+        "comment": "Сортировка элементов позиций заказчика"
+      },
+      {
+        "name": "boq_item_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Тип строки в виде enum (мат, суб-мат, мат-комп., раб, суб-раб, раб-комп.)"
+      },
+      {
+        "name": "material_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Тип материала (основной/вспомогательный)"
+      },
+      {
+        "name": "material_name_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Наименование материала, связан с таблицей material_names"
+      },
+      {
+        "name": "work_name_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Наименование работы, связан с таблицей work_names"
+      },
+      {
+        "name": "unit_code",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Единица измерения, связана с таблицей units"
+      },
+      {
+        "name": "quantity",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Количество"
+      },
+      {
+        "name": "base_quantity",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Базовое количество для непривязанного материала к работе"
+      },
+      {
+        "name": "consumption_coefficient",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 10,
+        "numeric_scale": 4,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Коэффициент расхода материала"
+      },
+      {
+        "name": "conversion_coefficient",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 10,
+        "numeric_scale": 4,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Коэффициент перевода материала"
+      },
+      {
+        "name": "delivery_price_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Тип доставки (в цене, не в цене, суммой)"
+      },
+      {
+        "name": "delivery_amount",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 15,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0.00",
+        "comment": "Стоимость доставки"
+      },
+      {
+        "name": "currency_type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "'RUB'::currency_type",
+        "comment": "Тип валюты (RUB, USD, EUR, CNY)"
+      },
+      {
+        "name": "total_amount",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Итоговая сумма"
+      },
+      {
+        "name": "detail_cost_category_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Затрата на строительство, связь с таблицей detail_cost_categories"
+      },
+      {
+        "name": "quote_link",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Ссылка на КП"
+      },
+      {
+        "name": "commercial_markup",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 10,
+        "numeric_scale": 4,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Коэффициент наценки"
+      },
+      {
+        "name": "total_commercial_material_cost",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Итоговая стоимость материала в коммерческой стоимости"
+      },
+      {
+        "name": "total_commercial_work_cost",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Итоговая стоимость работы в коммерческой стоимости"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": "Дата и время создания записи"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": "Дата и время последнего обновления"
+      },
+      {
+        "name": "parent_work_item_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Привязка материала к работе (FK к boq_items.id, NULL если материал независимый)"
+      },
+      {
+        "name": "description",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Примечание к элементу позиции"
+      },
+      {
+        "name": "unit_rate",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0.00",
+        "comment": "Цена за единицу"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_26065_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_26065_23_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_26065_24_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_26065_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_26065_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_26065_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_26065_5_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "boq_items_base_quantity_positive",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "base_quantity"
+      },
+      {
+        "name": "boq_items_client_position_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "client_position_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "boq_items_consumption_coefficient_positive",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "consumption_coefficient"
+      },
+      {
+        "name": "boq_items_conversion_coefficient_positive",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "conversion_coefficient"
+      },
+      {
+        "name": "boq_items_delivery_amount_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "delivery_amount"
+      },
+      {
+        "name": "boq_items_detail_cost_category_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "detail_cost_category_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "boq_items_material_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "boq_item_type"
+      },
+      {
+        "name": "boq_items_material_name_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "material_name_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "boq_items_parent_work_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "boq_item_type"
+      },
+      {
+        "name": "boq_items_parent_work_item_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "parent_work_item_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "id"
+      },
+      {
+        "name": "boq_items_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "id"
+      },
+      {
+        "name": "boq_items_quantity_positive",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "boq_items",
+        "foreign_column": "quantity"
+      },
+      {
+        "name": "boq_items_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "boq_items_unit_code_fkey",
+        "type": "FOREIGN KEY",
+        "column": "unit_code",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "boq_items_work_name_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "work_name_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "-- Элементы позиций заказчика (Bill of Quantities Items)\nCREATE TABLE IF NOT EXISTS public.boq_items (\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    tender_id uuid NOT NULL,\n    client_position_id uuid NOT NULL,\n    sort_number integer(32) NOT NULL DEFAULT 0,\n    boq_item_type USER-DEFINED NOT NULL,\n    material_type USER-DEFINED,\n    material_name_id uuid,\n    work_name_id uuid,\n    unit_code text,\n    quantity numeric(18,6),\n    base_quantity numeric(18,6),\n    consumption_coefficient numeric(10,4),\n    conversion_coefficient numeric(10,4),\n    delivery_price_type USER-DEFINED,\n    delivery_amount numeric(15,2) DEFAULT 0.00,\n    currency_type USER-DEFINED DEFAULT 'RUB'::currency_type,\n    total_amount numeric(18,2),\n    detail_cost_category_id uuid,\n    quote_link text,\n    commercial_markup numeric(10,4),\n    total_commercial_material_cost numeric(18,2),\n    total_commercial_work_cost numeric(18,2),\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    parent_work_item_id uuid,\n    description text,\n    unit_rate numeric(18,2) DEFAULT 0.00,\n    CONSTRAINT boq_items_client_position_id_fkey FOREIGN KEY (client_position_id) REFERENCES None.None(None),\n    CONSTRAINT boq_items_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT boq_items_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),\n    CONSTRAINT boq_items_parent_work_item_id_fkey FOREIGN KEY (parent_work_item_id) REFERENCES public.boq_items(id),\n    CONSTRAINT boq_items_pkey PRIMARY KEY (id),\n    CONSTRAINT boq_items_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None),\n    CONSTRAINT boq_items_unit_code_fkey FOREIGN KEY (unit_code) REFERENCES None.None(None),\n    CONSTRAINT boq_items_work_name_id_fkey FOREIGN KEY (work_name_id) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.boq_items IS 'Элементы позиций заказчика (Bill of Quantities Items)';\nCOMMENT ON COLUMN public.boq_items.id IS 'Уникальный идентификатор элемента позиции (UUID)';\nCOMMENT ON COLUMN public.boq_items.tender_id IS 'Привязка к таблице tenders';\nCOMMENT ON COLUMN public.boq_items.client_position_id IS 'Привязка к таблице client_positions';\nCOMMENT ON COLUMN public.boq_items.sort_number IS 'Сортировка элементов позиций заказчика';\nCOMMENT ON COLUMN public.boq_items.boq_item_type IS 'Тип строки в виде enum (мат, суб-мат, мат-комп., раб, суб-раб, раб-комп.)';\nCOMMENT ON COLUMN public.boq_items.material_type IS 'Тип материала (основной/вспомогательный)';\nCOMMENT ON COLUMN public.boq_items.material_name_id IS 'Наименование материала, связан с таблицей material_names';\nCOMMENT ON COLUMN public.boq_items.work_name_id IS 'Наименование работы, связан с таблицей work_names';\nCOMMENT ON COLUMN public.boq_items.unit_code IS 'Единица измерения, связана с таблицей units';\nCOMMENT ON COLUMN public.boq_items.quantity IS 'Количество';\nCOMMENT ON COLUMN public.boq_items.base_quantity IS 'Базовое количество для непривязанного материала к работе';\nCOMMENT ON COLUMN public.boq_items.consumption_coefficient IS 'Коэффициент расхода материала';\nCOMMENT ON COLUMN public.boq_items.conversion_coefficient IS 'Коэффициент перевода материала';\nCOMMENT ON COLUMN public.boq_items.delivery_price_type IS 'Тип доставки (в цене, не в цене, суммой)';\nCOMMENT ON COLUMN public.boq_items.delivery_amount IS 'Стоимость доставки';\nCOMMENT ON COLUMN public.boq_items.currency_type IS 'Тип валюты (RUB, USD, EUR, CNY)';\nCOMMENT ON COLUMN public.boq_items.total_amount IS 'Итоговая сумма';\nCOMMENT ON COLUMN public.boq_items.detail_cost_category_id IS 'Затрата на строительство, связь с таблицей detail_cost_categories';\nCOMMENT ON COLUMN public.boq_items.quote_link IS 'Ссылка на КП';\nCOMMENT ON COLUMN public.boq_items.commercial_markup IS 'Коэффициент наценки';\nCOMMENT ON COLUMN public.boq_items.total_commercial_material_cost IS 'Итоговая стоимость материала в коммерческой стоимости';\nCOMMENT ON COLUMN public.boq_items.total_commercial_work_cost IS 'Итоговая стоимость работы в коммерческой стоимости';\nCOMMENT ON COLUMN public.boq_items.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.boq_items.updated_at IS 'Дата и время последнего обновления';\nCOMMENT ON COLUMN public.boq_items.parent_work_item_id IS 'Привязка материала к работе (FK к boq_items.id, NULL если материал независимый)';\nCOMMENT ON COLUMN public.boq_items.description IS 'Примечание к элементу позиции';\nCOMMENT ON COLUMN public.boq_items.unit_rate IS 'Цена за единицу';"
+  },
+  "public.client_positions": {
+    "schema": "public",
+    "name": "client_positions",
+    "comment": "Позиции заказчика из ВОРа (Bill of Quantities)",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": "Уникальный идентификатор позиции"
+      },
+      {
+        "name": "tender_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Связь с тендером"
+      },
+      {
+        "name": "position_number",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Автоматический порядковый номер позиции"
+      },
+      {
+        "name": "unit_code",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Код единицы измерения (ссылка на units.code)"
+      },
+      {
+        "name": "volume",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Объем заказчика"
+      },
+      {
+        "name": "client_note",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Примечание заказчика"
+      },
+      {
+        "name": "item_no",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Номер раздела заказчика (из файла ВОР)"
+      },
+      {
+        "name": "work_name",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Название работы/позиции"
+      },
+      {
+        "name": "manual_volume",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Количество ГП (ручной ввод)"
+      },
+      {
+        "name": "manual_note",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Примечание ГП (ручной ввод)"
+      },
+      {
+        "name": "hierarchy_level",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Уровень в иерархии (вводится вручную)"
+      },
+      {
+        "name": "is_additional",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": "Признак дополнительной строки"
+      },
+      {
+        "name": "parent_position_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Связь с родительской позицией для доп. строк"
+      },
+      {
+        "name": "total_material",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Прямая стоимость материалов (расчетная)"
+      },
+      {
+        "name": "total_works",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Прямая стоимость работ (расчетная)"
+      },
+      {
+        "name": "material_cost_per_unit",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Стоимость материалов за единицу"
+      },
+      {
+        "name": "work_cost_per_unit",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Стоимость работ за единицу"
+      },
+      {
+        "name": "total_commercial_material",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Коммерческая стоимость материалов с наценками"
+      },
+      {
+        "name": "total_commercial_work",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 2,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Коммерческая стоимость работ с наценками"
+      },
+      {
+        "name": "total_commercial_material_per_unit",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Коммерческая стоимость материалов за единицу"
+      },
+      {
+        "name": "total_commercial_work_per_unit",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": "Коммерческая стоимость работ за единицу"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": "Дата и время создания записи"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": "Дата и время последнего обновления записи"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_25979_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_25979_22_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_25979_23_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_25979_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_25979_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_25979_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "client_positions_parent_position_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "parent_position_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "client_positions",
+        "foreign_column": "id"
+      },
+      {
+        "name": "client_positions_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "client_positions",
+        "foreign_column": "id"
+      },
+      {
+        "name": "client_positions_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "client_positions_unit_code_fkey",
+        "type": "FOREIGN KEY",
+        "column": "unit_code",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "-- Позиции заказчика из ВОРа (Bill of Quantities)\nCREATE TABLE IF NOT EXISTS public.client_positions (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    tender_id uuid NOT NULL,\n    position_number integer(32) NOT NULL,\n    unit_code text,\n    volume numeric(18,6),\n    client_note text,\n    item_no text,\n    work_name text NOT NULL,\n    manual_volume numeric(18,6),\n    manual_note text,\n    hierarchy_level integer(32) DEFAULT 0,\n    is_additional boolean DEFAULT false,\n    parent_position_id uuid,\n    total_material numeric(18,2) DEFAULT 0,\n    total_works numeric(18,2) DEFAULT 0,\n    material_cost_per_unit numeric(18,6) DEFAULT 0,\n    work_cost_per_unit numeric(18,6) DEFAULT 0,\n    total_commercial_material numeric(18,2) DEFAULT 0,\n    total_commercial_work numeric(18,2) DEFAULT 0,\n    total_commercial_material_per_unit numeric(18,6) DEFAULT 0,\n    total_commercial_work_per_unit numeric(18,6) DEFAULT 0,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT client_positions_parent_position_id_fkey FOREIGN KEY (parent_position_id) REFERENCES public.client_positions(id),\n    CONSTRAINT client_positions_pkey PRIMARY KEY (id),\n    CONSTRAINT client_positions_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None),\n    CONSTRAINT client_positions_unit_code_fkey FOREIGN KEY (unit_code) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.client_positions IS 'Позиции заказчика из ВОРа (Bill of Quantities)';\nCOMMENT ON COLUMN public.client_positions.id IS 'Уникальный идентификатор позиции';\nCOMMENT ON COLUMN public.client_positions.tender_id IS 'Связь с тендером';\nCOMMENT ON COLUMN public.client_positions.position_number IS 'Автоматический порядковый номер позиции';\nCOMMENT ON COLUMN public.client_positions.unit_code IS 'Код единицы измерения (ссылка на units.code)';\nCOMMENT ON COLUMN public.client_positions.volume IS 'Объем заказчика';\nCOMMENT ON COLUMN public.client_positions.client_note IS 'Примечание заказчика';\nCOMMENT ON COLUMN public.client_positions.item_no IS 'Номер раздела заказчика (из файла ВОР)';\nCOMMENT ON COLUMN public.client_positions.work_name IS 'Название работы/позиции';\nCOMMENT ON COLUMN public.client_positions.manual_volume IS 'Количество ГП (ручной ввод)';\nCOMMENT ON COLUMN public.client_positions.manual_note IS 'Примечание ГП (ручной ввод)';\nCOMMENT ON COLUMN public.client_positions.hierarchy_level IS 'Уровень в иерархии (вводится вручную)';\nCOMMENT ON COLUMN public.client_positions.is_additional IS 'Признак дополнительной строки';\nCOMMENT ON COLUMN public.client_positions.parent_position_id IS 'Связь с родительской позицией для доп. строк';\nCOMMENT ON COLUMN public.client_positions.total_material IS 'Прямая стоимость материалов (расчетная)';\nCOMMENT ON COLUMN public.client_positions.total_works IS 'Прямая стоимость работ (расчетная)';\nCOMMENT ON COLUMN public.client_positions.material_cost_per_unit IS 'Стоимость материалов за единицу';\nCOMMENT ON COLUMN public.client_positions.work_cost_per_unit IS 'Стоимость работ за единицу';\nCOMMENT ON COLUMN public.client_positions.total_commercial_material IS 'Коммерческая стоимость материалов с наценками';\nCOMMENT ON COLUMN public.client_positions.total_commercial_work IS 'Коммерческая стоимость работ с наценками';\nCOMMENT ON COLUMN public.client_positions.total_commercial_material_per_unit IS 'Коммерческая стоимость материалов за единицу';\nCOMMENT ON COLUMN public.client_positions.total_commercial_work_per_unit IS 'Коммерческая стоимость работ за единицу';\nCOMMENT ON COLUMN public.client_positions.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.client_positions.updated_at IS 'Дата и время последнего обновления записи';"
+  },
   "public.cost_categories": {
     "schema": "public",
     "name": "cost_categories",
@@ -3474,6 +4250,16 @@
         "is_nullable": "NO",
         "default": "now()",
         "comment": "Дата последнего обновления"
+      },
+      {
+        "name": "default_value",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 5,
+        "numeric_scale": 2,
+        "is_nullable": "NO",
+        "default": "0",
+        "comment": "Базовое (глобальное) значение процента по умолчанию. Используется при создании новых тендеров и как значение по умолчанию в интерфейсе."
       }
     ],
     "constraints": [
@@ -3534,6 +4320,22 @@
         "foreign_column": null
       },
       {
+        "name": "2200_21221_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "markup_parameters_default_value_range",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "markup_parameters",
+        "foreign_column": "default_value"
+      },
+      {
         "name": "markup_parameters_key_check",
         "type": "CHECK",
         "column": null,
@@ -3558,7 +4360,7 @@
         "foreign_column": "id"
       }
     ],
-    "sql": "-- Справочник параметров наценок\nCREATE TABLE IF NOT EXISTS public.markup_parameters (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    key text NOT NULL,\n    label text NOT NULL,\n    is_active boolean NOT NULL DEFAULT true,\n    order_num integer(32) NOT NULL DEFAULT 0,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT markup_parameters_key_key UNIQUE (key),\n    CONSTRAINT markup_parameters_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.markup_parameters IS 'Справочник параметров наценок';\nCOMMENT ON COLUMN public.markup_parameters.id IS 'Уникальный идентификатор параметра';\nCOMMENT ON COLUMN public.markup_parameters.key IS 'Ключ параметра (snake_case с цифрами, уникальный)';\nCOMMENT ON COLUMN public.markup_parameters.label IS 'Название параметра (для UI)';\nCOMMENT ON COLUMN public.markup_parameters.is_active IS 'Активен ли параметр';\nCOMMENT ON COLUMN public.markup_parameters.order_num IS 'Порядок отображения';\nCOMMENT ON COLUMN public.markup_parameters.created_at IS 'Дата создания';\nCOMMENT ON COLUMN public.markup_parameters.updated_at IS 'Дата последнего обновления';"
+    "sql": "-- Справочник параметров наценок\nCREATE TABLE IF NOT EXISTS public.markup_parameters (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    key text NOT NULL,\n    label text NOT NULL,\n    is_active boolean NOT NULL DEFAULT true,\n    order_num integer(32) NOT NULL DEFAULT 0,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    default_value numeric(5,2) NOT NULL DEFAULT 0,\n    CONSTRAINT markup_parameters_key_key UNIQUE (key),\n    CONSTRAINT markup_parameters_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.markup_parameters IS 'Справочник параметров наценок';\nCOMMENT ON COLUMN public.markup_parameters.id IS 'Уникальный идентификатор параметра';\nCOMMENT ON COLUMN public.markup_parameters.key IS 'Ключ параметра (snake_case с цифрами, уникальный)';\nCOMMENT ON COLUMN public.markup_parameters.label IS 'Название параметра (для UI)';\nCOMMENT ON COLUMN public.markup_parameters.is_active IS 'Активен ли параметр';\nCOMMENT ON COLUMN public.markup_parameters.order_num IS 'Порядок отображения';\nCOMMENT ON COLUMN public.markup_parameters.created_at IS 'Дата создания';\nCOMMENT ON COLUMN public.markup_parameters.updated_at IS 'Дата последнего обновления';\nCOMMENT ON COLUMN public.markup_parameters.default_value IS 'Базовое (глобальное) значение процента по умолчанию. Используется при создании новых тендеров и как значение по умолчанию в интерфейсе.';"
   },
   "public.markup_tactics": {
     "schema": "public",
@@ -3982,6 +4784,372 @@
     ],
     "sql": "-- Справочник материалов (Material library) с полной детализацией\nCREATE TABLE IF NOT EXISTS public.materials_library (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    material_type USER-DEFINED NOT NULL,\n    item_type USER-DEFINED NOT NULL,\n    consumption_coefficient numeric(10,4) DEFAULT 1.0000,\n    unit_rate numeric(15,2) NOT NULL,\n    currency_type USER-DEFINED NOT NULL DEFAULT 'RUB'::currency_type,\n    delivery_price_type USER-DEFINED NOT NULL DEFAULT 'в цене'::delivery_price_type,\n    delivery_amount numeric(15,2) DEFAULT 0.00,\n    material_name_id uuid NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT materials_library_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),\n    CONSTRAINT materials_library_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.materials_library IS 'Справочник материалов (Material library) с полной детализацией';\nCOMMENT ON COLUMN public.materials_library.id IS 'Уникальный идентификатор работы (UUID)';\nCOMMENT ON COLUMN public.materials_library.material_type IS 'Тип материала (основной/вспомогательный)';\nCOMMENT ON COLUMN public.materials_library.item_type IS 'Вид материала (мат, суб-мат, мат-комп)';\nCOMMENT ON COLUMN public.materials_library.consumption_coefficient IS 'Коэффициент расхода';\nCOMMENT ON COLUMN public.materials_library.unit_rate IS 'Цена материала за единицу';\nCOMMENT ON COLUMN public.materials_library.currency_type IS 'Тип валюты (рубли, евро, доллары, юани)';\nCOMMENT ON COLUMN public.materials_library.delivery_price_type IS 'Тип доставки (в цене, не в цене, суммой)';\nCOMMENT ON COLUMN public.materials_library.delivery_amount IS 'Сумма доставки';\nCOMMENT ON COLUMN public.materials_library.material_name_id IS 'Связь с наименованием материала (откуда берется название и единица измерения)';\nCOMMENT ON COLUMN public.materials_library.created_at IS 'Дата создания';\nCOMMENT ON COLUMN public.materials_library.updated_at IS 'Дата изменения';"
   },
+  "public.template_items": {
+    "schema": "public",
+    "name": "template_items",
+    "comment": null,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      },
+      {
+        "name": "template_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "kind",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "work_library_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "material_library_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "parent_work_item_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "conversation_coeff",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "position",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": "0",
+        "comment": null
+      },
+      {
+        "name": "note",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "detail_cost_category_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_23656_10_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23656_11_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23656_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23656_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23656_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23656_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "template_items_detail_cost_category_fk",
+        "type": "FOREIGN KEY",
+        "column": "detail_cost_category_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "template_items_kind_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "template_items",
+        "foreign_column": "kind"
+      },
+      {
+        "name": "template_items_material_library_fk",
+        "type": "FOREIGN KEY",
+        "column": "material_library_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "template_items_material_logic_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "template_items",
+        "foreign_column": "conversation_coeff"
+      },
+      {
+        "name": "template_items_parent_work_item_fk",
+        "type": "FOREIGN KEY",
+        "column": "parent_work_item_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "template_items",
+        "foreign_column": "id"
+      },
+      {
+        "name": "template_items_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "template_items",
+        "foreign_column": "id"
+      },
+      {
+        "name": "template_items_template_fk",
+        "type": "FOREIGN KEY",
+        "column": "template_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "template_items_work_library_fk",
+        "type": "FOREIGN KEY",
+        "column": "work_library_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "template_items_work_logic_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "template_items",
+        "foreign_column": "conversation_coeff"
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS public.template_items (\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    template_id uuid NOT NULL,\n    kind text NOT NULL,\n    work_library_id uuid,\n    material_library_id uuid,\n    parent_work_item_id uuid,\n    conversation_coeff numeric(18,6),\n    position integer(32) NOT NULL DEFAULT 0,\n    note text,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    detail_cost_category_id uuid,\n    CONSTRAINT template_items_detail_cost_category_fk FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT template_items_material_library_fk FOREIGN KEY (material_library_id) REFERENCES None.None(None),\n    CONSTRAINT template_items_parent_work_item_fk FOREIGN KEY (parent_work_item_id) REFERENCES public.template_items(id),\n    CONSTRAINT template_items_pkey PRIMARY KEY (id),\n    CONSTRAINT template_items_template_fk FOREIGN KEY (template_id) REFERENCES None.None(None),\n    CONSTRAINT template_items_work_library_fk FOREIGN KEY (work_library_id) REFERENCES None.None(None)\n);"
+  },
+  "public.templates": {
+    "schema": "public",
+    "name": "templates",
+    "comment": null,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "detail_cost_category_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_23640_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23640_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23640_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23640_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_23640_5_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "templates_detail_cost_category_fk",
+        "type": "FOREIGN KEY",
+        "column": "detail_cost_category_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "templates_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "templates",
+        "foreign_column": "id"
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS public.templates (\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    name text NOT NULL,\n    detail_cost_category_id uuid NOT NULL,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT templates_detail_cost_category_fk FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT templates_pkey PRIMARY KEY (id)\n);"
+  },
   "public.tender_markup_percentage": {
     "schema": "public",
     "name": "tender_markup_percentage",
@@ -4342,6 +5510,16 @@
         "is_nullable": "YES",
         "default": null,
         "comment": "ID пользователя, создавшего тендер"
+      },
+      {
+        "name": "markup_tactic_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Ссылка на тактику наценок для данного тендера"
       }
     ],
     "constraints": [
@@ -4386,6 +5564,14 @@
         "foreign_column": null
       },
       {
+        "name": "tenders_markup_tactic_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "markup_tactic_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
         "name": "tenders_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
@@ -4402,7 +5588,7 @@
         "foreign_column": "tender_number"
       }
     ],
-    "sql": "-- Основная таблица для хранения информации о тендерах\nCREATE TABLE IF NOT EXISTS public.tenders (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    title text NOT NULL,\n    description text,\n    client_name text NOT NULL,\n    tender_number text NOT NULL,\n    submission_deadline timestamp with time zone,\n    version integer(32) DEFAULT 1,\n    area_client numeric(12,2),\n    area_sp numeric(12,2),\n    usd_rate numeric(10,4),\n    eur_rate numeric(10,4),\n    cny_rate numeric(10,4),\n    upload_folder text,\n    bsm_link text,\n    tz_link text,\n    qa_form_link text,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    created_by uuid,\n    CONSTRAINT tenders_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),\n    CONSTRAINT tenders_pkey PRIMARY KEY (id),\n    CONSTRAINT tenders_tender_number_key UNIQUE (tender_number)\n);\n\nCOMMENT ON TABLE public.tenders IS 'Основная таблица для хранения информации о тендерах';\nCOMMENT ON COLUMN public.tenders.id IS 'Уникальный идентификатор тендера (UUID)';\nCOMMENT ON COLUMN public.tenders.title IS 'Название тендера';\nCOMMENT ON COLUMN public.tenders.description IS 'Подробное описание тендера';\nCOMMENT ON COLUMN public.tenders.client_name IS 'Наименование заказчика';\nCOMMENT ON COLUMN public.tenders.tender_number IS 'Номер тендера (уникальный, текст+цифры)';\nCOMMENT ON COLUMN public.tenders.submission_deadline IS 'Дата и время окончания приема заявок';\nCOMMENT ON COLUMN public.tenders.version IS 'Версия тендера';\nCOMMENT ON COLUMN public.tenders.area_client IS 'Площадь объекта заказчика (м²)';\nCOMMENT ON COLUMN public.tenders.area_sp IS 'Площадь СП (м²)';\nCOMMENT ON COLUMN public.tenders.usd_rate IS 'Курс доллара США';\nCOMMENT ON COLUMN public.tenders.eur_rate IS 'Курс евро';\nCOMMENT ON COLUMN public.tenders.cny_rate IS 'Курс китайского юаня';\nCOMMENT ON COLUMN public.tenders.upload_folder IS 'Ссылка на папку с загруженными файлами';\nCOMMENT ON COLUMN public.tenders.bsm_link IS 'Ссылка на БСМ (Bill of Materials)';\nCOMMENT ON COLUMN public.tenders.tz_link IS 'Ссылка на техническое задание';\nCOMMENT ON COLUMN public.tenders.qa_form_link IS 'Ссылка на форму вопросов и ответов';\nCOMMENT ON COLUMN public.tenders.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.tenders.updated_at IS 'Дата и время последнего обновления';\nCOMMENT ON COLUMN public.tenders.created_by IS 'ID пользователя, создавшего тендер';"
+    "sql": "-- Основная таблица для хранения информации о тендерах\nCREATE TABLE IF NOT EXISTS public.tenders (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    title text NOT NULL,\n    description text,\n    client_name text NOT NULL,\n    tender_number text NOT NULL,\n    submission_deadline timestamp with time zone,\n    version integer(32) DEFAULT 1,\n    area_client numeric(12,2),\n    area_sp numeric(12,2),\n    usd_rate numeric(10,4),\n    eur_rate numeric(10,4),\n    cny_rate numeric(10,4),\n    upload_folder text,\n    bsm_link text,\n    tz_link text,\n    qa_form_link text,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    created_by uuid,\n    markup_tactic_id uuid,\n    CONSTRAINT tenders_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),\n    CONSTRAINT tenders_markup_tactic_id_fkey FOREIGN KEY (markup_tactic_id) REFERENCES None.None(None),\n    CONSTRAINT tenders_pkey PRIMARY KEY (id),\n    CONSTRAINT tenders_tender_number_key UNIQUE (tender_number)\n);\n\nCOMMENT ON TABLE public.tenders IS 'Основная таблица для хранения информации о тендерах';\nCOMMENT ON COLUMN public.tenders.id IS 'Уникальный идентификатор тендера (UUID)';\nCOMMENT ON COLUMN public.tenders.title IS 'Название тендера';\nCOMMENT ON COLUMN public.tenders.description IS 'Подробное описание тендера';\nCOMMENT ON COLUMN public.tenders.client_name IS 'Наименование заказчика';\nCOMMENT ON COLUMN public.tenders.tender_number IS 'Номер тендера (уникальный, текст+цифры)';\nCOMMENT ON COLUMN public.tenders.submission_deadline IS 'Дата и время окончания приема заявок';\nCOMMENT ON COLUMN public.tenders.version IS 'Версия тендера';\nCOMMENT ON COLUMN public.tenders.area_client IS 'Площадь объекта заказчика (м²)';\nCOMMENT ON COLUMN public.tenders.area_sp IS 'Площадь СП (м²)';\nCOMMENT ON COLUMN public.tenders.usd_rate IS 'Курс доллара США';\nCOMMENT ON COLUMN public.tenders.eur_rate IS 'Курс евро';\nCOMMENT ON COLUMN public.tenders.cny_rate IS 'Курс китайского юаня';\nCOMMENT ON COLUMN public.tenders.upload_folder IS 'Ссылка на папку с загруженными файлами';\nCOMMENT ON COLUMN public.tenders.bsm_link IS 'Ссылка на БСМ (Bill of Materials)';\nCOMMENT ON COLUMN public.tenders.tz_link IS 'Ссылка на техническое задание';\nCOMMENT ON COLUMN public.tenders.qa_form_link IS 'Ссылка на форму вопросов и ответов';\nCOMMENT ON COLUMN public.tenders.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.tenders.updated_at IS 'Дата и время последнего обновления';\nCOMMENT ON COLUMN public.tenders.created_by IS 'ID пользователя, создавшего тендер';\nCOMMENT ON COLUMN public.tenders.markup_tactic_id IS 'Ссылка на тактику наценок для данного тендера';"
   },
   "public.units": {
     "schema": "public",
@@ -6056,6 +7242,116 @@
       }
     ],
     "sql": "CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads_parts (\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    upload_id text NOT NULL,\n    size bigint(64) NOT NULL DEFAULT 0,\n    part_number integer(32) NOT NULL,\n    bucket_id text NOT NULL,\n    key text NOT NULL,\n    etag text NOT NULL,\n    owner_id text,\n    version text NOT NULL,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT s3_multipart_uploads_parts_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES None.None(None),\n    CONSTRAINT s3_multipart_uploads_parts_pkey PRIMARY KEY (id),\n    CONSTRAINT s3_multipart_uploads_parts_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES None.None(None)\n);"
+  },
+  "supabase_migrations.schema_migrations": {
+    "schema": "supabase_migrations",
+    "name": "schema_migrations",
+    "comment": "Auth: Manages updates to the auth system.",
+    "columns": [
+      {
+        "name": "version",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "statements",
+        "data_type": "ARRAY",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "26044_26045_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "schema_migrations_pkey",
+        "type": "PRIMARY KEY",
+        "column": "version",
+        "foreign_table_schema": "supabase_migrations",
+        "foreign_table": "schema_migrations",
+        "foreign_column": "version"
+      }
+    ],
+    "sql": "-- Auth: Manages updates to the auth system.\nCREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (\n    version text NOT NULL,\n    statements ARRAY,\n    name text,\n    CONSTRAINT schema_migrations_pkey PRIMARY KEY (version)\n);\n\nCOMMENT ON TABLE supabase_migrations.schema_migrations IS 'Auth: Manages updates to the auth system.';"
+  },
+  "supabase_migrations.seed_files": {
+    "schema": "supabase_migrations",
+    "name": "seed_files",
+    "comment": null,
+    "columns": [
+      {
+        "name": "path",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "hash",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "26044_26052_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "26044_26052_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "seed_files_pkey",
+        "type": "PRIMARY KEY",
+        "column": "path",
+        "foreign_table_schema": "supabase_migrations",
+        "foreign_table": "seed_files",
+        "foreign_column": "path"
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS supabase_migrations.seed_files (\n    path text NOT NULL,\n    hash text NOT NULL,\n    CONSTRAINT seed_files_pkey PRIMARY KEY (path)\n);"
   },
   "vault.secrets": {
     "schema": "vault",

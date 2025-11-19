@@ -431,6 +431,102 @@
     "is_primary": false,
     "sql": "CREATE UNIQUE INDEX users_phone_key ON auth.users USING btree (phone)"
   },
+  "public.boq_items.idx_boq_items_boq_item_type": {
+    "schema": "public",
+    "name": "idx_boq_items_boq_item_type",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_boq_item_type ON public.boq_items USING btree (boq_item_type)"
+  },
+  "public.boq_items.idx_boq_items_client_position_id": {
+    "schema": "public",
+    "name": "idx_boq_items_client_position_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_client_position_id ON public.boq_items USING btree (client_position_id)"
+  },
+  "public.boq_items.idx_boq_items_detail_cost_category_id": {
+    "schema": "public",
+    "name": "idx_boq_items_detail_cost_category_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_detail_cost_category_id ON public.boq_items USING btree (detail_cost_category_id)"
+  },
+  "public.boq_items.idx_boq_items_material_name_id": {
+    "schema": "public",
+    "name": "idx_boq_items_material_name_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_material_name_id ON public.boq_items USING btree (material_name_id)"
+  },
+  "public.boq_items.idx_boq_items_parent_work_item_id": {
+    "schema": "public",
+    "name": "idx_boq_items_parent_work_item_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_parent_work_item_id ON public.boq_items USING btree (parent_work_item_id)"
+  },
+  "public.boq_items.idx_boq_items_sort_number": {
+    "schema": "public",
+    "name": "idx_boq_items_sort_number",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_sort_number ON public.boq_items USING btree (client_position_id, sort_number)"
+  },
+  "public.boq_items.idx_boq_items_tender_id": {
+    "schema": "public",
+    "name": "idx_boq_items_tender_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_tender_id ON public.boq_items USING btree (tender_id)"
+  },
+  "public.boq_items.idx_boq_items_work_name_id": {
+    "schema": "public",
+    "name": "idx_boq_items_work_name_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_boq_items_work_name_id ON public.boq_items USING btree (work_name_id)"
+  },
+  "public.client_positions.idx_client_positions_is_additional": {
+    "schema": "public",
+    "name": "idx_client_positions_is_additional",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_client_positions_is_additional ON public.client_positions USING btree (tender_id, is_additional)"
+  },
+  "public.client_positions.idx_client_positions_parent_id": {
+    "schema": "public",
+    "name": "idx_client_positions_parent_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_client_positions_parent_id ON public.client_positions USING btree (parent_position_id)"
+  },
+  "public.client_positions.idx_client_positions_position_number": {
+    "schema": "public",
+    "name": "idx_client_positions_position_number",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_client_positions_position_number ON public.client_positions USING btree (tender_id, position_number)"
+  },
+  "public.client_positions.idx_client_positions_tender_id": {
+    "schema": "public",
+    "name": "idx_client_positions_tender_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_client_positions_tender_id ON public.client_positions USING btree (tender_id)"
+  },
   "public.cost_categories.idx_cost_categories_created_at": {
     "schema": "public",
     "name": "idx_cost_categories_created_at",
@@ -630,6 +726,62 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX idx_materials_library_type_currency ON public.materials_library USING btree (material_type, currency_type)"
+  },
+  "public.template_items.idx_template_items_detail_cost_category_id": {
+    "schema": "public",
+    "name": "idx_template_items_detail_cost_category_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_template_items_detail_cost_category_id ON public.template_items USING btree (detail_cost_category_id)"
+  },
+  "public.template_items.idx_template_items_kind": {
+    "schema": "public",
+    "name": "idx_template_items_kind",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_template_items_kind ON public.template_items USING btree (kind)"
+  },
+  "public.template_items.idx_template_items_material_library_id": {
+    "schema": "public",
+    "name": "idx_template_items_material_library_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_template_items_material_library_id ON public.template_items USING btree (material_library_id)"
+  },
+  "public.template_items.idx_template_items_parent_work_item_id": {
+    "schema": "public",
+    "name": "idx_template_items_parent_work_item_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_template_items_parent_work_item_id ON public.template_items USING btree (parent_work_item_id)"
+  },
+  "public.template_items.idx_template_items_template_id": {
+    "schema": "public",
+    "name": "idx_template_items_template_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_template_items_template_id ON public.template_items USING btree (template_id)"
+  },
+  "public.template_items.idx_template_items_work_library_id": {
+    "schema": "public",
+    "name": "idx_template_items_work_library_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_template_items_work_library_id ON public.template_items USING btree (work_library_id)"
+  },
+  "public.templates.idx_templates_detail_cost_category_id": {
+    "schema": "public",
+    "name": "idx_templates_detail_cost_category_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_templates_detail_cost_category_id ON public.templates USING btree (detail_cost_category_id)"
   },
   "public.tender_markup_percentage.idx_tender_markup_percentage_markup_parameter_id": {
     "schema": "public",

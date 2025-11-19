@@ -1,5 +1,5 @@
 -- Database Schema SQL Export
--- Generated: 2025-11-19T14:51:28.608725
+-- Generated: 2025-11-19T09:05:39.853253
 -- Database: postgres
 -- Host: aws-1-eu-west-1.pooler.supabase.com
 
@@ -371,14 +371,13 @@ CREATE TABLE IF NOT EXISTS public.boq_items (
     total_amount numeric(18,2),
     detail_cost_category_id uuid,
     quote_link text,
+    description text,
     commercial_markup numeric(10,4),
     total_commercial_material_cost numeric(18,2),
     total_commercial_work_cost numeric(18,2),
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone NOT NULL DEFAULT now(),
     parent_work_item_id uuid,
-    description text,
-    unit_rate numeric(18,2) DEFAULT 0.00,
     CONSTRAINT boq_items_client_position_id_fkey FOREIGN KEY (client_position_id) REFERENCES None.None(None),
     CONSTRAINT boq_items_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),
     CONSTRAINT boq_items_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),
@@ -408,14 +407,13 @@ COMMENT ON COLUMN public.boq_items.currency_type IS 'Тип валюты (RUB, U
 COMMENT ON COLUMN public.boq_items.total_amount IS 'Итоговая сумма';
 COMMENT ON COLUMN public.boq_items.detail_cost_category_id IS 'Затрата на строительство, связь с таблицей detail_cost_categories';
 COMMENT ON COLUMN public.boq_items.quote_link IS 'Ссылка на КП';
+COMMENT ON COLUMN public.boq_items.description IS 'Примечание к элементу позиции';
 COMMENT ON COLUMN public.boq_items.commercial_markup IS 'Коэффициент наценки';
 COMMENT ON COLUMN public.boq_items.total_commercial_material_cost IS 'Итоговая стоимость материала в коммерческой стоимости';
 COMMENT ON COLUMN public.boq_items.total_commercial_work_cost IS 'Итоговая стоимость работы в коммерческой стоимости';
 COMMENT ON COLUMN public.boq_items.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.boq_items.updated_at IS 'Дата и время последнего обновления';
 COMMENT ON COLUMN public.boq_items.parent_work_item_id IS 'Привязка материала к работе (FK к boq_items.id, NULL если материал независимый)';
-COMMENT ON COLUMN public.boq_items.description IS 'Примечание к элементу позиции';
-COMMENT ON COLUMN public.boq_items.unit_rate IS 'Цена за единицу';
 
 -- Table: public.client_positions
 -- Description: Позиции заказчика из ВОРа (Bill of Quantities)
@@ -474,7 +472,8 @@ COMMENT ON COLUMN public.client_positions.created_at IS 'Дата и время 
 COMMENT ON COLUMN public.client_positions.updated_at IS 'Дата и время последнего обновления записи';
 
 -- Table: public.cost_categories
--- Description: Справочник      
+-- Description: Справочник      
+
   категорий затрат
 CREATE TABLE IF NOT EXISTS public.cost_categories (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -485,7 +484,8 @@ CREATE TABLE IF NOT EXISTS public.cost_categories (
     CONSTRAINT cost_categories_pkey PRIMARY KEY (id),
     CONSTRAINT cost_categories_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)
 );
-COMMENT ON TABLE public.cost_categories IS 'Справочник      
+COMMENT ON TABLE public.cost_categories IS 'Справочник      
+
   категорий затрат';
 COMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории (UUID)';
 COMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';
@@ -514,11 +514,14 @@ COMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылк�
 COMMENT ON COLUMN public.detail_cost_categories.location IS 'Локация/местоположение';
 COMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детальной категории';
 COMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';
-COMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      
+COMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      
+
   номер для сортировки';
-COMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и
+COMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и
+
   время создания записи';
-COMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и
+COMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и
+
   время последнего обновления';
 
 -- Table: public.markup_parameters
@@ -1926,11 +1929,16 @@ $function$
 CREATE OR REPLACE FUNCTION public.set_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
+AS $function$
+
+BEGIN
+
+  NEW.updated_at = now();
+
+  RETURN NEW;
+
+END;
+
 $function$
 
 
@@ -1938,11 +1946,16 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_boq_items_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
+AS $function$
+
+BEGIN
+
+    NEW.updated_at = now();
+
+    RETURN NEW;
+
+END;
+
 $function$
 
 
@@ -1950,11 +1963,16 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_client_positions_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
+AS $function$
+
+BEGIN
+
+    NEW.updated_at = NOW();
+
+    RETURN NEW;
+
+END;
+
 $function$
 
 
@@ -1962,11 +1980,16 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_markup_parameters_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
+AS $function$
+
+BEGIN
+
+  NEW.updated_at = NOW();
+
+  RETURN NEW;
+
+END;
+
 $function$
 
 
@@ -1974,11 +1997,16 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_markup_tactics_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
+AS $function$
+
+BEGIN
+
+  NEW.updated_at = NOW();
+
+  RETURN NEW;
+
+END;
+
 $function$
 
 
@@ -1986,11 +2014,16 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_tender_markup_percentage_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
+AS $function$
+
+BEGIN
+
+  NEW.updated_at = NOW();
+
+  RETURN NEW;
+
+END;
+
 $function$
 
 
@@ -4185,7 +4218,7 @@ GRANT service_role TO authenticator;
 -- GRANT USAGE ON SCHEMA public TO authenticator;
 
 -- Role: cli_login_postgres
-CREATE ROLE cli_login_postgres WITH LOGIN NOINHERIT VALID UNTIL '2025-11-19 09:11:28.232669+00';
+CREATE ROLE cli_login_postgres WITH LOGIN NOINHERIT VALID UNTIL '2025-11-17 12:34:07.223578+00';
 GRANT postgres TO cli_login_postgres;
 -- Database privileges for cli_login_postgres:
 -- GRANT CONNECT, TEMP ON DATABASE postgres TO cli_login_postgres;

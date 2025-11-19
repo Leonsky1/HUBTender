@@ -24,12 +24,7 @@
       "Bash(test:*)",
       "Bash(node scripts/fix-global-tactic.js:*)",
       "Bash(/tmp/markup_old.tsx)",
-      "Bash(supabase db diff:*)",
-      "Bash(npx tsc:*)",
-      "Bash(echo:*)",
-      "Bash(015_add_description_to_boq_items.sql)",
-      "mcp__supabase__queryDatabase",
-      "Bash(psql:*)"
+      "Bash(supabase db diff:*)"
     ],
     "deny": [],
     "ask": []

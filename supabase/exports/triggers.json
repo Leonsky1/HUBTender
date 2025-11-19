@@ -1,4 +1,22 @@
 {
+  "public.boq_items.boq_items_updated_at_trigger": {
+    "schema": "public",
+    "name": "boq_items_updated_at_trigger",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER boq_items_updated_at_trigger BEFORE UPDATE ON public.boq_items FOR EACH ROW EXECUTE FUNCTION update_boq_items_updated_at()"
+  },
+  "public.client_positions.trigger_update_client_positions_updated_at": {
+    "schema": "public",
+    "name": "trigger_update_client_positions_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER trigger_update_client_positions_updated_at BEFORE UPDATE ON public.client_positions FOR EACH ROW EXECUTE FUNCTION update_client_positions_updated_at()"
+  },
   "public.cost_categories.update_cost_categories_updated_at": {
     "schema": "public",
     "name": "update_cost_categories_updated_at",
@@ -52,6 +70,24 @@
     "timing": null,
     "comment": null,
     "sql": "CREATE TRIGGER update_materials_library_updated_at BEFORE UPDATE ON public.materials_library FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  "public.template_items.set_updated_at_template_items": {
+    "schema": "public",
+    "name": "set_updated_at_template_items",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER set_updated_at_template_items BEFORE UPDATE ON public.template_items FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+  },
+  "public.templates.set_updated_at_templates": {
+    "schema": "public",
+    "name": "set_updated_at_templates",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER set_updated_at_templates BEFORE UPDATE ON public.templates FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
   },
   "public.tender_markup_percentage.trigger_update_tender_markup_percentage_updated_at": {
     "schema": "public",
