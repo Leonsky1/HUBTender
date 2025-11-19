@@ -476,12 +476,12 @@ const ClientPositions: React.FC = () => {
       {selectedTender && (
         <div style={{
           background: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
-          padding: '20px 32px',
+          padding: '12px 32px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderRadius: '8px',
-          margin: '16px 0',
+          borderRadius: '8px 8px 0 0',
+          margin: '16px 0 0 0',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <FileTextOutlined style={{ fontSize: 32, color: 'white' }} />
@@ -519,87 +519,57 @@ const ClientPositions: React.FC = () => {
 
       {/* Блок с фильтрами и информацией о тендере */}
       <div>
-        {!selectedTender ? (
-          // Блок выбора тендера (когда тендер не выбран)
-          <Card>
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Text strong>Тендер:</Text>
-                <Select
-                  style={{ width: '100%', marginTop: 8 }}
-                  placeholder="Выберите тендер..."
-                  options={getTenderTitles()}
-                  value={selectedTenderTitle}
-                  onChange={handleTenderTitleChange}
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                />
-              </Col>
+        <Card
+          bodyStyle={{ padding: '12px 24px' }}
+          style={{
+            background: currentTheme === 'dark' ? '#1a1a1a' : '#f5f5f5',
+            border: 'none',
+            borderRadius: selectedTender ? '0' : '8px',
+            marginBottom: 0,
+          }}
+        >
+          <Row gutter={[16, 8]}>
+            {/* Левая колонка: Фильтры */}
+            <Col span={7}>
+              <Row gutter={8}>
+                <Col span={16}>
+                  <Text strong style={{ color: currentTheme === 'dark' ? '#fff' : '#000', fontSize: 14 }}>Тендер:</Text>
+                  <Select
+                    style={{ width: '100%', marginTop: 6 }}
+                    placeholder="Выберите тендер..."
+                    value={selectedTenderTitle}
+                    onChange={handleTenderTitleChange}
+                    options={getTenderTitles()}
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <Text strong style={{ color: currentTheme === 'dark' ? '#fff' : '#000', fontSize: 14 }}>Версия:</Text>
+                  <Select
+                    style={{ width: '100%', marginTop: 6 }}
+                    placeholder="Выберите..."
+                    disabled={!selectedTenderTitle}
+                    value={selectedVersion}
+                    onChange={handleVersionChange}
+                    options={selectedTenderTitle ? getVersionsForTitle(selectedTenderTitle) : []}
+                  />
+                </Col>
+              </Row>
+              <Button
+                type="link"
+                icon={<FileSearchOutlined />}
+                style={{ padding: 0, marginTop: 8, color: '#10b981' }}
+              >
+                БСМ тендера
+              </Button>
+            </Col>
 
-              <Col span={12}>
-                <Text strong>Версия:</Text>
-                <Select
-                  style={{ width: '100%', marginTop: 8 }}
-                  placeholder="Сначала выберите тендер..."
-                  disabled={!selectedTenderTitle}
-                  options={selectedTenderTitle ? getVersionsForTitle(selectedTenderTitle) : []}
-                  value={selectedVersion}
-                  onChange={handleVersionChange}
-                />
-              </Col>
-            </Row>
-          </Card>
-        ) : (
-          // Блок с информацией о выбранном тендере
-          <Card
-            bodyStyle={{ padding: '12px 24px' }}
-            style={{
-              background: currentTheme === 'dark' ? '#1a1a1a' : '#f5f5f5',
-              border: 'none',
-              borderRadius: '8px 8px 0 0',
-              marginBottom: 0,
-            }}
-          >
-            <Row gutter={[16, 8]}>
-              {/* Левая колонка: Фильтры */}
-              <Col span={7}>
-                <Row gutter={8}>
-                  <Col span={16}>
-                    <Text strong style={{ color: currentTheme === 'dark' ? '#fff' : '#000', fontSize: 14 }}>Тендер:</Text>
-                    <Select
-                      style={{ width: '100%', marginTop: 6 }}
-                      value={selectedTenderTitle}
-                      onChange={handleTenderTitleChange}
-                      options={getTenderTitles()}
-                      showSearch
-                      filterOption={(input, option) =>
-                        (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                      }
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <Text strong style={{ color: currentTheme === 'dark' ? '#fff' : '#000', fontSize: 14 }}>Версия:</Text>
-                    <Select
-                      style={{ width: '100%', marginTop: 6 }}
-                      value={selectedVersion}
-                      onChange={handleVersionChange}
-                      options={selectedTenderTitle ? getVersionsForTitle(selectedTenderTitle) : []}
-                    />
-                  </Col>
-                </Row>
-                <Button
-                  type="link"
-                  icon={<FileSearchOutlined />}
-                  style={{ padding: 0, marginTop: 8, color: '#10b981' }}
-                >
-                  БСМ тендера
-                </Button>
-              </Col>
-
-              {/* Средняя колонка: Информация о тендере */}
-              <Col span={14} offset={0}>
+            {/* Средняя колонка: Информация о тендере */}
+            <Col span={14} offset={0}>
+              {selectedTender ? (
                 <div style={{ textAlign: 'right' }}>
                   {/* Строка 1: Название и заказчик */}
                   <div style={{ marginBottom: 4, fontSize: 14 }}>
@@ -677,32 +647,44 @@ const ClientPositions: React.FC = () => {
                     </Space>
                   </div>
                 </div>
-              </Col>
-
-              {/* Правая колонка: Общая стоимость */}
-              <Col span={3}>
+              ) : (
                 <div style={{
-                  border: `2px solid ${currentTheme === 'dark' ? '#444' : '#d9d9d9'}`,
-                  borderRadius: '8px',
-                  padding: '12px 16px',
-                  background: currentTheme === 'dark' ? '#2a2a2a' : '#fff',
-                  textAlign: 'center',
                   display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
                   alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: currentTheme === 'dark' ? '#666' : '#999'
                 }}>
-                  <Text style={{ fontSize: 12, color: currentTheme === 'dark' ? '#999' : '#666', display: 'block', marginBottom: 6 }}>
-                    Общая стоимость
-                  </Text>
-                  <Text strong style={{ fontSize: 22, color: '#10b981', display: 'block', lineHeight: 1.2 }}>
-                    {Math.round(getTotalCost()).toLocaleString('ru-RU')}
+                  <Text style={{ fontSize: 14, color: currentTheme === 'dark' ? '#666' : '#999' }}>
+                    Выберите тендер для отображения данных
                   </Text>
                 </div>
-              </Col>
-            </Row>
-          </Card>
-        )}
+              )}
+            </Col>
+
+            {/* Правая колонка: Общая стоимость */}
+            <Col span={3}>
+              <div style={{
+                border: `2px solid ${currentTheme === 'dark' ? '#444' : '#d9d9d9'}`,
+                borderRadius: '8px',
+                padding: '20px 16px',
+                background: currentTheme === 'dark' ? '#2a2a2a' : '#fff',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <Text style={{ fontSize: 12, color: currentTheme === 'dark' ? '#999' : '#666', display: 'block', marginBottom: 12 }}>
+                  Общая стоимость
+                </Text>
+                <Text strong style={{ fontSize: 22, color: '#10b981', display: 'block', lineHeight: 1.2 }}>
+                  {selectedTender ? Math.round(getTotalCost()).toLocaleString('ru-RU') : '—'}
+                </Text>
+              </div>
+            </Col>
+          </Row>
+        </Card>
 
         {/* Строка с дедлайном */}
         {selectedTender && selectedTender.submission_deadline && (() => {
@@ -710,7 +692,7 @@ const ClientPositions: React.FC = () => {
           return (
             <div style={{
               background: isExpired ? '#b91c1c' : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
-              padding: '14px 32px',
+              padding: '8px 32px',
               marginTop: 0,
               display: 'flex',
               justifyContent: 'center',

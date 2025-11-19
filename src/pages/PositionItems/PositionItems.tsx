@@ -1011,7 +1011,7 @@ const PositionItems: React.FC = () => {
                 <Text type="secondary">{position.unit_code}</Text>
               </div>
               <Tag color="success" style={{ fontSize: 14, padding: '4px 12px', fontWeight: 600 }}>
-                Итого: {items.reduce((sum, item) => sum + calculateTotal(item), 0).toLocaleString('ru-RU')}
+                Итого: {Math.round(items.reduce((sum, item) => sum + calculateTotal(item), 0)).toLocaleString('ru-RU')}
               </Tag>
               <Tag color="success" style={{ fontSize: 14, padding: '4px 12px', fontWeight: 600 }}>
                 Р {items.filter(item => ['раб', 'суб-раб', 'раб-комп.'].includes(item.boq_item_type)).length} М {items.filter(item => ['мат', 'суб-мат', 'мат-комп.'].includes(item.boq_item_type)).length}
@@ -1146,7 +1146,7 @@ const PositionItems: React.FC = () => {
                     Итого:
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={8} align="center">
-                    {totalSum.toLocaleString('ru-RU')}
+                    {Math.round(totalSum).toLocaleString('ru-RU')}
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={9} colSpan={4} />
                 </Table.Summary.Row>
