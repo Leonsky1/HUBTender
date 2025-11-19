@@ -138,8 +138,8 @@ export async function checkDatabaseStructure() {
     if (rlsError) {
       console.log('  Не удалось проверить RLS (функция может отсутствовать)');
     } else if (rls) {
-      console.log(`  RLS статус: ${rls.enabled ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'}`);
-      if (rls.enabled) {
+      console.log(`  RLS статус: ${(rls as any).enabled ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'}`);
+      if ((rls as any).enabled) {
         console.log('  ⚠️ RLS включен - убедитесь, что есть политики для обновления');
       }
     }

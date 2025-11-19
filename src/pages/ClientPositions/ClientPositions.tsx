@@ -177,7 +177,7 @@ const ClientPositions: React.FC = () => {
     if (tender) {
       setSelectedTender(tender);
       setSelectedTenderId(tenderId);
-      setSelectedVersion(tender.version);
+      setSelectedVersion(tender.version ?? null);
       fetchClientPositions(tenderId);
     }
   };

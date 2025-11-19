@@ -5,17 +5,12 @@
 
 import { supabase } from '../lib/supabase';
 import type {
-  BoqItem,
-  MarkupTactic,
-  MarkupParameter,
-  TenderMarkupPercentage,
-  BoqItemType
+  BoqItem
 } from '../lib/supabase';
 import {
   calculateMarkupResult,
   validateMarkupSequence,
-  type CalculationContext,
-  type CalculationResult
+  type CalculationContext
 } from '../utils/markupCalculator';
 
 /**
@@ -41,31 +36,94 @@ export interface TacticApplicationResult {
 export async function loadMarkupParameters(tenderId: string): Promise<Map<string, number>> {
   const parametersMap = new Map<string, number>();
 
-  // ВРЕМЕННОЕ РЕШЕНИЕ: Используем фиксированные параметры наценок
-  // TODO: Создать таблицы markup_parameters и tender_markup_percentage
-  // или хранить параметры в самой тактике
+  try {
+    // Сначала загружаем все активные параметры с их значениями по умолчанию
+    const { data: allParameters, error: paramsError } = await supabase
+      .from('markup_parameters')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_num');
 
-  // Заполняем Map тестовыми значениями наценок
-  parametersMap.set('mechanization_service', 5); // Служба механизации 5%
-  parametersMap.set('mbp_gsm', 5); // МБП и ГСМ 5%
-  parametersMap.set('warranty_period', 5); // Гарантийный период 5%
-  parametersMap.set('works_16_markup', 60); // Работы 1.6 - 60%
-  parametersMap.set('works_cost_growth', 10); // Рост стоимости работ 10%
-  parametersMap.set('material_cost_growth', 10); // Рост стоимости материалов 10%
-  parametersMap.set('subcontract_works_cost_growth', 10); // Рост субподрядных работ 10%
-  parametersMap.set('subcontract_materials_cost_growth', 10); // Рост субподрядных материалов 10%
-  parametersMap.set('contingency_costs', 3); // Непредвиденные затраты 3%
-  parametersMap.set('overhead_own_forces', 10); // Накладные собственные силы 10%
-  parametersMap.set('overhead_subcontract', 10); // Накладные субподряд 10%
-  parametersMap.set('general_costs_without_subcontract', 20); // Общие расходы без субподряда 20%
-  parametersMap.set('profit_own_forces', 10); // Прибыль собственные силы 10%
-  parametersMap.set('profit_subcontract', 16); // Прибыль субподряд 16%
+    if (paramsError) {
+      console.error('Ошибка загрузки параметров:', paramsError);
+      // Если таблица не существует, используем фоллбэк значения
+      return getFallbackParameters();
+    }
 
-  console.log('Загружены тестовые параметры наценок:', {
-    size: parametersMap.size,
-    entries: Array.from(parametersMap.entries())
-  });
+    // Заполняем Map значениями по умолчанию
+    if (allParameters) {
+      for (const param of allParameters) {
+        parametersMap.set(param.key, param.default_value || 0);
+      }
+    }
 
+    // Теперь загружаем конкретные значения для тендера
+    const { data: tenderPercentages, error: percentagesError } = await supabase
+      .from('tender_markup_percentage')
+      .select(`
+        value,
+        markup_parameter:markup_parameter_id (
+          key,
+          label
+        )
+      `)
+      .eq('tender_id', tenderId);
+
+    if (percentagesError) {
+      console.error('Ошибка загрузки процентов тендера:', percentagesError);
+      // Продолжаем с дефолтными значениями
+    } else if (tenderPercentages && tenderPercentages.length > 0) {
+      // Обновляем Map значениями из тендера
+      for (const percentage of tenderPercentages) {
+        const param = percentage.markup_parameter as any;
+        if (param && param.key) {
+          parametersMap.set(param.key, percentage.value);
+        }
+      }
+    }
+
+    console.log('Загружены параметры наценок из БД:', {
+      size: parametersMap.size,
+      entries: Array.from(parametersMap.entries())
+    });
+
+    // Если параметров мало или нет, возвращаем фоллбэк
+    if (parametersMap.size === 0) {
+      console.warn('Параметры не найдены в БД, используем фоллбэк');
+      return getFallbackParameters();
+    }
+
+    return parametersMap;
+
+  } catch (error) {
+    console.error('Критическая ошибка загрузки параметров:', error);
+    return getFallbackParameters();
+  }
+}
+
+/**
+ * Возвращает фоллбэк параметры для случаев когда БД недоступна
+ */
+function getFallbackParameters(): Map<string, number> {
+  const parametersMap = new Map<string, number>();
+
+  // Базовые параметры для расчета коэффициентов
+  parametersMap.set('mechanization_service', 5);
+  parametersMap.set('mbp_gsm', 5);
+  parametersMap.set('warranty_period', 5);
+  parametersMap.set('works_16_markup', 60);
+  parametersMap.set('works_cost_growth', 10);
+  parametersMap.set('material_cost_growth', 10);
+  parametersMap.set('subcontract_works_cost_growth', 10);
+  parametersMap.set('subcontract_materials_cost_growth', 10);
+  parametersMap.set('contingency_costs', 3);
+  parametersMap.set('overhead_own_forces', 10);
+  parametersMap.set('overhead_subcontract', 10);
+  parametersMap.set('general_costs_without_subcontract', 20);
+  parametersMap.set('profit_own_forces', 10);
+  parametersMap.set('profit_subcontract', 16);
+
+  console.log('Используются фоллбэк параметры наценок');
   return parametersMap;
 }
 
@@ -393,7 +451,7 @@ export async function applyTacticToTender(
     const allDetails: TacticApplicationResult['details'] = [];
 
     for (const position of positions) {
-      const result = await applyTacticToPosition(position.id, tacticId);
+      const result = await applyTacticToPosition(position.id!, tacticId);
 
       if (result.updatedCount) {
         totalUpdated += result.updatedCount;

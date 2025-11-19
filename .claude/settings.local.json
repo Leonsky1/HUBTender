@@ -24,7 +24,9 @@
       "Bash(test:*)",
       "Bash(node scripts/fix-global-tactic.js:*)",
       "Bash(/tmp/markup_old.tsx)",
-      "Bash(supabase db diff:*)"
+      "Bash(supabase db diff:*)",
+      "mcp__github__get_file_contents",
+      "Bash(npx playwright test:*)"
     ],
     "deny": [],
     "ask": []

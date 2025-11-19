@@ -36,7 +36,7 @@ import { checkCommercialData } from '../../utils/checkCommercialData';
 import { initializeTestMarkup } from '../../utils/initializeTestMarkup';
 import { debugCommercialCalculation } from '../../utils/debugCommercialCalculation';
 import { checkDatabaseStructure } from '../../utils/checkDatabaseStructure';
-import { checkMarkupSequences } from '../../utils/checkMarkupSequences';
+import { verifyCoefficients } from '../../utils/verifyCoefficients';
 import * as XLSX from 'xlsx';
 
 const { Title, Text } = Typography;
@@ -623,6 +623,15 @@ export default function Commerce() {
                         style={{ background: '#faad14', color: 'white' }}
                       >
                         Debug
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="Проверка коэффициентов наценок">
+                      <Button
+                        onClick={() => selectedTenderId && verifyCoefficients(selectedTenderId)}
+                        disabled={!selectedTenderId}
+                        style={{ background: '#52c41a', color: 'white' }}
+                      >
+                        Коэфф.
                       </Button>
                     </Tooltip>
                   </>

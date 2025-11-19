@@ -881,7 +881,7 @@ const Nomenclatures: React.FC = () => {
               placeholder="Например: Кирпич керамический"
               options={materialsData.map(item => ({ value: item.name }))}
               filterOption={(inputValue, option) =>
-                option?.value.toLowerCase().includes(inputValue.toLowerCase())
+                option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
               }
             />
           </Form.Item>
@@ -948,7 +948,7 @@ const Nomenclatures: React.FC = () => {
               placeholder="Например: Монтаж кирпичной кладки"
               options={worksData.map(item => ({ value: item.name }))}
               filterOption={(inputValue, option) =>
-                option?.value.toLowerCase().includes(inputValue.toLowerCase())
+                option?.value.toLowerCase().includes(inputValue.toLowerCase()) || false
               }
             />
           </Form.Item>
