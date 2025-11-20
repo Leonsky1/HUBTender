@@ -470,6 +470,89 @@ const ClientPositions: React.FC = () => {
     },
   ];
 
+  // Если тендер не выбран, показываем экран выбора тендера
+  if (!selectedTender) {
+    return (
+      <Card bordered={false} style={{ height: '100%' }}>
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <Title level={3} style={{ marginBottom: 24 }}>
+              Позиции заказчика
+            </Title>
+            <Text type="secondary" style={{ fontSize: 16, marginBottom: 24, display: 'block' }}>
+              Выберите тендер для просмотра позиций
+            </Text>
+            <Select
+              style={{ width: 400, marginBottom: 32 }}
+              placeholder="Выберите тендер"
+              value={selectedTenderTitle}
+              onChange={handleTenderTitleChange}
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={getTenderTitles()}
+              size="large"
+            />
+
+            {selectedTenderTitle && (
+              <Select
+                style={{ width: 200, marginBottom: 32, marginLeft: 16 }}
+                placeholder="Выберите версию"
+                value={selectedVersion}
+                onChange={handleVersionChange}
+                options={getVersionsForTitle(selectedTenderTitle)}
+                size="large"
+              />
+            )}
+
+            {/* Быстрый выбор через карточки */}
+            {tenders.length > 0 && (
+              <div style={{ marginTop: 32 }}>
+                <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                  Или выберите из списка:
+                </Text>
+                <Row gutter={[16, 16]} justify="center">
+                  {tenders.slice(0, 6).map(tender => (
+                    <Col key={tender.id}>
+                      <Card
+                        hoverable
+                        style={{
+                          width: 200,
+                          textAlign: 'center',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                          setSelectedTenderTitle(tender.title);
+                          setSelectedVersion(tender.version || 1);
+                          setSelectedTender(tender);
+                          setSelectedTenderId(tender.id);
+                          fetchClientPositions(tender.id);
+                        }}
+                      >
+                        <div style={{ marginBottom: 8 }}>
+                          <Tag color="blue">{tender.tender_number}</Tag>
+                        </div>
+                        <div style={{ marginBottom: 8 }}>
+                          <Text strong style={{ marginRight: 8 }}>
+                            {tender.title}
+                          </Text>
+                          <Tag color="orange">v{tender.version || 1}</Tag>
+                        </div>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {tender.client_name}
+                        </Text>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+          </div>
+      </Card>
+    );
+  }
+
   return (
     <div style={{ padding: 0 }}>
       {/* Верхняя шапка с названием тендера и кнопками */}
@@ -496,6 +579,8 @@ const ClientPositions: React.FC = () => {
           </div>
           <Space>
             <Button
+              type="primary"
+              style={{ backgroundColor: '#10b981', borderColor: '#10b981' }}
               icon={<ArrowLeftOutlined />}
               onClick={() => {
                 setSelectedTender(null);
@@ -520,10 +605,10 @@ const ClientPositions: React.FC = () => {
       {/* Блок с фильтрами и информацией о тендере */}
       <div>
         <Card
+          bordered={false}
           bodyStyle={{ padding: '12px 24px' }}
           style={{
             background: currentTheme === 'dark' ? '#1a1a1a' : '#f5f5f5',
-            border: 'none',
             borderRadius: selectedTender ? '0' : '8px',
             marginBottom: 0,
           }}
@@ -558,17 +643,10 @@ const ClientPositions: React.FC = () => {
                   />
                 </Col>
               </Row>
-              <Button
-                type="link"
-                icon={<FileSearchOutlined />}
-                style={{ padding: 0, marginTop: 8, color: '#10b981' }}
-              >
-                БСМ тендера
-              </Button>
             </Col>
 
             {/* Средняя колонка: Информация о тендере */}
-            <Col span={14} offset={0}>
+            <Col span={17} offset={0}>
               {selectedTender ? (
                 <div style={{ textAlign: 'right' }}>
                   {/* Строка 1: Название и заказчик */}
@@ -661,28 +739,6 @@ const ClientPositions: React.FC = () => {
                 </div>
               )}
             </Col>
-
-            {/* Правая колонка: Общая стоимость */}
-            <Col span={3}>
-              <div style={{
-                border: `2px solid ${currentTheme === 'dark' ? '#444' : '#d9d9d9'}`,
-                borderRadius: '8px',
-                padding: '20px 16px',
-                background: currentTheme === 'dark' ? '#2a2a2a' : '#fff',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-                <Text style={{ fontSize: 12, color: currentTheme === 'dark' ? '#999' : '#666', display: 'block', marginBottom: 12 }}>
-                  Общая стоимость
-                </Text>
-                <Text strong style={{ fontSize: 22, color: '#10b981', display: 'block', lineHeight: 1.2 }}>
-                  {selectedTender ? Math.round(getTotalCost()).toLocaleString('ru-RU') : '—'}
-                </Text>
-              </div>
-            </Col>
           </Row>
         </Card>
 
@@ -719,7 +775,7 @@ const ClientPositions: React.FC = () => {
 
       {/* Таблица позиций заказчика */}
       {selectedTender && (
-        <Card title="Позиции заказчика" style={{ marginTop: 24 }}>
+        <Card bordered={false} title="Позиции заказчика" style={{ marginTop: 24 }}>
           <Table
             columns={columns}
             dataSource={clientPositions}

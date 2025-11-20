@@ -192,6 +192,7 @@ const Settings: React.FC = () => {
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={16}>
           <Card
+            bordered={false}
             title={
               <Space>
                 <FontSizeOutlined />
@@ -391,7 +392,7 @@ const Settings: React.FC = () => {
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Предпросмотр" className="settings-preview">
+          <Card bordered={false} title="Предпросмотр" className="settings-preview">
             <Title level={3}>Заголовок третьего уровня</Title>
             <Title level={4}>Заголовок четвертого уровня</Title>
             <Paragraph>
@@ -412,6 +413,7 @@ const Settings: React.FC = () => {
           </Card>
 
           <Card
+            bordered={false}
             title="Текущие настройки"
             className="settings-current"
             style={{ marginTop: 24 }}

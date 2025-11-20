@@ -22,7 +22,7 @@ import {
   BankOutlined,
   PercentageOutlined,
 } from '@ant-design/icons';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { LogoIcon } from '../Icons';
 import './MainLayout.css';
@@ -81,6 +81,11 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
       ],
     },
     {
+      key: '/bsm',
+      icon: <FileTextOutlined />,
+      label: 'Базовая стоимость',
+    },
+    {
       key: '/costs',
       icon: <DollarOutlined />,
       label: 'Затраты на строительство',
@@ -133,8 +138,43 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
   ];
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    navigate(e.key);
+    // Предотвращаем навигацию только если это не клик по ссылке
+    // (клик колесом обрабатывается браузером нативно через Link)
+    if (e.domEvent && 'button' in e.domEvent && !e.domEvent.button) {
+      e.domEvent.preventDefault();
+      navigate(e.key);
+    }
   };
+
+  // Функция для преобразования пунктов меню в ссылки
+  const renderMenuItem = (item: any) => {
+    // Если это группа (есть children), не рендерим как ссылку
+    if (item.children) {
+      return item.label;
+    }
+    // Если есть key, рендерим как Link для поддержки открытия в новой вкладке
+    if (item.key && item.key.startsWith('/')) {
+      return <Link to={item.key}>{item.label}</Link>;
+    }
+    return item.label;
+  };
+
+  // Преобразуем menuItems, добавляя label как функцию рендеринга
+  const processedMenuItems = menuItems.map((item: any) => {
+    if (item.children) {
+      return {
+        ...item,
+        children: item.children.map((child: any) => ({
+          ...child,
+          label: child.type === 'divider' ? undefined : renderMenuItem(child),
+        })),
+      };
+    }
+    return {
+      ...item,
+      label: renderMenuItem(item),
+    };
+  });
 
   return (
     <Layout style={{ minHeight: '100vh', height: '100vh' }}>
@@ -174,8 +214,8 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
           theme={currentTheme}
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={location.pathname.startsWith('/admin') ? ['admin'] : []}
-          items={menuItems}
+          defaultOpenKeys={location.pathname.startsWith('/admin') ? ['admin'] : location.pathname.startsWith('/library') ? ['library'] : []}
+          items={processedMenuItems}
           onClick={handleMenuClick}
           style={{
             background: 'transparent',
@@ -187,11 +227,11 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
         <Header
           style={{
             padding: '0 24px',
-            background: colorBgContainer,
+            background: currentTheme === 'dark' ? '#0a0a0a' : '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+            borderBottom: currentTheme === 'light' ? '1px solid #e8e8e8' : 'none',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -228,11 +268,9 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
         </Header>
         <Content
           style={{
-            margin: '16px 8px',
-            padding: 24,
+            padding: 16,
             minHeight: 280,
             background: colorBgContainer,
-            borderRadius: '8px',
             overflow: 'auto',
           }}
         >

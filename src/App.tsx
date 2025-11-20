@@ -14,6 +14,7 @@ import Templates from './pages/Library/Templates';
 import ClientPositions from './pages/ClientPositions/ClientPositions';
 import PositionItems from './pages/PositionItems/PositionItems';
 import Commerce from './pages/Commerce';
+import Bsm from './pages/Bsm/Bsm';
 import './App.css';
 
 // Временный импорт для тестирования Supabase (удалить после проверки)
@@ -43,6 +44,7 @@ function AppContent() {
             <Route path="commerce" element={<Commerce />} />
             <Route path="library" element={<Library />} />
             <Route path="library/templates" element={<Templates />} />
+            <Route path="bsm" element={<Bsm />} />
             <Route path="costs" element={<div>Затраты на строительство</div>} />
             <Route path="admin">
               <Route index element={<Navigate to="/admin/nomenclatures" replace />} />

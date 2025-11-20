@@ -115,7 +115,8 @@ export function calculateMarkupResult(context: CalculationContext): CalculationR
         step.operand1Index,
         step.operand1MultiplyFormat,
         markupParameters,
-        stepResults
+        stepResults,
+        baseAmount
       );
       console.log(`  Операнд1 = ${operand1}`);
       stepResult = applyOperation(stepResult, step.action1, operand1);
@@ -129,7 +130,8 @@ export function calculateMarkupResult(context: CalculationContext): CalculationR
           step.operand2Index,
           step.operand2MultiplyFormat,
           markupParameters,
-          stepResults
+          stepResults,
+          baseAmount
         );
         stepResult = applyOperation(stepResult, step.action2, operand2);
       }
@@ -142,7 +144,8 @@ export function calculateMarkupResult(context: CalculationContext): CalculationR
           step.operand3Index,
           step.operand3MultiplyFormat,
           markupParameters,
-          stepResults
+          stepResults,
+          baseAmount
         );
         stepResult = applyOperation(stepResult, step.action3, operand3);
       }
@@ -155,7 +158,8 @@ export function calculateMarkupResult(context: CalculationContext): CalculationR
           step.operand4Index,
           step.operand4MultiplyFormat,
           markupParameters,
-          stepResults
+          stepResults,
+          baseAmount
         );
         stepResult = applyOperation(stepResult, step.action4, operand4);
       }
@@ -168,7 +172,8 @@ export function calculateMarkupResult(context: CalculationContext): CalculationR
           step.operand5Index,
           step.operand5MultiplyFormat,
           markupParameters,
-          stepResults
+          stepResults,
+          baseAmount
         );
         stepResult = applyOperation(stepResult, step.action5, operand5);
       }
@@ -233,6 +238,7 @@ function getBaseValue(
  * @param multiplyFormat Формат умножения (для markup)
  * @param markupParameters Параметры наценок
  * @param stepResults Результаты предыдущих шагов
+ * @param baseAmount Базовая сумма (для operandIndex = -1)
  * @returns Значение операнда
  */
 function getOperandValue(
@@ -241,7 +247,8 @@ function getOperandValue(
   operandIndex?: number,
   multiplyFormat?: 'addOne' | 'direct',
   markupParameters?: Map<string, number>,
-  stepResults?: number[]
+  stepResults?: number[],
+  baseAmount?: number
 ): number {
   if (!operandType) {
     throw new Error('Не указан тип операнда');
@@ -290,6 +297,15 @@ function getOperandValue(
     case 'step': {
       if (operandIndex === undefined || !stepResults) {
         throw new Error('Не указан индекс шага или отсутствуют результаты шагов');
+      }
+
+      // Специальный случай: -1 означает базовое значение (baseAmount)
+      if (operandIndex === -1) {
+        if (baseAmount === undefined) {
+          throw new Error('Базовая сумма не передана для operandIndex = -1');
+        }
+        console.log(`  🔹 operandIndex = -1, возвращаем baseAmount = ${baseAmount}`);
+        return baseAmount;
       }
 
       if (operandIndex < 0 || operandIndex >= stepResults.length) {
