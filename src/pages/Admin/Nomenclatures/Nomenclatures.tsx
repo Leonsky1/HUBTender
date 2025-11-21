@@ -732,10 +732,11 @@ const Nomenclatures: React.FC = () => {
   ];
 
   return (
-    <div style={{ margin: '-16px', padding: '24px' }}>
-      <Title level={4} style={{ margin: '0 0 16px 0' }}>
-        Номенклатуры
-      </Title>
+    <>
+      <div style={{ margin: '-16px', padding: '24px' }}>
+        <Title level={4} style={{ margin: '0 0 16px 0' }}>
+          Номенклатуры
+        </Title>
         <Tabs
           defaultActiveKey="materials"
           items={tabItems}
