@@ -6,7 +6,6 @@ import MainLayout from './components/Layout/MainLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Nomenclatures from './pages/Admin/Nomenclatures/Nomenclatures';
 import Tenders from './pages/Admin/Tenders/Tenders';
-import ConstructionCost from './pages/Admin/ConstructionCost/ConstructionCost';
 import ConstructionCostNew from './pages/Admin/ConstructionCostNew/ConstructionCostNew';
 import MarkupConstructor from './pages/Admin/MarkupConstructor/MarkupConstructor';
 import MarkupPercentages from './pages/Admin/MarkupPercentages/MarkupPercentages';
@@ -54,7 +53,6 @@ function AppContent() {
               <Route index element={<Navigate to="/admin/nomenclatures" replace />} />
               <Route path="nomenclatures" element={<Nomenclatures />} />
               <Route path="tenders" element={<Tenders />} />
-              <Route path="construction_cost" element={<ConstructionCost />} />
               <Route path="markup_constructor" element={<MarkupConstructor />} />
               <Route path="markup" element={<MarkupPercentages />} />
             </Route>
