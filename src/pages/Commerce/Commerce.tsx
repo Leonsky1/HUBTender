@@ -793,7 +793,7 @@ export default function Commerce() {
                   emptyText: <Empty description="Нет позиций заказчика" />
                 }}
                 pagination={false}
-                scroll={{ y: 'calc(100vh - 450px)' }}
+                scroll={{ y: 'calc(100vh - 320px)' }}
                 summary={() => {
                   const totalBase = positions.reduce((sum, pos) => sum + (pos.base_total || 0), 0);
                   const totalCommercial = positions.reduce((sum, pos) => sum + (pos.commercial_total || 0), 0);

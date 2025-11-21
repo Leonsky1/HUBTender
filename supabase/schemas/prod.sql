@@ -615,6 +615,29 @@ COMMENT ON COLUMN public.materials_library.material_name_id IS 'Связь с н
 COMMENT ON COLUMN public.materials_library.created_at IS 'Дата создания';
 COMMENT ON COLUMN public.materials_library.updated_at IS 'Дата изменения';
 
+-- Table: public.notifications
+-- Description: Системные уведомления для пользователей
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    type text NOT NULL CHECK (type IN ('success', 'info', 'warning', 'pending')),
+    title text NOT NULL,
+    message text NOT NULL,
+    related_entity_type text,
+    related_entity_id uuid,
+    is_read boolean NOT NULL DEFAULT false,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT notifications_pkey PRIMARY KEY (id)
+);
+COMMENT ON TABLE public.notifications IS 'Системные уведомления для пользователей';
+COMMENT ON COLUMN public.notifications.id IS 'Уникальный идентификатор уведомления';
+COMMENT ON COLUMN public.notifications.type IS 'Тип уведомления (success, info, warning, pending)';
+COMMENT ON COLUMN public.notifications.title IS 'Заголовок уведомления';
+COMMENT ON COLUMN public.notifications.message IS 'Текст уведомления';
+COMMENT ON COLUMN public.notifications.related_entity_type IS 'Тип связанной сущности (tender, position, cost, etc.)';
+COMMENT ON COLUMN public.notifications.related_entity_id IS 'ID связанной сущности';
+COMMENT ON COLUMN public.notifications.is_read IS 'Признак прочтения уведомления';
+COMMENT ON COLUMN public.notifications.created_at IS 'Дата и время создания';
+
 -- Table: public.template_items
 CREATE TABLE IF NOT EXISTS public.template_items (
     id uuid NOT NULL DEFAULT gen_random_uuid(),

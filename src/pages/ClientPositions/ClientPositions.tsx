@@ -26,7 +26,7 @@ import {
   FileSearchOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import { supabase, type Tender, type ClientPosition } from '../../lib/supabase';
 import { useTheme } from '../../contexts/ThemeContext';
 import dayjs from 'dayjs';
@@ -357,17 +357,30 @@ const ClientPositions: React.FC = () => {
         const isLeaf = isLeafPosition(index);
         const sectionColor = isLeaf ? '#52c41a' : '#ff7875'; // Зеленый для конечных, бледно-красный для неконечных
 
+        // Если это конечная позиция (лист), оборачиваем в RouterLink для поддержки открытия в новой вкладке
+        if (isLeaf && selectedTender) {
+          return (
+            <RouterLink
+              to={`/positions/${record.id}/items?tenderId=${selectedTender.id}&positionId=${record.id}`}
+              style={{
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'block',
+              }}
+            >
+              {record.item_no && (
+                <Text strong style={{ color: sectionColor, marginRight: 8 }}>
+                  {record.item_no}
+                </Text>
+              )}
+              <Text>{record.work_name}</Text>
+            </RouterLink>
+          );
+        }
+
+        // Для неконечных позиций просто отображаем текст
         return (
-          <div
-            onClick={() => {
-              if (isLeaf && selectedTender) {
-                navigate(`/positions/${record.id}/items?tenderId=${selectedTender.id}&positionId=${record.id}`);
-              }
-            }}
-            style={{
-              cursor: isLeaf ? 'pointer' : 'default',
-            }}
-          >
+          <div>
             {record.item_no && (
               <Text strong style={{ color: sectionColor, marginRight: 8 }}>
                 {record.item_no}

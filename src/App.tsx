@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Nomenclatures from './pages/Admin/Nomenclatures/Nomenclatures';
 import Tenders from './pages/Admin/Tenders/Tenders';
 import ConstructionCost from './pages/Admin/ConstructionCost/ConstructionCost';
+import ConstructionCostNew from './pages/Admin/ConstructionCostNew/ConstructionCostNew';
 import MarkupConstructor from './pages/Admin/MarkupConstructor/MarkupConstructor';
 import MarkupPercentages from './pages/Admin/MarkupPercentages/MarkupPercentages';
 import Library from './pages/Library';
@@ -15,6 +16,7 @@ import ClientPositions from './pages/ClientPositions/ClientPositions';
 import PositionItems from './pages/PositionItems/PositionItems';
 import Commerce from './pages/Commerce';
 import Bsm from './pages/Bsm/Bsm';
+import ObjectComparison from './pages/Analytics/ObjectComparison';
 import './App.css';
 
 // Временный импорт для тестирования Supabase (удалить после проверки)
@@ -45,7 +47,9 @@ function AppContent() {
             <Route path="library" element={<Library />} />
             <Route path="library/templates" element={<Templates />} />
             <Route path="bsm" element={<Bsm />} />
-            <Route path="costs" element={<div>Затраты на строительство</div>} />
+            <Route path="analytics">
+              <Route path="comparison" element={<ObjectComparison />} />
+            </Route>
             <Route path="admin">
               <Route index element={<Navigate to="/admin/nomenclatures" replace />} />
               <Route path="nomenclatures" element={<Nomenclatures />} />
@@ -54,6 +58,7 @@ function AppContent() {
               <Route path="markup_constructor" element={<MarkupConstructor />} />
               <Route path="markup" element={<MarkupPercentages />} />
             </Route>
+            <Route path="costs" element={<ConstructionCostNew />} />
             <Route path="users" element={<div>Пользователи</div>} />
             <Route path="settings" element={<div>Настройки</div>} />
           </Route>

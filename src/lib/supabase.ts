@@ -155,6 +155,22 @@ export interface DetailCostCategory extends DetailCostCategoryInsert {
 }
 
 // =============================================
+// Типы для таблицы construction_cost_volumes
+// =============================================
+
+export interface ConstructionCostVolumeInsert {
+  tender_id: string;
+  detail_cost_category_id: string;
+  volume?: number;
+}
+
+export interface ConstructionCostVolume extends ConstructionCostVolumeInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// =============================================
 // Расширенный тип для materials_library с JOIN данными
 // =============================================
 
@@ -509,6 +525,26 @@ export interface BoqItemFull extends BoqItem {
   parent_work_name?: string;
   parent_work_unit?: UnitType;
   parent_work_quantity?: number;
+}
+
+// =============================================
+// Типы для таблицы notifications (уведомления)
+// =============================================
+
+export type NotificationType = 'success' | 'info' | 'warning' | 'pending';
+
+export interface NotificationInsert {
+  type: NotificationType;
+  title: string;
+  message: string;
+  related_entity_type?: string | null;
+  related_entity_id?: string | null;
+  is_read?: boolean;
+}
+
+export interface Notification extends NotificationInsert {
+  id: string;
+  created_at: string;
 }
 
 // =============================================

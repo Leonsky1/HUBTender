@@ -30,7 +30,9 @@
       "Bash(node scripts/simulate-mat-calculation.js:*)",
       "Bash(done)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(node scripts/create-notifications-table.js:*)",
+      "Bash(node scripts/clear-notifications.js:*)"
     ],
     "deny": [],
     "ask": []

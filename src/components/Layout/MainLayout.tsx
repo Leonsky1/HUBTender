@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Badge, Input, Switch, theme } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Layout, Menu, Avatar, Badge, Input, Switch, theme, Dropdown, List, Typography, Space, Empty } from 'antd';
 import type { MenuProps } from 'antd';
+const { Text } = Typography;
 import {
   HomeOutlined,
   DashboardOutlined,
@@ -21,11 +22,25 @@ import {
   FileTextOutlined,
   BankOutlined,
   PercentageOutlined,
+  CheckCircleOutlined,
+  InfoCircleOutlined,
+  WarningOutlined,
+  ClockCircleOutlined,
+  BarChartOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { LogoIcon } from '../Icons';
+import { supabase, type Notification } from '../../lib/supabase';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ru';
 import './MainLayout.css';
+
+// Настройка dayjs для форматирования относительного времени на русском
+dayjs.extend(relativeTime);
+dayjs.locale('ru');
 
 const { Header, Sider, Content } = Layout;
 
@@ -35,12 +50,78 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const { theme: currentTheme, toggleTheme } = useTheme();
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+
+  // Загрузка уведомлений при монтировании компонента и подписка на изменения
+  useEffect(() => {
+    fetchNotifications();
+
+    // Подписываемся на real-time обновления таблицы notifications
+    const channel = supabase
+      .channel('notifications-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Слушаем все события (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          console.log('Получено изменение в уведомлениях:', payload);
+          // Перезагружаем уведомления при любом изменении
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    // Очистка подписки при размонтировании
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Функция для загрузки уведомлений из базы данных
+  const fetchNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50); // Загружаем последние 50 уведомлений
+
+      if (error) throw error;
+
+      setNotifications(data || []);
+      // Подсчитываем непрочитанные уведомления
+      const unread = (data || []).filter(n => !n.is_read).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Ошибка загрузки уведомлений:', error);
+    }
+  };
+
+  // Функция для получения иконки по типу уведомления
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'success':
+        return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
+      case 'info':
+        return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
+      case 'warning':
+        return <WarningOutlined style={{ color: '#faad14' }} />;
+      case 'pending':
+        return <ClockCircleOutlined style={{ color: '#8c8c8c' }} />;
+      default:
+        return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
+    }
+  };
 
   const menuItems: MenuProps['items'] = [
     // {
@@ -89,6 +170,18 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
       key: '/costs',
       icon: <DollarOutlined />,
       label: 'Затраты на строительство',
+    },
+    {
+      key: 'analytics',
+      icon: <BarChartOutlined />,
+      label: 'Аналитика',
+      children: [
+        {
+          key: '/analytics/comparison',
+          icon: <LineChartOutlined />,
+          label: 'Сравнение объектов',
+        },
+      ],
     },
     {
       key: 'admin',
@@ -214,7 +307,12 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
           theme={currentTheme}
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={location.pathname.startsWith('/admin') ? ['admin'] : location.pathname.startsWith('/library') ? ['library'] : []}
+          defaultOpenKeys={
+            location.pathname.startsWith('/admin') ? ['admin'] :
+            location.pathname.startsWith('/library') ? ['library'] :
+            location.pathname.startsWith('/analytics') ? ['analytics'] :
+            []
+          }
           items={processedMenuItems}
           onClick={handleMenuClick}
           style={{
@@ -256,9 +354,79 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               <MoonOutlined style={{ fontSize: '16px', color: currentTheme === 'dark' ? '#10b981' : '#888' }} />
             </div>
 
-            <Badge count={3}>
-              <BellOutlined style={{ fontSize: '18px', cursor: 'pointer' }} />
-            </Badge>
+            <Dropdown
+              dropdownRender={() => (
+                <div
+                  style={{
+                    backgroundColor: currentTheme === 'dark' ? '#1f1f1f' : '#fff',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    width: '400px',
+                    maxHeight: '500px',
+                    overflow: 'auto',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderBottom: currentTheme === 'dark' ? '1px solid #303030' : '1px solid #f0f0f0',
+                    }}
+                  >
+                    <Text strong style={{ fontSize: '16px' }}>Уведомления</Text>
+                  </div>
+                  {notifications.length > 0 ? (
+                    <List
+                      dataSource={notifications}
+                      renderItem={(item) => (
+                        <List.Item
+                          style={{
+                            padding: '12px 16px',
+                            borderBottom: currentTheme === 'dark' ? '1px solid #303030' : '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = currentTheme === 'dark' ? '#262626' : '#f5f5f5';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <List.Item.Meta
+                            avatar={getNotificationIcon(item.type)}
+                            title={
+                              <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                                <Text strong>{item.title}</Text>
+                                <Text type="secondary" style={{ fontSize: '12px' }}>
+                                  {dayjs(item.created_at).fromNow()}
+                                </Text>
+                              </Space>
+                            }
+                            description={
+                              <Text style={{ fontSize: '13px', color: currentTheme === 'dark' ? '#d9d9d9' : '#595959' }}>
+                                {item.message}
+                              </Text>
+                            }
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  ) : (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="Нет уведомлений"
+                      style={{ padding: '40px 0' }}
+                    />
+                  )}
+                </div>
+              )}
+              trigger={['click']}
+              placement="bottomRight"
+            >
+              <Badge count={unreadCount}>
+                <BellOutlined style={{ fontSize: '18px', cursor: 'pointer' }} />
+              </Badge>
+            </Dropdown>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <span>Пользователь</span>
               <Avatar style={{ backgroundColor: '#10b981' }} icon={<UserOutlined />} />
