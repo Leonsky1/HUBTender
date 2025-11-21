@@ -1271,12 +1271,12 @@ const ConstructionCostNew: React.FC = () => {
       {/* Заголовок страницы */}
       <div style={{ marginBottom: 16 }}>
         <Title level={4} style={{ margin: 0 }}>
-          Затраты на строительство [NEW VERSION]
+          Затраты на строительство
         </Title>
       </div>
 
       {/* Выбор тендера и версии */}
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <Space size="small">
           <Text type="secondary">Тендер:</Text>
           <Select
@@ -1379,6 +1379,7 @@ const ConstructionCostNew: React.FC = () => {
         {/* Таблица */}
         <Spin spinning={loading}>
           <Table
+            key={costType}
             columns={columns}
             dataSource={filteredData}
             pagination={false}
