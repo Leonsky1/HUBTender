@@ -32,7 +32,16 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(node scripts/create-notifications-table.js:*)",
-      "Bash(node scripts/clear-notifications.js:*)"
+      "Bash(node scripts/clear-notifications.js:*)",
+      "Bash(git stash:*)",
+      "Bash(npx supabase:*)",
+      "Bash(test:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "WebFetch(domain:vswxtmkdsimwgmvzysdo.supabase.co)",
+      "WebFetch(domain:status.supabase.com)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

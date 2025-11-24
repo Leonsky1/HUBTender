@@ -399,6 +399,16 @@ Color coding for material/work types in Library:
 - Return navigation preserves context with URL params and highlights edited row
 - Inline editing for manual_volume and manual_note
 
+**Additional Works (ДОП) System:**
+- Create additional works from any regular position via "+" button in "Итого" column
+- Additional works marked with `is_additional = true` and linked via `parent_position_id`
+- Numbering uses decimal system: parent 5 → additional works 5.1, 5.2, 5.3
+- `position_number` type: `numeric(10,2)` to support decimal numbering
+- Visual: 20px indent and orange "ДОП" tag instead of section number
+- Additional works are leaf positions (can contain works/materials)
+- Cannot create nested additional works (button hidden for ДОП positions)
+- Editable fields in PositionItems: work name, unit code, GP volume, GP note
+
 ### BOQ Items (`/positions/:positionId/items`)
 **Works and materials management for each client position**
 

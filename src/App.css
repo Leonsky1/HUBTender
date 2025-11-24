@@ -59,3 +59,18 @@
 .ant-table-cell-fix-right.highlight-row {
   animation: highlight-fade 2s ease-in-out !important;
 }
+
+/* Подсветка скопированной строки */
+.copied-row {
+  background-color: rgba(24, 144, 255, 0.1) !important;
+}
+
+.copied-row > td {
+  background-color: rgba(24, 144, 255, 0.1) !important;
+}
+
+/* Для фиксированных колонок в скопированной строке */
+.ant-table-cell-fix-left.copied-row,
+.ant-table-cell-fix-right.copied-row {
+  background-color: rgba(24, 144, 255, 0.1) !important;
+}

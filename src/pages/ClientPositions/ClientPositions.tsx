@@ -26,11 +26,14 @@ import {
   DashboardOutlined,
   FileSearchOutlined,
   PlusOutlined,
+  CopyOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import { supabase, type Tender, type ClientPosition } from '../../lib/supabase';
 import { useTheme } from '../../contexts/ThemeContext';
+import { copyBoqItems } from '../../utils/copyBoqItems';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import AddAdditionalPositionModal from './AddAdditionalPositionModal';
@@ -67,6 +70,7 @@ const ClientPositions: React.FC = () => {
   const [positionCounts, setPositionCounts] = useState<Record<string, { works: number; materials: number }>>({});
   const [additionalModalOpen, setAdditionalModalOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [copiedPositionId, setCopiedPositionId] = useState<string | null>(null);
 
   // Загрузка тендеров
   useEffect(() => {
@@ -360,6 +364,36 @@ const ClientPositions: React.FC = () => {
     }
   };
 
+  // Копирование позиции
+  const handleCopyPosition = (positionId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setCopiedPositionId(positionId);
+    message.success('Позиция скопирована в буфер обмена');
+  };
+
+  // Вставка позиции
+  const handlePastePosition = async (targetPositionId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!copiedPositionId) return;
+
+    setLoading(true);
+    try {
+      const result = await copyBoqItems(copiedPositionId, targetPositionId);
+      message.success(
+        `Вставлено: ${result.worksCount} работ, ${result.materialsCount} материалов`
+      );
+      setCopiedPositionId(null); // Сброс после вставки
+      if (selectedTenderId) {
+        await fetchClientPositions(selectedTenderId); // Обновить таблицу
+      }
+    } catch (error: any) {
+      console.error('Ошибка вставки:', error);
+      message.error('Ошибка вставки: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Колонки таблицы
   const columns: ColumnsType<ClientPosition> = [
     {
@@ -499,24 +533,50 @@ const ClientPositions: React.FC = () => {
         const isAdditional = record.is_additional;
 
         return (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            {/* Кнопка добавления доп работы (только для обычных позиций, не для доп работ) */}
-            {!isAdditional && (
-              <Tooltip title="Добавить ДОП работу">
-                <Button
-                  type="text"
-                  icon={<PlusOutlined />}
-                  size="small"
-                  style={{
-                    color: '#52c41a',
-                    padding: '4px 8px',
-                  }}
-                  onClick={(e) => handleOpenAdditionalModal(record.id, e)}
-                />
-              </Tooltip>
-            )}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 8 }}>
+            {/* Левая колонка - кнопки (вертикально) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+              {/* Кнопка добавления доп работы (только для обычных позиций) */}
+              {!isAdditional && (
+                <Tooltip title="Добавить ДОП работу">
+                  <Tag
+                    color="success"
+                    style={{ cursor: 'pointer', margin: 0 }}
+                    onClick={(e) => handleOpenAdditionalModal(record.id, e)}
+                  >
+                    <PlusOutlined />
+                  </Tag>
+                </Tooltip>
+              )}
 
-            {/* Итоги только для конечных позиций */}
+              {/* Кнопка копирования (только для листовых позиций и если не скопировано) */}
+              {isLeaf && copiedPositionId !== record.id && (
+                <Tooltip title="Скопировать работы и материалы">
+                  <Tag
+                    color="processing"
+                    style={{ cursor: 'pointer', margin: 0 }}
+                    onClick={(e) => handleCopyPosition(record.id, e)}
+                  >
+                    <CopyOutlined />
+                  </Tag>
+                </Tooltip>
+              )}
+
+              {/* Кнопка вставки (показывается если есть скопированная позиция) */}
+              {isLeaf && copiedPositionId !== null && (
+                <Tooltip title="Вставить работы и материалы">
+                  <Tag
+                    color="success"
+                    style={{ cursor: 'pointer', margin: 0 }}
+                    onClick={(e) => handlePastePosition(record.id, e)}
+                  >
+                    <CheckOutlined />
+                  </Tag>
+                </Tooltip>
+              )}
+            </div>
+
+            {/* Правая колонка - итоги (вертикально) */}
             {isLeaf && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                 <Text style={{ margin: 0, fontWeight: 600, fontSize: 15, color: currentTheme === 'dark' ? '#52c41a' : '#389e0d' }}>
@@ -906,9 +966,11 @@ const ClientPositions: React.FC = () => {
             dataSource={clientPositions}
             rowKey="id"
             loading={loading}
-            rowClassName={(record) =>
-              scrollToPositionId === record.id ? 'highlight-row' : ''
-            }
+            rowClassName={(record) => {
+              if (scrollToPositionId === record.id) return 'highlight-row';
+              if (copiedPositionId === record.id) return 'copied-row';
+              return '';
+            }}
             onRow={(record, index) => {
               const isLeaf = isLeafPosition(index!);
               return {

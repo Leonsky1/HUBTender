@@ -1,5 +1,5 @@
 -- Database Schema SQL Export
--- Generated: 2025-11-19T09:05:39.853253
+-- Generated: 2025-11-24T11:44:35.638891
 -- Database: postgres
 -- Host: aws-1-eu-west-1.pooler.supabase.com
 
@@ -371,13 +371,14 @@ CREATE TABLE IF NOT EXISTS public.boq_items (
     total_amount numeric(18,2),
     detail_cost_category_id uuid,
     quote_link text,
-    description text,
     commercial_markup numeric(10,4),
     total_commercial_material_cost numeric(18,2),
     total_commercial_work_cost numeric(18,2),
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone NOT NULL DEFAULT now(),
     parent_work_item_id uuid,
+    description text,
+    unit_rate numeric(18,2) DEFAULT 0.00,
     CONSTRAINT boq_items_client_position_id_fkey FOREIGN KEY (client_position_id) REFERENCES None.None(None),
     CONSTRAINT boq_items_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),
     CONSTRAINT boq_items_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),
@@ -407,13 +408,14 @@ COMMENT ON COLUMN public.boq_items.currency_type IS 'Тип валюты (RUB, U
 COMMENT ON COLUMN public.boq_items.total_amount IS 'Итоговая сумма';
 COMMENT ON COLUMN public.boq_items.detail_cost_category_id IS 'Затрата на строительство, связь с таблицей detail_cost_categories';
 COMMENT ON COLUMN public.boq_items.quote_link IS 'Ссылка на КП';
-COMMENT ON COLUMN public.boq_items.description IS 'Примечание к элементу позиции';
 COMMENT ON COLUMN public.boq_items.commercial_markup IS 'Коэффициент наценки';
 COMMENT ON COLUMN public.boq_items.total_commercial_material_cost IS 'Итоговая стоимость материала в коммерческой стоимости';
 COMMENT ON COLUMN public.boq_items.total_commercial_work_cost IS 'Итоговая стоимость работы в коммерческой стоимости';
 COMMENT ON COLUMN public.boq_items.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.boq_items.updated_at IS 'Дата и время последнего обновления';
 COMMENT ON COLUMN public.boq_items.parent_work_item_id IS 'Привязка материала к работе (FK к boq_items.id, NULL если материал независимый)';
+COMMENT ON COLUMN public.boq_items.description IS 'Примечание к элементу позиции';
+COMMENT ON COLUMN public.boq_items.unit_rate IS 'Цена за единицу';
 
 -- Table: public.client_positions
 -- Description: Позиции заказчика из ВОРа (Bill of Quantities)
@@ -449,7 +451,7 @@ CREATE TABLE IF NOT EXISTS public.client_positions (
 COMMENT ON TABLE public.client_positions IS 'Позиции заказчика из ВОРа (Bill of Quantities)';
 COMMENT ON COLUMN public.client_positions.id IS 'Уникальный идентификатор позиции';
 COMMENT ON COLUMN public.client_positions.tender_id IS 'Связь с тендером';
-COMMENT ON COLUMN public.client_positions.position_number IS 'Автоматический порядковый номер позиции';
+COMMENT ON COLUMN public.client_positions.position_number IS 'Номер позиции, поддерживает decimal для дополнительных работ (например: 5.1, 5.2)';
 COMMENT ON COLUMN public.client_positions.unit_code IS 'Код единицы измерения (ссылка на units.code)';
 COMMENT ON COLUMN public.client_positions.volume IS 'Объем заказчика';
 COMMENT ON COLUMN public.client_positions.client_note IS 'Примечание заказчика';
@@ -471,9 +473,23 @@ COMMENT ON COLUMN public.client_positions.total_commercial_work_per_unit IS 'К�
 COMMENT ON COLUMN public.client_positions.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.client_positions.updated_at IS 'Дата и время последнего обновления записи';
 
--- Table: public.cost_categories
--- Description: Справочник      
+-- Table: public.construction_cost_volumes
+CREATE TABLE IF NOT EXISTS public.construction_cost_volumes (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    tender_id uuid NOT NULL,
+    detail_cost_category_id uuid NOT NULL,
+    volume numeric(18,6) DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT construction_cost_volumes_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),
+    CONSTRAINT construction_cost_volumes_pkey PRIMARY KEY (id),
+    CONSTRAINT construction_cost_volumes_tender_id_detail_cost_category_id_key UNIQUE (detail_cost_category_id),
+    CONSTRAINT construction_cost_volumes_tender_id_detail_cost_category_id_key UNIQUE (tender_id),
+    CONSTRAINT construction_cost_volumes_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None)
+);
 
+-- Table: public.cost_categories
+-- Description: Справочник      
   категорий затрат
 CREATE TABLE IF NOT EXISTS public.cost_categories (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -484,8 +500,7 @@ CREATE TABLE IF NOT EXISTS public.cost_categories (
     CONSTRAINT cost_categories_pkey PRIMARY KEY (id),
     CONSTRAINT cost_categories_unit_fkey FOREIGN KEY (unit) REFERENCES None.None(None)
 );
-COMMENT ON TABLE public.cost_categories IS 'Справочник      
-
+COMMENT ON TABLE public.cost_categories IS 'Справочник      
   категорий затрат';
 COMMENT ON COLUMN public.cost_categories.id IS 'Уникальный идентификатор категории (UUID)';
 COMMENT ON COLUMN public.cost_categories.name IS 'Наименование категории затрат';
@@ -514,14 +529,11 @@ COMMENT ON COLUMN public.detail_cost_categories.cost_category_id IS 'Ссылк�
 COMMENT ON COLUMN public.detail_cost_categories.location IS 'Локация/местоположение';
 COMMENT ON COLUMN public.detail_cost_categories.name IS 'Наименование детальной категории';
 COMMENT ON COLUMN public.detail_cost_categories.unit IS 'Единица измерения';
-COMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      
-
+COMMENT ON COLUMN public.detail_cost_categories.order_num IS 'Порядковый      
   номер для сортировки';
-COMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и
-
+COMMENT ON COLUMN public.detail_cost_categories.created_at IS 'Дата и
   время создания записи';
-COMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и
-
+COMMENT ON COLUMN public.detail_cost_categories.updated_at IS 'Дата и
   время последнего обновления';
 
 -- Table: public.markup_parameters
@@ -619,7 +631,7 @@ COMMENT ON COLUMN public.materials_library.updated_at IS 'Дата измене�
 -- Description: Системные уведомления для пользователей
 CREATE TABLE IF NOT EXISTS public.notifications (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    type text NOT NULL CHECK (type IN ('success', 'info', 'warning', 'pending')),
+    type text NOT NULL,
     title text NOT NULL,
     message text NOT NULL,
     related_entity_type text,
@@ -694,6 +706,50 @@ COMMENT ON COLUMN public.tender_markup_percentage.value IS 'Значение п�
 COMMENT ON COLUMN public.tender_markup_percentage.created_at IS 'Дата создания';
 COMMENT ON COLUMN public.tender_markup_percentage.updated_at IS 'Дата последнего обновления';
 
+-- Table: public.tender_pricing_distribution
+-- Description: Правила распределения затрат и наценок между КП (материалы) и работами для каждого        
+  тендера
+CREATE TABLE IF NOT EXISTS public.tender_pricing_distribution (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    tender_id uuid NOT NULL,
+    markup_tactic_id uuid,
+    basic_material_base_target text NOT NULL DEFAULT 'material'::text,
+    basic_material_markup_target text NOT NULL DEFAULT 'work'::text,
+    auxiliary_material_base_target text NOT NULL DEFAULT 'work'::text,
+    auxiliary_material_markup_target text NOT NULL DEFAULT 'work'::text,
+    work_base_target text NOT NULL DEFAULT 'work'::text,
+    work_markup_target text NOT NULL DEFAULT 'work'::text,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone NOT NULL DEFAULT now(),
+    subcontract_basic_material_base_target text NOT NULL DEFAULT 'work'::text,
+    subcontract_basic_material_markup_target text NOT NULL DEFAULT 'work'::text,
+    subcontract_auxiliary_material_base_target text NOT NULL DEFAULT 'work'::text,
+    subcontract_auxiliary_material_markup_target text NOT NULL DEFAULT 'work'::text,
+    component_material_base_target text NOT NULL DEFAULT 'work'::text,
+    component_material_markup_target text NOT NULL DEFAULT 'work'::text,
+    component_work_base_target text NOT NULL DEFAULT 'work'::text,
+    component_work_markup_target text NOT NULL DEFAULT 'work'::text,
+    CONSTRAINT tender_pricing_distribution_markup_tactic_id_fkey FOREIGN KEY (markup_tactic_id) REFERENCES None.None(None),
+    CONSTRAINT tender_pricing_distribution_pkey PRIMARY KEY (id),
+    CONSTRAINT tender_pricing_distribution_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None),
+    CONSTRAINT tender_pricing_distribution_tender_id_markup_tactic_id_key UNIQUE (markup_tactic_id),
+    CONSTRAINT tender_pricing_distribution_tender_id_markup_tactic_id_key UNIQUE (tender_id)
+);
+COMMENT ON TABLE public.tender_pricing_distribution IS 'Правила распределения затрат и наценок между КП (материалы) и работами для каждого        
+  тендера';
+COMMENT ON COLUMN public.tender_pricing_distribution.basic_material_base_target IS 'Куда направляется базовая стоимость основных материалов: material = КП, work =
+  работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.basic_material_markup_target IS 'Куда направляется наценка на основные материалы: material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.auxiliary_material_base_target IS 'Куда направляется базовая стоимость вспомогательных материалов: material = КП, work =     
+  работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.auxiliary_material_markup_target IS 'Куда направляется наценка на вспомогательные материалы: material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.work_base_target IS 'Куда направляется базовая стоимость работ: material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.work_markup_target IS 'Куда направляется наценка на работы: material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.component_material_base_target IS 'Куда направляется базовая стоимость компонентных материалов (мат-комп.): material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.component_material_markup_target IS 'Куда направляется наценка на компонентные материалы (мат-комп.): material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.component_work_base_target IS 'Куда направляется базовая стоимость компонентных работ (раб-комп.): material = КП, work = работы';
+COMMENT ON COLUMN public.tender_pricing_distribution.component_work_markup_target IS 'Куда направляется наценка на компонентные работы (раб-комп.): material = КП, work = работы';
+
 -- Table: public.tenders
 -- Description: Основная таблица для хранения информации о тендерах
 CREATE TABLE IF NOT EXISTS public.tenders (
@@ -743,45 +799,6 @@ COMMENT ON COLUMN public.tenders.created_at IS 'Дата и время созд�
 COMMENT ON COLUMN public.tenders.updated_at IS 'Дата и время последнего обновления';
 COMMENT ON COLUMN public.tenders.created_by IS 'ID пользователя, создавшего тендер';
 COMMENT ON COLUMN public.tenders.markup_tactic_id IS 'Ссылка на тактику наценок для данного тендера';
-
--- Table: public.tender_pricing_distribution
--- Description: Правила распределения затрат и наценок между КП (материалы) и работами для каждого тендера
-CREATE TABLE IF NOT EXISTS public.tender_pricing_distribution (
-    id uuid NOT NULL DEFAULT uuid_generate_v4(),
-    tender_id uuid NOT NULL,
-    markup_tactic_id uuid,
-    basic_material_base_target text NOT NULL DEFAULT 'material'::text,
-    basic_material_markup_target text NOT NULL DEFAULT 'work'::text,
-    auxiliary_material_base_target text NOT NULL DEFAULT 'work'::text,
-    auxiliary_material_markup_target text NOT NULL DEFAULT 'work'::text,
-    subcontract_material_base_target text NOT NULL DEFAULT 'work'::text,
-    subcontract_material_markup_target text NOT NULL DEFAULT 'work'::text,
-    work_base_target text NOT NULL DEFAULT 'work'::text,
-    work_markup_target text NOT NULL DEFAULT 'work'::text,
-    created_at timestamp with time zone NOT NULL DEFAULT now(),
-    updated_at timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT tender_pricing_distribution_pkey PRIMARY KEY (id),
-    CONSTRAINT tender_pricing_distribution_tender_id_markup_tactic_id_key UNIQUE (tender_id, markup_tactic_id),
-    CONSTRAINT tender_pricing_distribution_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES public.tenders(id) ON DELETE CASCADE,
-    CONSTRAINT tender_pricing_distribution_markup_tactic_id_fkey FOREIGN KEY (markup_tactic_id) REFERENCES public.markup_tactics(id) ON DELETE CASCADE,
-    CONSTRAINT tender_pricing_distribution_basic_material_base_target_check CHECK ((basic_material_base_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_basic_material_markup_target_check CHECK ((basic_material_markup_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_auxiliary_material_base_target_check CHECK ((auxiliary_material_base_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_auxiliary_material_markup_target_check CHECK ((auxiliary_material_markup_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_subcontract_material_base_target_check CHECK ((subcontract_material_base_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_subcontract_material_markup_target_check CHECK ((subcontract_material_markup_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_work_base_target_check CHECK ((work_base_target = ANY (ARRAY['material'::text, 'work'::text]))),
-    CONSTRAINT tender_pricing_distribution_work_markup_target_check CHECK ((work_markup_target = ANY (ARRAY['material'::text, 'work'::text])))
-);
-COMMENT ON TABLE public.tender_pricing_distribution IS 'Правила распределения затрат и наценок между КП (материалы) и работами для каждого тендера';
-COMMENT ON COLUMN public.tender_pricing_distribution.basic_material_base_target IS 'Куда направляется базовая стоимость основных материалов: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.basic_material_markup_target IS 'Куда направляется наценка на основные материалы: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.auxiliary_material_base_target IS 'Куда направляется базовая стоимость вспомогательных материалов: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.auxiliary_material_markup_target IS 'Куда направляется наценка на вспомогательные материалы: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.subcontract_material_base_target IS 'Куда направляется базовая стоимость субподрядных материалов: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.subcontract_material_markup_target IS 'Куда направляется наценка на субподрядные материалы: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.work_base_target IS 'Куда направляется базовая стоимость работ: material = КП, work = работы';
-COMMENT ON COLUMN public.tender_pricing_distribution.work_markup_target IS 'Куда направляется наценка на работы: material = КП, work = работы';
 
 -- Table: public.units
 CREATE TABLE IF NOT EXISTS public.units (
@@ -850,6 +867,118 @@ CREATE TABLE IF NOT EXISTS realtime.messages (
     CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)
 );
 
+-- Table: realtime.messages_2025_11_20
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_20 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_20_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_20_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_21
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_21 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_21_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_21_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_22
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_22 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_22_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_22_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_23
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_23 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_23_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_23_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_24
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_24 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_24_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_24_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_25
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_25 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_25_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_25_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_26
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_26 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_26_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_26_pkey PRIMARY KEY (inserted_at)
+);
+
+-- Table: realtime.messages_2025_11_27
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_27 (
+    topic text NOT NULL,
+    extension text NOT NULL,
+    payload jsonb,
+    event text,
+    private boolean DEFAULT false,
+    updated_at timestamp without time zone NOT NULL DEFAULT now(),
+    inserted_at timestamp without time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    CONSTRAINT messages_2025_11_27_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_11_27_pkey PRIMARY KEY (inserted_at)
+);
+
 -- Table: realtime.schema_migrations
 -- Description: Auth: Manages updates to the auth system.
 CREATE TABLE IF NOT EXISTS realtime.schema_migrations (
@@ -890,12 +1019,22 @@ COMMENT ON COLUMN storage.buckets.owner IS 'Field is deprecated, use owner_id in
 
 -- Table: storage.buckets_analytics
 CREATE TABLE IF NOT EXISTS storage.buckets_analytics (
-    id text NOT NULL,
+    name text NOT NULL,
     type USER-DEFINED NOT NULL DEFAULT 'ANALYTICS'::storage.buckettype,
     format text NOT NULL DEFAULT 'ICEBERG'::text,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone NOT NULL DEFAULT now(),
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    deleted_at timestamp with time zone,
     CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id)
+);
+
+-- Table: storage.buckets_vectors
+CREATE TABLE IF NOT EXISTS storage.buckets_vectors (
+    id text NOT NULL,
+    type USER-DEFINED NOT NULL DEFAULT 'VECTOR'::storage.buckettype,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone NOT NULL DEFAULT now()
 );
 
 -- Table: storage.migrations
@@ -971,6 +1110,19 @@ CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads_parts (
     CONSTRAINT s3_multipart_uploads_parts_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES None.None(None)
 );
 
+-- Table: storage.vector_indexes
+CREATE TABLE IF NOT EXISTS storage.vector_indexes (
+    id text NOT NULL DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    bucket_id text NOT NULL,
+    data_type text NOT NULL,
+    dimension integer(32) NOT NULL,
+    distance_metric text NOT NULL,
+    metadata_configuration jsonb,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
 -- Table: supabase_migrations.schema_migrations
 -- Description: Auth: Manages updates to the auth system.
 CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations (
@@ -1039,7 +1191,7 @@ CREATE TYPE realtime.action AS ENUM ('INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', '
 
 CREATE TYPE realtime.equality_op AS ENUM ('eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in');
 
-CREATE TYPE storage.buckettype AS ENUM ('STANDARD', 'ANALYTICS');
+CREATE TYPE storage.buckettype AS ENUM ('STANDARD', 'ANALYTICS', 'VECTOR');
 
 
 -- ============================================
@@ -1991,16 +2143,11 @@ $function$
 CREATE OR REPLACE FUNCTION public.set_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-
-BEGIN
-
-  NEW.updated_at = now();
-
-  RETURN NEW;
-
-END;
-
+AS $function$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
 $function$
 
 
@@ -2008,16 +2155,11 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_boq_items_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-
-BEGIN
-
-    NEW.updated_at = now();
-
-    RETURN NEW;
-
-END;
-
+AS $function$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
 $function$
 
 
@@ -2025,16 +2167,11 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_client_positions_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-
-BEGIN
-
-    NEW.updated_at = NOW();
-
-    RETURN NEW;
-
-END;
-
+AS $function$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
 $function$
 
 
@@ -2042,16 +2179,11 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_markup_parameters_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-
-BEGIN
-
-  NEW.updated_at = NOW();
-
-  RETURN NEW;
-
-END;
-
+AS $function$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
 $function$
 
 
@@ -2059,16 +2191,11 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_markup_tactics_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-
-BEGIN
-
-  NEW.updated_at = NOW();
-
-  RETURN NEW;
-
-END;
-
+AS $function$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
 $function$
 
 
@@ -2076,16 +2203,11 @@ $function$
 CREATE OR REPLACE FUNCTION public.update_tender_markup_percentage_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
-AS $function$
-
-BEGIN
-
-  NEW.updated_at = NOW();
-
-  RETURN NEW;
-
-END;
-
+AS $function$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
 $function$
 
 
@@ -3768,6 +3890,9 @@ CREATE TRIGGER boq_items_updated_at_trigger BEFORE UPDATE ON public.boq_items FO
 -- Trigger: trigger_update_client_positions_updated_at on public.client_positions
 CREATE TRIGGER trigger_update_client_positions_updated_at BEFORE UPDATE ON public.client_positions FOR EACH ROW EXECUTE FUNCTION update_client_positions_updated_at()
 
+-- Trigger: update_construction_cost_volumes_updated_at on public.construction_cost_volumes
+CREATE TRIGGER update_construction_cost_volumes_updated_at BEFORE UPDATE ON public.construction_cost_volumes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+
 -- Trigger: update_cost_categories_updated_at on public.cost_categories
 CREATE TRIGGER update_cost_categories_updated_at BEFORE UPDATE ON public.cost_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
 
@@ -3794,6 +3919,9 @@ CREATE TRIGGER set_updated_at_templates BEFORE UPDATE ON public.templates FOR EA
 
 -- Trigger: trigger_update_tender_markup_percentage_updated_at on public.tender_markup_percentage
 CREATE TRIGGER trigger_update_tender_markup_percentage_updated_at BEFORE UPDATE ON public.tender_markup_percentage FOR EACH ROW EXECUTE FUNCTION update_tender_markup_percentage_updated_at()
+
+-- Trigger: set_updated_at_tender_pricing_distribution on public.tender_pricing_distribution
+CREATE TRIGGER set_updated_at_tender_pricing_distribution BEFORE UPDATE ON public.tender_pricing_distribution FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
 
 -- Trigger: update_tenders_updated_at on public.tenders
 CREATE TRIGGER update_tenders_updated_at BEFORE UPDATE ON public.tenders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
@@ -4034,6 +4162,15 @@ CREATE INDEX idx_client_positions_position_number ON public.client_positions USI
 -- Index on public.client_positions
 CREATE INDEX idx_client_positions_tender_id ON public.client_positions USING btree (tender_id);
 
+-- Index on public.construction_cost_volumes
+CREATE UNIQUE INDEX construction_cost_volumes_tender_id_detail_cost_category_id_key ON public.construction_cost_volumes USING btree (tender_id, detail_cost_category_id);
+
+-- Index on public.construction_cost_volumes
+CREATE INDEX idx_construction_cost_volumes_detail_cost ON public.construction_cost_volumes USING btree (detail_cost_category_id);
+
+-- Index on public.construction_cost_volumes
+CREATE INDEX idx_construction_cost_volumes_tender ON public.construction_cost_volumes USING btree (tender_id);
+
 -- Index on public.cost_categories
 CREATE INDEX idx_cost_categories_created_at ON public.cost_categories USING btree (created_at DESC);
 
@@ -4139,6 +4276,15 @@ CREATE INDEX idx_tender_markup_percentage_tender_id ON public.tender_markup_perc
 -- Index on public.tender_markup_percentage
 CREATE UNIQUE INDEX tender_markup_percentage_unique ON public.tender_markup_percentage USING btree (tender_id, markup_parameter_id);
 
+-- Index on public.tender_pricing_distribution
+CREATE INDEX idx_tender_pricing_distribution_tactic_id ON public.tender_pricing_distribution USING btree (markup_tactic_id);
+
+-- Index on public.tender_pricing_distribution
+CREATE INDEX idx_tender_pricing_distribution_tender_id ON public.tender_pricing_distribution USING btree (tender_id);
+
+-- Index on public.tender_pricing_distribution
+CREATE UNIQUE INDEX tender_pricing_distribution_tender_id_markup_tactic_id_key ON public.tender_pricing_distribution USING btree (tender_id, markup_tactic_id);
+
 -- Index on public.tenders
 CREATE INDEX idx_tenders_client_name ON public.tenders USING btree (client_name);
 
@@ -4187,6 +4333,30 @@ CREATE INDEX idx_works_library_work_name_id ON public.works_library USING btree 
 -- Index on realtime.messages
 CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
+-- Index on realtime.messages_2025_11_20
+CREATE INDEX messages_2025_11_20_inserted_at_topic_idx ON realtime.messages_2025_11_20 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_21
+CREATE INDEX messages_2025_11_21_inserted_at_topic_idx ON realtime.messages_2025_11_21 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_22
+CREATE INDEX messages_2025_11_22_inserted_at_topic_idx ON realtime.messages_2025_11_22 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_23
+CREATE INDEX messages_2025_11_23_inserted_at_topic_idx ON realtime.messages_2025_11_23 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_24
+CREATE INDEX messages_2025_11_24_inserted_at_topic_idx ON realtime.messages_2025_11_24 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_25
+CREATE INDEX messages_2025_11_25_inserted_at_topic_idx ON realtime.messages_2025_11_25 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_26
+CREATE INDEX messages_2025_11_26_inserted_at_topic_idx ON realtime.messages_2025_11_26 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
+-- Index on realtime.messages_2025_11_27
+CREATE INDEX messages_2025_11_27_inserted_at_topic_idx ON realtime.messages_2025_11_27 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+
 -- Index on realtime.subscription
 CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity);
 
@@ -4198,6 +4368,9 @@ CREATE UNIQUE INDEX subscription_subscription_id_entity_filters_key ON realtime.
 
 -- Index on storage.buckets
 CREATE UNIQUE INDEX bname ON storage.buckets USING btree (name);
+
+-- Index on storage.buckets_analytics
+CREATE UNIQUE INDEX buckets_analytics_unique_name_idx ON storage.buckets_analytics USING btree (name) WHERE (deleted_at IS NULL);
 
 -- Index on storage.migrations
 CREATE UNIQUE INDEX migrations_name_key ON storage.migrations USING btree (name);
@@ -4225,6 +4398,9 @@ CREATE INDEX idx_prefixes_lower_name ON storage.prefixes USING btree (bucket_id,
 
 -- Index on storage.s3_multipart_uploads
 CREATE INDEX idx_multipart_uploads_list ON storage.s3_multipart_uploads USING btree (bucket_id, key, created_at);
+
+-- Index on storage.vector_indexes
+CREATE UNIQUE INDEX vector_indexes_name_bucket_id_idx ON storage.vector_indexes USING btree (name, bucket_id);
 
 -- Index on vault.secrets
 CREATE UNIQUE INDEX secrets_name_idx ON vault.secrets USING btree (name) WHERE (name IS NOT NULL);
@@ -4280,7 +4456,7 @@ GRANT service_role TO authenticator;
 -- GRANT USAGE ON SCHEMA public TO authenticator;
 
 -- Role: cli_login_postgres
-CREATE ROLE cli_login_postgres WITH LOGIN NOINHERIT VALID UNTIL '2025-11-17 12:34:07.223578+00';
+CREATE ROLE cli_login_postgres WITH LOGIN NOINHERIT VALID UNTIL '2025-11-24 08:36:06.867941+00';
 GRANT postgres TO cli_login_postgres;
 -- Database privileges for cli_login_postgres:
 -- GRANT CONNECT, TEMP ON DATABASE postgres TO cli_login_postgres;
@@ -4335,6 +4511,7 @@ GRANT supabase_realtime_admin TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_36 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_38 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_40 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_41 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_42 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_43 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_44 TO postgres;
@@ -4343,6 +4520,7 @@ GRANT supabase_realtime_admin TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_49 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_50 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_52 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_temp_53 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_55 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_57 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_temp_58 TO postgres;
@@ -4366,6 +4544,7 @@ GRANT supabase_realtime_admin TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_36 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_38 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_40 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_41 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_42 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_43 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_44 TO postgres;
@@ -4374,6 +4553,7 @@ GRANT supabase_realtime_admin TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_49 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_50 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_52 TO postgres;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_53 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_55 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_57 TO postgres;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_58 TO postgres;
@@ -4430,6 +4610,7 @@ CREATE ROLE supabase_admin WITH SUPERUSER CREATEDB CREATEROLE LOGIN REPLICATION 
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_36 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_38 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_40 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_41 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_42 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_43 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_44 TO supabase_admin;
@@ -4438,6 +4619,7 @@ CREATE ROLE supabase_admin WITH SUPERUSER CREATEDB CREATEROLE LOGIN REPLICATION 
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_49 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_50 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_52 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_temp_53 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_55 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_57 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_temp_58 TO supabase_admin;
@@ -4461,6 +4643,7 @@ CREATE ROLE supabase_admin WITH SUPERUSER CREATEDB CREATEROLE LOGIN REPLICATION 
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_36 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_38 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_40 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_41 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_42 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_43 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_44 TO supabase_admin;
@@ -4469,6 +4652,7 @@ CREATE ROLE supabase_admin WITH SUPERUSER CREATEDB CREATEROLE LOGIN REPLICATION 
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_49 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_50 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_52 TO supabase_admin;
+-- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_53 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_55 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_57 TO supabase_admin;
 -- GRANT CREATE, USAGE ON SCHEMA pg_toast_temp_58 TO supabase_admin;
@@ -4518,6 +4702,7 @@ GRANT pg_read_all_data TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_36 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_38 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_40 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_41 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_42 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_43 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_44 TO supabase_etl_admin;
@@ -4526,6 +4711,7 @@ GRANT pg_read_all_data TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_49 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_50 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_52 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_temp_53 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_55 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_57 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_temp_58 TO supabase_etl_admin;
@@ -4549,6 +4735,7 @@ GRANT pg_read_all_data TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_36 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_38 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_40 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_41 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_42 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_43 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_44 TO supabase_etl_admin;
@@ -4557,6 +4744,7 @@ GRANT pg_read_all_data TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_49 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_50 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_52 TO supabase_etl_admin;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_53 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_55 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_57 TO supabase_etl_admin;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_58 TO supabase_etl_admin;
@@ -4598,6 +4786,7 @@ GRANT pg_read_all_data TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_36 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_38 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_40 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_41 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_42 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_43 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_44 TO supabase_read_only_user;
@@ -4606,6 +4795,7 @@ GRANT pg_read_all_data TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_49 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_50 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_52 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_temp_53 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_55 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_57 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_temp_58 TO supabase_read_only_user;
@@ -4629,6 +4819,7 @@ GRANT pg_read_all_data TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_36 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_38 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_40 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_41 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_42 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_43 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_44 TO supabase_read_only_user;
@@ -4637,6 +4828,7 @@ GRANT pg_read_all_data TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_49 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_50 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_52 TO supabase_read_only_user;
+-- GRANT USAGE ON SCHEMA pg_toast_temp_53 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_55 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_57 TO supabase_read_only_user;
 -- GRANT USAGE ON SCHEMA pg_toast_temp_58 TO supabase_read_only_user;
