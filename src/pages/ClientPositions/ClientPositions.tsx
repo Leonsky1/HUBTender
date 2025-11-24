@@ -15,6 +15,7 @@ import {
   Input,
   InputNumber,
   Tooltip,
+  AutoComplete,
 } from 'antd';
 import {
   CalendarOutlined,
@@ -28,12 +29,14 @@ import {
   PlusOutlined,
   CopyOutlined,
   CheckOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import { supabase, type Tender, type ClientPosition } from '../../lib/supabase';
 import { useTheme } from '../../contexts/ThemeContext';
 import { copyBoqItems } from '../../utils/copyBoqItems';
+import { exportPositionsToExcel } from '../../utils/exportPositionsToExcel';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import AddAdditionalPositionModal from './AddAdditionalPositionModal';
@@ -71,11 +74,40 @@ const ClientPositions: React.FC = () => {
   const [additionalModalOpen, setAdditionalModalOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [copiedPositionId, setCopiedPositionId] = useState<string | null>(null);
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [searchOptions, setSearchOptions] = useState<Array<{ key: string; value: string; label: string }>>([]);
 
   // Загрузка тендеров
   useEffect(() => {
     fetchTenders();
   }, []);
+
+  // Debounce для поиска позиций с оптимизацией через early exit
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchValue && searchValue.length >= 2) {
+        const searchLower = searchValue.toLowerCase(); // Вычисляем один раз
+        const filtered = [];
+
+        // Прерываем цикл после нахождения 50 результатов
+        for (let i = 0; i < clientPositions.length && filtered.length < 50; i++) {
+          const p = clientPositions[i];
+          if (p.work_name.toLowerCase().includes(searchLower)) {
+            filtered.push({
+              key: p.id,
+              value: `${p.position_number} - ${p.work_name}`,
+              label: `${p.position_number} - ${p.work_name}`,
+            });
+          }
+        }
+        setSearchOptions(filtered);
+      } else {
+        setSearchOptions([]);
+      }
+    }, 300); // Задержка 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchValue, clientPositions]);
 
   const fetchTenders = async () => {
     try {
@@ -392,6 +424,42 @@ const ClientPositions: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Экспорт в Excel
+  const handleExportToExcel = async () => {
+    if (!selectedTender) {
+      message.error('Выберите тендер для экспорта');
+      return;
+    }
+
+    const hideLoading = message.loading('Формирование Excel файла...', 0);
+    try {
+      await exportPositionsToExcel(
+        selectedTender.id,
+        selectedTender.title,
+        selectedTender.version
+      );
+      hideLoading();
+      message.success('Файл успешно экспортирован');
+    } catch (error: any) {
+      console.error('Ошибка экспорта:', error);
+      hideLoading();
+      message.error('Ошибка экспорта: ' + error.message);
+    }
+  };
+
+  // Поиск и прокрутка к позиции
+  const handleSearchSelect = (value: string, option: any) => {
+    const positionId = option.key;
+    setScrollToPositionId(positionId);
+    setSearchValue('');
+    setSearchOptions([]); // Очистить опции
+
+    // Сбросить подсветку через 3 секунды
+    setTimeout(() => {
+      setScrollToPositionId(null);
+    }, 3000);
   };
 
   // Колонки таблицы
@@ -960,7 +1028,33 @@ const ClientPositions: React.FC = () => {
 
       {/* Таблица позиций заказчика */}
       {selectedTender && (
-        <Card bordered={false} title="Позиции заказчика" style={{ marginTop: 24 }}>
+        <Card
+          bordered={false}
+          title="Позиции заказчика"
+          extra={
+            <Space>
+              <AutoComplete
+                value={searchValue}
+                onChange={setSearchValue}
+                onSelect={handleSearchSelect}
+                style={{ width: 300 }}
+                placeholder="Поиск позиции (минимум 2 символа)..."
+                options={searchOptions}
+                filterOption={false}
+                allowClear
+                notFoundContent={searchValue && searchValue.length >= 2 ? 'Позиции не найдены' : null}
+              />
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={handleExportToExcel}
+                disabled={!selectedTender || loading}
+              >
+                Экспорт в Excel
+              </Button>
+            </Space>
+          }
+          style={{ marginTop: 24 }}
+        >
           <Table
             columns={columns}
             dataSource={clientPositions}
