@@ -17,6 +17,15 @@
     "comment": null,
     "sql": "CREATE TRIGGER trigger_update_client_positions_updated_at BEFORE UPDATE ON public.client_positions FOR EACH ROW EXECUTE FUNCTION update_client_positions_updated_at()"
   },
+  "public.construction_cost_volumes.update_construction_cost_volumes_updated_at": {
+    "schema": "public",
+    "name": "update_construction_cost_volumes_updated_at",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER update_construction_cost_volumes_updated_at BEFORE UPDATE ON public.construction_cost_volumes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
   "public.cost_categories.update_cost_categories_updated_at": {
     "schema": "public",
     "name": "update_cost_categories_updated_at",
@@ -97,6 +106,15 @@
     "timing": null,
     "comment": null,
     "sql": "CREATE TRIGGER trigger_update_tender_markup_percentage_updated_at BEFORE UPDATE ON public.tender_markup_percentage FOR EACH ROW EXECUTE FUNCTION update_tender_markup_percentage_updated_at()"
+  },
+  "public.tender_pricing_distribution.set_updated_at_tender_pricing_distribution": {
+    "schema": "public",
+    "name": "set_updated_at_tender_pricing_distribution",
+    "table_name": null,
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER set_updated_at_tender_pricing_distribution BEFORE UPDATE ON public.tender_pricing_distribution FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
   "public.tenders.update_tenders_updated_at": {
     "schema": "public",

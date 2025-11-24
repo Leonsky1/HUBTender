@@ -3922,6 +3922,140 @@
     ],
     "sql": "-- Позиции заказчика из ВОРа (Bill of Quantities)\nCREATE TABLE IF NOT EXISTS public.client_positions (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    tender_id uuid NOT NULL,\n    position_number integer(32) NOT NULL,\n    unit_code text,\n    volume numeric(18,6),\n    client_note text,\n    item_no text,\n    work_name text NOT NULL,\n    manual_volume numeric(18,6),\n    manual_note text,\n    hierarchy_level integer(32) DEFAULT 0,\n    is_additional boolean DEFAULT false,\n    parent_position_id uuid,\n    total_material numeric(18,2) DEFAULT 0,\n    total_works numeric(18,2) DEFAULT 0,\n    material_cost_per_unit numeric(18,6) DEFAULT 0,\n    work_cost_per_unit numeric(18,6) DEFAULT 0,\n    total_commercial_material numeric(18,2) DEFAULT 0,\n    total_commercial_work numeric(18,2) DEFAULT 0,\n    total_commercial_material_per_unit numeric(18,6) DEFAULT 0,\n    total_commercial_work_per_unit numeric(18,6) DEFAULT 0,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT client_positions_parent_position_id_fkey FOREIGN KEY (parent_position_id) REFERENCES public.client_positions(id),\n    CONSTRAINT client_positions_pkey PRIMARY KEY (id),\n    CONSTRAINT client_positions_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None),\n    CONSTRAINT client_positions_unit_code_fkey FOREIGN KEY (unit_code) REFERENCES None.None(None)\n);\n\nCOMMENT ON TABLE public.client_positions IS 'Позиции заказчика из ВОРа (Bill of Quantities)';\nCOMMENT ON COLUMN public.client_positions.id IS 'Уникальный идентификатор позиции';\nCOMMENT ON COLUMN public.client_positions.tender_id IS 'Связь с тендером';\nCOMMENT ON COLUMN public.client_positions.position_number IS 'Автоматический порядковый номер позиции';\nCOMMENT ON COLUMN public.client_positions.unit_code IS 'Код единицы измерения (ссылка на units.code)';\nCOMMENT ON COLUMN public.client_positions.volume IS 'Объем заказчика';\nCOMMENT ON COLUMN public.client_positions.client_note IS 'Примечание заказчика';\nCOMMENT ON COLUMN public.client_positions.item_no IS 'Номер раздела заказчика (из файла ВОР)';\nCOMMENT ON COLUMN public.client_positions.work_name IS 'Название работы/позиции';\nCOMMENT ON COLUMN public.client_positions.manual_volume IS 'Количество ГП (ручной ввод)';\nCOMMENT ON COLUMN public.client_positions.manual_note IS 'Примечание ГП (ручной ввод)';\nCOMMENT ON COLUMN public.client_positions.hierarchy_level IS 'Уровень в иерархии (вводится вручную)';\nCOMMENT ON COLUMN public.client_positions.is_additional IS 'Признак дополнительной строки';\nCOMMENT ON COLUMN public.client_positions.parent_position_id IS 'Связь с родительской позицией для доп. строк';\nCOMMENT ON COLUMN public.client_positions.total_material IS 'Прямая стоимость материалов (расчетная)';\nCOMMENT ON COLUMN public.client_positions.total_works IS 'Прямая стоимость работ (расчетная)';\nCOMMENT ON COLUMN public.client_positions.material_cost_per_unit IS 'Стоимость материалов за единицу';\nCOMMENT ON COLUMN public.client_positions.work_cost_per_unit IS 'Стоимость работ за единицу';\nCOMMENT ON COLUMN public.client_positions.total_commercial_material IS 'Коммерческая стоимость материалов с наценками';\nCOMMENT ON COLUMN public.client_positions.total_commercial_work IS 'Коммерческая стоимость работ с наценками';\nCOMMENT ON COLUMN public.client_positions.total_commercial_material_per_unit IS 'Коммерческая стоимость материалов за единицу';\nCOMMENT ON COLUMN public.client_positions.total_commercial_work_per_unit IS 'Коммерческая стоимость работ за единицу';\nCOMMENT ON COLUMN public.client_positions.created_at IS 'Дата и время создания записи';\nCOMMENT ON COLUMN public.client_positions.updated_at IS 'Дата и время последнего обновления записи';"
   },
+  "public.construction_cost_volumes": {
+    "schema": "public",
+    "name": "construction_cost_volumes",
+    "comment": null,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": null
+      },
+      {
+        "name": "tender_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "detail_cost_category_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "volume",
+        "data_type": "numeric",
+        "max_length": null,
+        "numeric_precision": 18,
+        "numeric_scale": 6,
+        "is_nullable": "YES",
+        "default": "0",
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_30630_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30630_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30630_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "construction_cost_volumes_detail_cost_category_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "detail_cost_category_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "construction_cost_volumes_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "construction_cost_volumes",
+        "foreign_column": "id"
+      },
+      {
+        "name": "construction_cost_volumes_tender_id_detail_cost_category_id_key",
+        "type": "UNIQUE",
+        "column": "detail_cost_category_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "construction_cost_volumes",
+        "foreign_column": "detail_cost_category_id"
+      },
+      {
+        "name": "construction_cost_volumes_tender_id_detail_cost_category_id_key",
+        "type": "UNIQUE",
+        "column": "tender_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "construction_cost_volumes",
+        "foreign_column": "detail_cost_category_id"
+      },
+      {
+        "name": "construction_cost_volumes_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS public.construction_cost_volumes (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    tender_id uuid NOT NULL,\n    detail_cost_category_id uuid NOT NULL,\n    volume numeric(18,6) DEFAULT 0,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT construction_cost_volumes_detail_cost_category_id_fkey FOREIGN KEY (detail_cost_category_id) REFERENCES None.None(None),\n    CONSTRAINT construction_cost_volumes_pkey PRIMARY KEY (id),\n    CONSTRAINT construction_cost_volumes_tender_id_detail_cost_category_id_key UNIQUE (detail_cost_category_id),\n    CONSTRAINT construction_cost_volumes_tender_id_detail_cost_category_id_key UNIQUE (tender_id),\n    CONSTRAINT construction_cost_volumes_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None)\n);"
+  },
   "public.cost_categories": {
     "schema": "public",
     "name": "cost_categories",
@@ -4784,6 +4918,160 @@
     ],
     "sql": "-- Справочник материалов (Material library) с полной детализацией\nCREATE TABLE IF NOT EXISTS public.materials_library (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    material_type USER-DEFINED NOT NULL,\n    item_type USER-DEFINED NOT NULL,\n    consumption_coefficient numeric(10,4) DEFAULT 1.0000,\n    unit_rate numeric(15,2) NOT NULL,\n    currency_type USER-DEFINED NOT NULL DEFAULT 'RUB'::currency_type,\n    delivery_price_type USER-DEFINED NOT NULL DEFAULT 'в цене'::delivery_price_type,\n    delivery_amount numeric(15,2) DEFAULT 0.00,\n    material_name_id uuid NOT NULL,\n    created_at timestamp with time zone DEFAULT now(),\n    updated_at timestamp with time zone DEFAULT now(),\n    CONSTRAINT materials_library_material_name_id_fkey FOREIGN KEY (material_name_id) REFERENCES None.None(None),\n    CONSTRAINT materials_library_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.materials_library IS 'Справочник материалов (Material library) с полной детализацией';\nCOMMENT ON COLUMN public.materials_library.id IS 'Уникальный идентификатор работы (UUID)';\nCOMMENT ON COLUMN public.materials_library.material_type IS 'Тип материала (основной/вспомогательный)';\nCOMMENT ON COLUMN public.materials_library.item_type IS 'Вид материала (мат, суб-мат, мат-комп)';\nCOMMENT ON COLUMN public.materials_library.consumption_coefficient IS 'Коэффициент расхода';\nCOMMENT ON COLUMN public.materials_library.unit_rate IS 'Цена материала за единицу';\nCOMMENT ON COLUMN public.materials_library.currency_type IS 'Тип валюты (рубли, евро, доллары, юани)';\nCOMMENT ON COLUMN public.materials_library.delivery_price_type IS 'Тип доставки (в цене, не в цене, суммой)';\nCOMMENT ON COLUMN public.materials_library.delivery_amount IS 'Сумма доставки';\nCOMMENT ON COLUMN public.materials_library.material_name_id IS 'Связь с наименованием материала (откуда берется название и единица измерения)';\nCOMMENT ON COLUMN public.materials_library.created_at IS 'Дата создания';\nCOMMENT ON COLUMN public.materials_library.updated_at IS 'Дата изменения';"
   },
+  "public.notifications": {
+    "schema": "public",
+    "name": "notifications",
+    "comment": "Системные уведомления для пользователей",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": "Уникальный идентификатор уведомления"
+      },
+      {
+        "name": "type",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Тип уведомления (success, info, warning, pending)"
+      },
+      {
+        "name": "title",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Заголовок уведомления"
+      },
+      {
+        "name": "message",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": "Текст уведомления"
+      },
+      {
+        "name": "related_entity_type",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "Тип связанной сущности (tender, position, cost, etc.)"
+      },
+      {
+        "name": "related_entity_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": "ID связанной сущности"
+      },
+      {
+        "name": "is_read",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "false",
+        "comment": "Признак прочтения уведомления"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": "Дата и время создания"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_30775_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30775_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30775_3_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30775_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30775_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_30775_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "notifications_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "notifications",
+        "foreign_column": "id"
+      },
+      {
+        "name": "notifications_type_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "notifications",
+        "foreign_column": "type"
+      }
+    ],
+    "sql": "-- Системные уведомления для пользователей\nCREATE TABLE IF NOT EXISTS public.notifications (\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    type text NOT NULL,\n    title text NOT NULL,\n    message text NOT NULL,\n    related_entity_type text,\n    related_entity_id uuid,\n    is_read boolean NOT NULL DEFAULT false,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT notifications_pkey PRIMARY KEY (id)\n);\n\nCOMMENT ON TABLE public.notifications IS 'Системные уведомления для пользователей';\nCOMMENT ON COLUMN public.notifications.id IS 'Уникальный идентификатор уведомления';\nCOMMENT ON COLUMN public.notifications.type IS 'Тип уведомления (success, info, warning, pending)';\nCOMMENT ON COLUMN public.notifications.title IS 'Заголовок уведомления';\nCOMMENT ON COLUMN public.notifications.message IS 'Текст уведомления';\nCOMMENT ON COLUMN public.notifications.related_entity_type IS 'Тип связанной сущности (tender, position, cost, etc.)';\nCOMMENT ON COLUMN public.notifications.related_entity_id IS 'ID связанной сущности';\nCOMMENT ON COLUMN public.notifications.is_read IS 'Признак прочтения уведомления';\nCOMMENT ON COLUMN public.notifications.created_at IS 'Дата и время создания';"
+  },
   "public.template_items": {
     "schema": "public",
     "name": "template_items",
@@ -5315,6 +5603,502 @@
       }
     ],
     "sql": "-- Проценты наценок по тендерам (связь с справочником параметров)\nCREATE TABLE IF NOT EXISTS public.tender_markup_percentage (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    tender_id uuid NOT NULL,\n    markup_parameter_id uuid NOT NULL,\n    value numeric(5,2) NOT NULL DEFAULT 0,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT tender_markup_percentage_markup_parameter_id_fkey FOREIGN KEY (markup_parameter_id) REFERENCES None.None(None),\n    CONSTRAINT tender_markup_percentage_pkey PRIMARY KEY (id),\n    CONSTRAINT tender_markup_percentage_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None),\n    CONSTRAINT tender_markup_percentage_unique UNIQUE (markup_parameter_id),\n    CONSTRAINT tender_markup_percentage_unique UNIQUE (tender_id)\n);\n\nCOMMENT ON TABLE public.tender_markup_percentage IS 'Проценты наценок по тендерам (связь с справочником параметров)';\nCOMMENT ON COLUMN public.tender_markup_percentage.id IS 'Уникальный идентификатор записи';\nCOMMENT ON COLUMN public.tender_markup_percentage.tender_id IS 'Ссылка на тендер';\nCOMMENT ON COLUMN public.tender_markup_percentage.markup_parameter_id IS 'Ссылка на параметр наценки';\nCOMMENT ON COLUMN public.tender_markup_percentage.value IS 'Значение процента (0-100)';\nCOMMENT ON COLUMN public.tender_markup_percentage.created_at IS 'Дата создания';\nCOMMENT ON COLUMN public.tender_markup_percentage.updated_at IS 'Дата последнего обновления';"
+  },
+  "public.tender_pricing_distribution": {
+    "schema": "public",
+    "name": "tender_pricing_distribution",
+    "comment": "Правила распределения затрат и наценок между КП (материалы) и работами для каждого        \r\n  тендера",
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "uuid_generate_v4()",
+        "comment": null
+      },
+      {
+        "name": "tender_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "markup_tactic_id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "basic_material_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'material'::text",
+        "comment": "Куда направляется базовая стоимость основных материалов: material = КП, work =\r\n  работы"
+      },
+      {
+        "name": "basic_material_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда направляется наценка на основные материалы: material = КП, work = работы"
+      },
+      {
+        "name": "auxiliary_material_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда направляется базовая стоимость вспомогательных материалов: material = КП, work =     \r\n  работы"
+      },
+      {
+        "name": "auxiliary_material_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда направляется наценка на вспомогательные материалы: material = КП, work = работы"
+      },
+      {
+        "name": "work_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда направляется базовая стоимость работ: material = КП, work = работы"
+      },
+      {
+        "name": "work_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда направляется наценка на работы: material = КП, work = работы"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "subcontract_basic_material_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": null
+      },
+      {
+        "name": "subcontract_basic_material_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": null
+      },
+      {
+        "name": "subcontract_auxiliary_material_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": null
+      },
+      {
+        "name": "subcontract_auxiliary_material_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": null
+      },
+      {
+        "name": "component_material_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда\r\n  направляется базовая стоимость компонентных материалов (мат-комп.): material = КП, work = работы"
+      },
+      {
+        "name": "component_material_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда\r\n  направляется наценка на компонентные материалы (мат-комп.): material = КП, work = работы"
+      },
+      {
+        "name": "component_work_base_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда направляется    \r\n   базовая стоимость компонентных работ (раб-комп.): material = КП, work = работы"
+      },
+      {
+        "name": "component_work_markup_target",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'work'::text",
+        "comment": "Куда\r\n  направляется наценка на компонентные работы (раб-комп.): material = КП, work = работы"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "2200_31915_10_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_11_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_12_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_13_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_14_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_15_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_16_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_17_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_18_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_19_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_20_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_21_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_4_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_5_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "2200_31915_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "tender_pricing_distribution_auxiliary_material_base_targe_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "auxiliary_material_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_auxiliary_material_markup_tar_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "auxiliary_material_markup_target"
+      },
+      {
+        "name": "tender_pricing_distribution_basic_material_base_target_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "basic_material_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_basic_material_markup_target_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "basic_material_markup_target"
+      },
+      {
+        "name": "tender_pricing_distribution_component_material_base_target_chec",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "component_material_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_component_material_markup_target_ch",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "component_material_markup_target"
+      },
+      {
+        "name": "tender_pricing_distribution_component_work_base_target_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "component_work_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_component_work_markup_target_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "component_work_markup_target"
+      },
+      {
+        "name": "tender_pricing_distribution_markup_tactic_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "markup_tactic_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "tender_pricing_distribution_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "id"
+      },
+      {
+        "name": "tender_pricing_distribution_subcontract_auxiliary_materi_check1",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "subcontract_auxiliary_material_markup_target"
+      },
+      {
+        "name": "tender_pricing_distribution_subcontract_auxiliary_materia_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "subcontract_auxiliary_material_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_subcontract_basic_material_ba_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "subcontract_basic_material_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_subcontract_basic_material_ma_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "subcontract_basic_material_markup_target"
+      },
+      {
+        "name": "tender_pricing_distribution_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "tender_pricing_distribution_tender_id_markup_tactic_id_key",
+        "type": "UNIQUE",
+        "column": "markup_tactic_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "markup_tactic_id"
+      },
+      {
+        "name": "tender_pricing_distribution_tender_id_markup_tactic_id_key",
+        "type": "UNIQUE",
+        "column": "tender_id",
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "markup_tactic_id"
+      },
+      {
+        "name": "tender_pricing_distribution_work_base_target_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "work_base_target"
+      },
+      {
+        "name": "tender_pricing_distribution_work_markup_target_check",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": "public",
+        "foreign_table": "tender_pricing_distribution",
+        "foreign_column": "work_markup_target"
+      }
+    ],
+    "sql": "-- Правила распределения затрат и наценок между КП (материалы) и работами для каждого        \r\n  тендера\nCREATE TABLE IF NOT EXISTS public.tender_pricing_distribution (\n    id uuid NOT NULL DEFAULT uuid_generate_v4(),\n    tender_id uuid NOT NULL,\n    markup_tactic_id uuid,\n    basic_material_base_target text NOT NULL DEFAULT 'material'::text,\n    basic_material_markup_target text NOT NULL DEFAULT 'work'::text,\n    auxiliary_material_base_target text NOT NULL DEFAULT 'work'::text,\n    auxiliary_material_markup_target text NOT NULL DEFAULT 'work'::text,\n    work_base_target text NOT NULL DEFAULT 'work'::text,\n    work_markup_target text NOT NULL DEFAULT 'work'::text,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    subcontract_basic_material_base_target text NOT NULL DEFAULT 'work'::text,\n    subcontract_basic_material_markup_target text NOT NULL DEFAULT 'work'::text,\n    subcontract_auxiliary_material_base_target text NOT NULL DEFAULT 'work'::text,\n    subcontract_auxiliary_material_markup_target text NOT NULL DEFAULT 'work'::text,\n    component_material_base_target text NOT NULL DEFAULT 'work'::text,\n    component_material_markup_target text NOT NULL DEFAULT 'work'::text,\n    component_work_base_target text NOT NULL DEFAULT 'work'::text,\n    component_work_markup_target text NOT NULL DEFAULT 'work'::text,\n    CONSTRAINT tender_pricing_distribution_markup_tactic_id_fkey FOREIGN KEY (markup_tactic_id) REFERENCES None.None(None),\n    CONSTRAINT tender_pricing_distribution_pkey PRIMARY KEY (id),\n    CONSTRAINT tender_pricing_distribution_tender_id_fkey FOREIGN KEY (tender_id) REFERENCES None.None(None),\n    CONSTRAINT tender_pricing_distribution_tender_id_markup_tactic_id_key UNIQUE (markup_tactic_id),\n    CONSTRAINT tender_pricing_distribution_tender_id_markup_tactic_id_key UNIQUE (tender_id)\n);\n\nCOMMENT ON TABLE public.tender_pricing_distribution IS 'Правила распределения затрат и наценок между КП (материалы) и работами для каждого        \r\n  тендера';\nCOMMENT ON COLUMN public.tender_pricing_distribution.basic_material_base_target IS 'Куда направляется базовая стоимость основных материалов: material = КП, work =\r\n  работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.basic_material_markup_target IS 'Куда направляется наценка на основные материалы: material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.auxiliary_material_base_target IS 'Куда направляется базовая стоимость вспомогательных материалов: material = КП, work =     \r\n  работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.auxiliary_material_markup_target IS 'Куда направляется наценка на вспомогательные материалы: material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.work_base_target IS 'Куда направляется базовая стоимость работ: material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.work_markup_target IS 'Куда направляется наценка на работы: material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.component_material_base_target IS 'Куда\r\n  направляется базовая стоимость компонентных материалов (мат-комп.): material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.component_material_markup_target IS 'Куда\r\n  направляется наценка на компонентные материалы (мат-комп.): material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.component_work_base_target IS 'Куда направляется    \r\n   базовая стоимость компонентных работ (раб-комп.): material = КП, work = работы';\nCOMMENT ON COLUMN public.tender_pricing_distribution.component_work_markup_target IS 'Куда\r\n  направляется наценка на компонентные работы (раб-комп.): material = КП, work = работы';"
   },
   "public.tenders": {
     "schema": "public",
@@ -6086,6 +6870,1174 @@
     ],
     "sql": "CREATE TABLE IF NOT EXISTS realtime.messages (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)\n);"
   },
+  "realtime.messages_2025_11_20": {
+    "schema": "realtime",
+    "name": "messages_2025_11_20",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_30712_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30712_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30712_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30712_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30712_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_20_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_20_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_20 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_20_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_20_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_21": {
+    "schema": "realtime",
+    "name": "messages_2025_11_21",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_30724_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30724_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30724_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30724_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30724_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_21_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_21_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_21 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_21_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_21_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_22": {
+    "schema": "realtime",
+    "name": "messages_2025_11_22",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_30736_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30736_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30736_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30736_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30736_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_22_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_22_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_22 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_22_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_22_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_23": {
+    "schema": "realtime",
+    "name": "messages_2025_11_23",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_30748_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30748_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30748_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30748_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30748_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_23_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_23_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_23 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_23_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_23_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_24": {
+    "schema": "realtime",
+    "name": "messages_2025_11_24",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_30760_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30760_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30760_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30760_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_30760_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_24_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_24_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_24 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_24_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_24_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_25": {
+    "schema": "realtime",
+    "name": "messages_2025_11_25",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_34210_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34210_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34210_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34210_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34210_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_25_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_25_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_25 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_25_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_25_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_26": {
+    "schema": "realtime",
+    "name": "messages_2025_11_26",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_34222_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34222_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34222_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34222_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34222_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_26_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_26_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_26 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_26_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_26_pkey PRIMARY KEY (inserted_at)\n);"
+  },
+  "realtime.messages_2025_11_27": {
+    "schema": "realtime",
+    "name": "messages_2025_11_27",
+    "comment": null,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": "false",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      }
+    ],
+    "constraints": [
+      {
+        "name": "16605_34234_1_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34234_2_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34234_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34234_7_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "16605_34234_8_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_27_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
+        "name": "messages_2025_11_27_pkey",
+        "type": "PRIMARY KEY",
+        "column": "inserted_at",
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      }
+    ],
+    "sql": "CREATE TABLE IF NOT EXISTS realtime.messages_2025_11_27 (\n    topic text NOT NULL,\n    extension text NOT NULL,\n    payload jsonb,\n    event text,\n    private boolean DEFAULT false,\n    updated_at timestamp without time zone NOT NULL DEFAULT now(),\n    inserted_at timestamp without time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    CONSTRAINT messages_2025_11_27_pkey PRIMARY KEY (id),\n    CONSTRAINT messages_2025_11_27_pkey PRIMARY KEY (inserted_at)\n);"
+  },
   "realtime.schema_migrations": {
     "schema": "realtime",
     "name": "schema_migrations",
@@ -6434,7 +8386,7 @@
     "comment": null,
     "columns": [
       {
-        "name": "id",
+        "name": "name",
         "data_type": "text",
         "max_length": null,
         "numeric_precision": null,
@@ -6482,6 +8434,26 @@
         "is_nullable": "NO",
         "default": "now()",
         "comment": null
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      },
+      {
+        "name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
       }
     ],
     "constraints": [
@@ -6526,6 +8498,14 @@
         "foreign_column": null
       },
       {
+        "name": "16542_17246_6_not_null",
+        "type": "CHECK",
+        "column": null,
+        "foreign_table_schema": null,
+        "foreign_table": null,
+        "foreign_column": null
+      },
+      {
         "name": "buckets_analytics_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
@@ -6534,7 +8514,56 @@
         "foreign_column": null
       }
     ],
-    "sql": "CREATE TABLE IF NOT EXISTS storage.buckets_analytics (\n    id text NOT NULL,\n    type USER-DEFINED NOT NULL DEFAULT 'ANALYTICS'::storage.buckettype,\n    format text NOT NULL DEFAULT 'ICEBERG'::text,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id)\n);"
+    "sql": "CREATE TABLE IF NOT EXISTS storage.buckets_analytics (\n    name text NOT NULL,\n    type USER-DEFINED NOT NULL DEFAULT 'ANALYTICS'::storage.buckettype,\n    format text NOT NULL DEFAULT 'ICEBERG'::text,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now(),\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    deleted_at timestamp with time zone,\n    CONSTRAINT buckets_analytics_pkey PRIMARY KEY (id)\n);"
+  },
+  "storage.buckets_vectors": {
+    "schema": "storage",
+    "name": "buckets_vectors",
+    "comment": null,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "type",
+        "data_type": "USER-DEFINED",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "'VECTOR'::storage.buckettype",
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [],
+    "sql": "CREATE TABLE IF NOT EXISTS storage.buckets_vectors (\n    id text NOT NULL,\n    type USER-DEFINED NOT NULL DEFAULT 'VECTOR'::storage.buckettype,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now()\n);"
   },
   "storage.migrations": {
     "schema": "storage",
@@ -7242,6 +9271,105 @@
       }
     ],
     "sql": "CREATE TABLE IF NOT EXISTS storage.s3_multipart_uploads_parts (\n    id uuid NOT NULL DEFAULT gen_random_uuid(),\n    upload_id text NOT NULL,\n    size bigint(64) NOT NULL DEFAULT 0,\n    part_number integer(32) NOT NULL,\n    bucket_id text NOT NULL,\n    key text NOT NULL,\n    etag text NOT NULL,\n    owner_id text,\n    version text NOT NULL,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    CONSTRAINT s3_multipart_uploads_parts_bucket_id_fkey FOREIGN KEY (bucket_id) REFERENCES None.None(None),\n    CONSTRAINT s3_multipart_uploads_parts_pkey PRIMARY KEY (id),\n    CONSTRAINT s3_multipart_uploads_parts_upload_id_fkey FOREIGN KEY (upload_id) REFERENCES None.None(None)\n);"
+  },
+  "storage.vector_indexes": {
+    "schema": "storage",
+    "name": "vector_indexes",
+    "comment": null,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "gen_random_uuid()",
+        "comment": null
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "data_type",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "dimension",
+        "data_type": "integer",
+        "max_length": null,
+        "numeric_precision": 32,
+        "numeric_scale": 0,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "distance_metric",
+        "data_type": "text",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "metadata_configuration",
+        "data_type": "jsonb",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "YES",
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "max_length": null,
+        "numeric_precision": null,
+        "numeric_scale": null,
+        "is_nullable": "NO",
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "constraints": [],
+    "sql": "CREATE TABLE IF NOT EXISTS storage.vector_indexes (\n    id text NOT NULL DEFAULT gen_random_uuid(),\n    name text NOT NULL,\n    bucket_id text NOT NULL,\n    data_type text NOT NULL,\n    dimension integer(32) NOT NULL,\n    distance_metric text NOT NULL,\n    metadata_configuration jsonb,\n    created_at timestamp with time zone NOT NULL DEFAULT now(),\n    updated_at timestamp with time zone NOT NULL DEFAULT now()\n);"
   },
   "supabase_migrations.schema_migrations": {
     "schema": "supabase_migrations",

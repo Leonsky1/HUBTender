@@ -96,7 +96,7 @@ App.tsx
 - `/` and `/dashboard` - Tender dashboard with statistics and tender table (✅ complete)
 - `/admin/nomenclatures` - Materials, Works, Locations, Cost Categories (✅ complete, Supabase integrated)
 - `/admin/tenders` - Tender management table (✅ UI complete, Supabase ready)
-- `/admin/construction_cost` - Cost calculation interface (✅ UI complete, mock data)
+- `/admin/construction_cost` - Справочник затрат (Cost reference catalog with CRUD operations) (✅ complete, Supabase integrated)
 - `/admin/markup_constructor` - Markup calculation constructor (✅ complete, Supabase integrated)
 - `/admin/markup` - Markup percentages management (✅ complete, Supabase integrated)
 - `/library` - Materials/Works library with inline editing (✅ complete, Supabase integrated)
@@ -104,8 +104,9 @@ App.tsx
 - `/positions` - Client positions with hierarchical structure (✅ complete, Supabase integrated)
 - `/positions/:positionId/items` - BOQ items management for each position (✅ complete with price calculations)
 - `/commerce` - Commercial calculations with BOQ analysis (✅ complete with calculations)
+- `/costs` - Затраты на строительство (Construction costs analysis by tender) (✅ complete with calculations and pricing distribution)
 - `/settings` - Application settings and configuration (✅ complete)
-- `/costs`, `/users` - Placeholder pages
+- `/users` - Placeholder page
 
 ### Theme System
 - **Context**: `src/contexts/ThemeContext.tsx`
@@ -280,10 +281,8 @@ All database migrations have been executed and consolidated into `supabase/schem
 
 **UI Complete (Supabase Ready):**
 - `/admin/tenders` - Complex tender management table with filters and actions
-- `/admin/construction_cost` - Cost calculations with statistics and deviation analysis
 
 **Placeholder Pages:**
-- `/costs` - Construction costs
 - `/users` - User management
 
 ## Vite Configuration Notes
@@ -436,6 +435,62 @@ Color coding for material/work types in Library:
 - Profit calculation and percentage analysis
 - Color-coded profit indicators
 - Real-time updates from BOQ changes
+
+## Construction Costs Pages
+
+### Two Pages for Different Purposes:
+
+#### `/admin/construction_cost` - Справочник затрат (Cost Reference Catalog)
+**File**: `src/pages/Admin/ConstructionCost/ConstructionCost.tsx`
+**Purpose**: Managing the structure and catalog of cost categories
+
+**Features**:
+- CRUD operations for cost categories and detailed items
+- Import structure from Excel with auto-detection of new units
+- 3-level hierarchy: Category → Detail → Location
+- Edit names, units, locations
+- Delete items and bulk delete all costs
+- Expand/collapse all categories
+
+**Database tables**:
+- `cost_categories` (read/write)
+- `detail_cost_categories` (read/write)
+- `units` (read/write)
+
+**Use cases**:
+- Setting up initial cost structure
+- Adding new types of works/materials
+- Importing cost structure from Excel
+- Managing cost catalog for organization
+
+#### `/costs` - Затраты на строительство (Construction Costs Analysis)
+**File**: `src/pages/Admin/ConstructionCostNew/ConstructionCostNew.tsx`
+**Purpose**: Analyzing costs for specific tenders with calculations
+
+**Features**:
+- Select tender and version
+- Toggle between "Direct costs" / "Commercial costs"
+- Edit work volumes (stored in `construction_cost_volumes`)
+- Automatic calculation from BOQ items
+- Breakdown by types: Materials, Works, Sub-materials, Sub-works, Component materials, Component works
+- Export to Excel with dual view (direct + commercial costs)
+- Detailed/Summary view modes
+- Hide zero values
+- Search and filter by categories/types/locations
+- Shows only categories used in selected tender (by default)
+
+**Database tables**:
+- `tenders` (read - for selection)
+- `detail_cost_categories` (read - structure)
+- `construction_cost_volumes` (read/write - volumes per tender)
+- `boq_items` (read - cost calculations with pricing distribution)
+
+**Use cases**:
+- Viewing costs for specific tender
+- Editing work volumes
+- Comparing direct vs commercial costs
+- Exporting cost reports to Excel
+- Analyzing cost distribution by types
 
 ## Templates Architecture
 

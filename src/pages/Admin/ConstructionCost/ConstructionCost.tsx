@@ -8,6 +8,8 @@ import {
   FolderOutlined,
   FileOutlined,
   ExclamationCircleOutlined,
+  ExpandOutlined,
+  CompressOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { UploadFile } from 'antd/es/upload';
@@ -69,6 +71,7 @@ const ConstructionCost: React.FC = () => {
   const [addLocationModalOpen, setAddLocationModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<TreeNode | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<TreeNode | null>(null);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [form] = Form.useForm();
   const [addCategoryForm] = Form.useForm();
   const [addDetailForm] = Form.useForm();
@@ -221,12 +224,43 @@ const ConstructionCost: React.FC = () => {
       });
 
       setData(treeData);
+
+      // Инициализируем expandedKeys всеми ключами для раскрытого состояния по умолчанию
+      const allKeys: string[] = [];
+      treeData.forEach(cat => {
+        allKeys.push(cat.key);
+        if (cat.children) {
+          cat.children.forEach(detail => {
+            allKeys.push(detail.key);
+          });
+        }
+      });
+      setExpandedKeys(allKeys);
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
       message.error('Ошибка загрузки данных');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Функция для разворачивания всех категорий
+  const expandAll = () => {
+    const allKeys: string[] = [];
+    data.forEach(cat => {
+      allKeys.push(cat.key);
+      if (cat.children) {
+        cat.children.forEach(detail => {
+          allKeys.push(detail.key);
+        });
+      }
+    });
+    setExpandedKeys(allKeys);
+  };
+
+  // Функция для сворачивания всех категорий
+  const collapseAll = () => {
+    setExpandedKeys([]);
   };
 
   useEffect(() => {
@@ -753,7 +787,7 @@ ORDER BY sort_order;`;
       dataIndex: 'description',
       key: 'description',
       align: 'center',
-      width: '10%',
+      width: '8%',
     },
     {
       title: 'Действия',
@@ -870,10 +904,24 @@ ORDER BY sort_order;`;
         }
       `}</style>
       <Title level={4} style={{ margin: '0 0 16px 0' }}>
-        Затраты на строительство
+        Справочник затрат
       </Title>
       <div>
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Space>
+            <Button
+              icon={<ExpandOutlined />}
+              onClick={expandAll}
+            >
+              Раскрыть все
+            </Button>
+            <Button
+              icon={<CompressOutlined />}
+              onClick={collapseAll}
+            >
+              Свернуть все
+            </Button>
+          </Space>
           <Space>
             <Upload
               accept=".xlsx,.xls"
@@ -946,7 +994,8 @@ ORDER BY sort_order;`;
           size="small"
           scroll={{ y: 'calc(100vh - 300px)' }}
           expandable={{
-            defaultExpandAllRows: true,
+            expandedRowKeys: expandedKeys,
+            onExpandedRowsChange: (keys) => setExpandedKeys(keys as string[]),
           }}
           rowKey="key"
         />

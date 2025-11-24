@@ -527,6 +527,30 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_client_positions_tender_id ON public.client_positions USING btree (tender_id)"
   },
+  "public.construction_cost_volumes.construction_cost_volumes_tender_id_detail_cost_category_id_key": {
+    "schema": "public",
+    "name": "construction_cost_volumes_tender_id_detail_cost_category_id_key",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX construction_cost_volumes_tender_id_detail_cost_category_id_key ON public.construction_cost_volumes USING btree (tender_id, detail_cost_category_id)"
+  },
+  "public.construction_cost_volumes.idx_construction_cost_volumes_detail_cost": {
+    "schema": "public",
+    "name": "idx_construction_cost_volumes_detail_cost",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_construction_cost_volumes_detail_cost ON public.construction_cost_volumes USING btree (detail_cost_category_id)"
+  },
+  "public.construction_cost_volumes.idx_construction_cost_volumes_tender": {
+    "schema": "public",
+    "name": "idx_construction_cost_volumes_tender",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_construction_cost_volumes_tender ON public.construction_cost_volumes USING btree (tender_id)"
+  },
   "public.cost_categories.idx_cost_categories_created_at": {
     "schema": "public",
     "name": "idx_cost_categories_created_at",
@@ -807,6 +831,30 @@
     "is_primary": false,
     "sql": "CREATE UNIQUE INDEX tender_markup_percentage_unique ON public.tender_markup_percentage USING btree (tender_id, markup_parameter_id)"
   },
+  "public.tender_pricing_distribution.idx_tender_pricing_distribution_tactic_id": {
+    "schema": "public",
+    "name": "idx_tender_pricing_distribution_tactic_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_pricing_distribution_tactic_id ON public.tender_pricing_distribution USING btree (markup_tactic_id)"
+  },
+  "public.tender_pricing_distribution.idx_tender_pricing_distribution_tender_id": {
+    "schema": "public",
+    "name": "idx_tender_pricing_distribution_tender_id",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_pricing_distribution_tender_id ON public.tender_pricing_distribution USING btree (tender_id)"
+  },
+  "public.tender_pricing_distribution.tender_pricing_distribution_tender_id_markup_tactic_id_key": {
+    "schema": "public",
+    "name": "tender_pricing_distribution_tender_id_markup_tactic_id_key",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX tender_pricing_distribution_tender_id_markup_tactic_id_key ON public.tender_pricing_distribution USING btree (tender_id, markup_tactic_id)"
+  },
   "public.tenders.idx_tenders_client_name": {
     "schema": "public",
     "name": "idx_tenders_client_name",
@@ -935,6 +983,70 @@
     "is_primary": false,
     "sql": "CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
+  "realtime.messages_2025_11_20.messages_2025_11_20_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_20_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_20_inserted_at_topic_idx ON realtime.messages_2025_11_20 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_21.messages_2025_11_21_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_21_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_21_inserted_at_topic_idx ON realtime.messages_2025_11_21 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_22.messages_2025_11_22_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_22_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_22_inserted_at_topic_idx ON realtime.messages_2025_11_22 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_23.messages_2025_11_23_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_23_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_23_inserted_at_topic_idx ON realtime.messages_2025_11_23 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_24.messages_2025_11_24_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_24_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_24_inserted_at_topic_idx ON realtime.messages_2025_11_24 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_25.messages_2025_11_25_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_25_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_25_inserted_at_topic_idx ON realtime.messages_2025_11_25 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_26.messages_2025_11_26_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_26_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_26_inserted_at_topic_idx ON realtime.messages_2025_11_26 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
+  "realtime.messages_2025_11_27.messages_2025_11_27_inserted_at_topic_idx": {
+    "schema": "realtime",
+    "name": "messages_2025_11_27_inserted_at_topic_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX messages_2025_11_27_inserted_at_topic_idx ON realtime.messages_2025_11_27 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+  },
   "realtime.subscription.ix_realtime_subscription_entity": {
     "schema": "realtime",
     "name": "ix_realtime_subscription_entity",
@@ -966,6 +1078,14 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE UNIQUE INDEX bname ON storage.buckets USING btree (name)"
+  },
+  "storage.buckets_analytics.buckets_analytics_unique_name_idx": {
+    "schema": "storage",
+    "name": "buckets_analytics_unique_name_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX buckets_analytics_unique_name_idx ON storage.buckets_analytics USING btree (name) WHERE (deleted_at IS NULL)"
   },
   "storage.migrations.migrations_name_key": {
     "schema": "storage",
@@ -1038,6 +1158,14 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX idx_multipart_uploads_list ON storage.s3_multipart_uploads USING btree (bucket_id, key, created_at)"
+  },
+  "storage.vector_indexes.vector_indexes_name_bucket_id_idx": {
+    "schema": "storage",
+    "name": "vector_indexes_name_bucket_id_idx",
+    "table_name": null,
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX vector_indexes_name_bucket_id_idx ON storage.vector_indexes USING btree (name, bucket_id)"
   },
   "vault.secrets.secrets_name_idx": {
     "schema": "vault",

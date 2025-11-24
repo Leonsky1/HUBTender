@@ -17,6 +17,7 @@ import PositionItems from './pages/PositionItems/PositionItems';
 import Commerce from './pages/Commerce';
 import Bsm from './pages/Bsm/Bsm';
 import ObjectComparison from './pages/Analytics/ObjectComparison';
+import FinancialIndicators from './pages/FinancialIndicators/FinancialIndicators';
 import './App.css';
 
 // Временный импорт для тестирования Supabase (удалить после проверки)
@@ -59,6 +60,7 @@ function AppContent() {
               <Route path="markup" element={<MarkupPercentages />} />
             </Route>
             <Route path="costs" element={<ConstructionCostNew />} />
+            <Route path="financial-indicators" element={<FinancialIndicators />} />
             <Route path="users" element={<div>Пользователи</div>} />
             <Route path="settings" element={<div>Настройки</div>} />
           </Route>

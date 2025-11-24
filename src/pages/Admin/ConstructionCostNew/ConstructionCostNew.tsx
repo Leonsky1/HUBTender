@@ -31,6 +31,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { supabase } from '../../../lib/supabase';
 import type { Tender, DetailCostCategory, ConstructionCostVolume } from '../../../lib/supabase';
+import { useTheme } from '../../../contexts/ThemeContext';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx-js-style';
 
@@ -65,6 +66,7 @@ interface TenderOption {
 }
 
 const ConstructionCostNew: React.FC = () => {
+  const { theme } = useTheme();
   const [tenders, setTenders] = useState<Tender[]>([]);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
   const [selectedTenderTitle, setSelectedTenderTitle] = useState<string | null>(null);
@@ -80,8 +82,8 @@ const ConstructionCostNew: React.FC = () => {
 
   // Переключатели
   const [costType, setCostType] = useState<'base' | 'commercial'>('base'); // Прямые / Коммерческие
-  const [hideZeros, setHideZeros] = useState(false); // Скрыть нули
   const [viewMode, setViewMode] = useState<'detailed' | 'summary'>('detailed'); // Детальный / Итоговый
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]); // Раскрытые категории
 
   // Получение уникальных наименований тендеров
   const getTenderTitles = (): TenderOption[] => {
@@ -246,27 +248,35 @@ const ConstructionCostNew: React.FC = () => {
               break;
           }
         } else {
-          // Для коммерческих затрат используем отдельные поля
+          // Для коммерческих затрат распределение УЖЕ выполнено в boq_items
+          // total_commercial_material_cost → идет в столбцы материалов (Мат./Суб-мат./Мат-комп.)
+          // total_commercial_work_cost → идет в столбцы работ (Раб./Суб-раб./Раб-комп.)
           const materialCost = item.total_commercial_material_cost || 0;
           const workCost = item.total_commercial_work_cost || 0;
 
           switch (item.boq_item_type) {
             case 'мат':
               costs.materials += materialCost;
+              costs.works += workCost;
               break;
             case 'суб-мат':
               costs.subMaterials += materialCost;
+              costs.subWorks += workCost;
               break;
             case 'мат-комп.':
               costs.materialsComp += materialCost;
+              costs.worksComp += workCost;
               break;
             case 'раб':
+              costs.materials += materialCost;
               costs.works += workCost;
               break;
             case 'суб-раб':
+              costs.subMaterials += materialCost;
               costs.subWorks += workCost;
               break;
             case 'раб-комп.':
+              costs.materialsComp += materialCost;
               costs.worksComp += workCost;
               break;
           }
@@ -344,8 +354,18 @@ const ConstructionCostNew: React.FC = () => {
       });
 
       // Преобразуем Map в массив и сортируем по order_num
-      const rows: CostRow[] = Array.from(categoryMap.values()).sort((a, b) =>
+      let rows: CostRow[] = Array.from(categoryMap.values()).sort((a, b) =>
         (a.order_num || 0) - (b.order_num || 0)
+      );
+
+      // ФИЛЬТРАЦИЯ: Оставляем только категории с ненулевыми затратами (по умолчанию)
+      // Фильтруем children и сами категории
+      rows = rows.map(category => ({
+        ...category,
+        children: category.children?.filter(child => child.total_cost > 0)
+      })).filter(category =>
+        // Оставляем категорию, если есть хотя бы один дочерний элемент с затратами
+        category.children && category.children.length > 0
       );
 
       setData(rows);
@@ -888,9 +908,6 @@ const ConstructionCostNew: React.FC = () => {
     if (detailFilter && row.detail_category_name !== detailFilter) return null;
     if (locationFilter && row.location_name !== locationFilter) return null;
 
-    // Скрыть нули (применяется к детализациям)
-    if (hideZeros && row.total_cost === 0) return null;
-
     return row;
   };
 
@@ -1252,6 +1269,14 @@ const ConstructionCostNew: React.FC = () => {
 
   return (
     <div style={{ margin: '-16px', padding: '24px', height: 'calc(100vh - 64px)' }}>
+      <style>{`
+        .category-row > td {
+          background-color: ${theme === 'dark' ? '#3a3a2a' : '#f5f5dc'} !important;
+        }
+        .category-row:hover > td {
+          background-color: ${theme === 'dark' ? '#4a4a3a' : '#ede9d0'} !important;
+        }
+      `}</style>
       {/* Шапка с кнопкой назад */}
       <div style={{ marginBottom: 16 }}>
         <Button
@@ -1338,13 +1363,21 @@ const ConstructionCostNew: React.FC = () => {
                   />
                 </Space>
                 <Space>
-                  <Switch
-                    checkedChildren={<EyeInvisibleOutlined />}
-                    unCheckedChildren={<EyeOutlined />}
-                    checked={hideZeros}
-                    onChange={setHideZeros}
-                  />
-                  <Text type="secondary">Скрыть нули</Text>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      const allKeys = filteredData.filter(row => row.is_category).map(row => row.key);
+                      setExpandedRowKeys(allKeys);
+                    }}
+                  >
+                    Развернуть все
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => setExpandedRowKeys([])}
+                  >
+                    Свернуть все
+                  </Button>
                 </Space>
               </Space>
             </Space>
@@ -1386,8 +1419,10 @@ const ConstructionCostNew: React.FC = () => {
             size="small"
             scroll={{ y: 'calc(100vh - 340px)' }}
             bordered
+            rowClassName={(record) => record.is_category ? 'category-row' : ''}
             expandable={{
-              defaultExpandAllRows: true,
+              expandedRowKeys: expandedRowKeys,
+              onExpandedRowsChange: (keys) => setExpandedRowKeys(keys as string[]),
               childrenColumnName: 'children',
               indentSize: 20,
             }}

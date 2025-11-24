@@ -176,9 +176,10 @@
     "name": "buckettype",
     "values": [
       "STANDARD",
-      "ANALYTICS"
+      "ANALYTICS",
+      "VECTOR"
     ],
     "comment": null,
-    "sql": "CREATE TYPE storage.buckettype AS ENUM ('STANDARD', 'ANALYTICS');"
+    "sql": "CREATE TYPE storage.buckettype AS ENUM ('STANDARD', 'ANALYTICS', 'VECTOR');"
   }
 }

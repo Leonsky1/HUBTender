@@ -172,6 +172,11 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
       label: 'Затраты на строительство',
     },
     {
+      key: '/financial-indicators',
+      icon: <BarChartOutlined />,
+      label: 'Финансовые показатели',
+    },
+    {
       key: 'analytics',
       icon: <BarChartOutlined />,
       label: 'Аналитика',
@@ -201,7 +206,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
         {
           key: '/admin/construction_cost',
           icon: <BankOutlined />,
-          label: 'Затраты строительства',
+          label: 'Справочник затрат',
         },
         {
           key: '/admin/markup',
