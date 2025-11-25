@@ -30,12 +30,14 @@ import {
   PlusOutlined,
   FolderOutlined,
   QuestionCircleOutlined,
-  FileSearchOutlined
+  FileSearchOutlined,
+  SwapOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import TenderModal from './TenderModal';
 import UploadBOQModal from './UploadBOQModal';
+import { VersionMatchModal } from './VersionMatch';
 import { supabase, type Tender, type TenderInsert, type MarkupParameter, type TenderMarkupPercentageInsert } from '../../../lib/supabase';
 import dayjs from 'dayjs';
 import './Tenders.css';
@@ -82,6 +84,10 @@ const Tenders: React.FC = () => {
   // Состояние для модального окна загрузки ВОР
   const [uploadBOQVisible, setUploadBOQVisible] = useState(false);
   const [selectedTenderForUpload, setSelectedTenderForUpload] = useState<TenderRecord | null>(null);
+
+  // Состояние для модального окна сопоставления версий
+  const [versionMatchVisible, setVersionMatchVisible] = useState(false);
+  const [selectedTenderForVersion, setSelectedTenderForVersion] = useState<Tender | null>(null);
 
   // Загрузка тендеров из БД
   const fetchTenders = async () => {
@@ -243,6 +249,25 @@ const Tenders: React.FC = () => {
       case 'export':
         message.success(`Экспорт тендера: ${record.tender}`);
         break;
+      case 'new_version':
+        // Загружаем полные данные тендера для создания новой версии
+        const { data: tenderData, error: tenderError } = await supabase
+          .from('tenders')
+          .select('*')
+          .eq('id', record.id)
+          .single();
+
+        if (tenderError) {
+          message.error('Ошибка загрузки данных тендера');
+          console.error(tenderError);
+          return;
+        }
+
+        if (tenderData) {
+          setSelectedTenderForVersion(tenderData);
+          setVersionMatchVisible(true);
+        }
+        break;
       default:
         break;
     }
@@ -260,6 +285,12 @@ const Tenders: React.FC = () => {
       label: 'Дублировать',
       icon: <CopyOutlined />,
       onClick: () => handleMenuClick('copy', record),
+    },
+    {
+      key: 'new_version',
+      label: 'Новая версия',
+      icon: <SwapOutlined />,
+      onClick: () => handleMenuClick('new_version', record),
     },
     {
       type: 'divider',
@@ -767,6 +798,17 @@ const Tenders: React.FC = () => {
           onSuccess={handleUploadSuccess}
         />
       )}
+
+      {/* Модальное окно для сопоставления версий */}
+      <VersionMatchModal
+        open={versionMatchVisible}
+        onClose={() => {
+          setVersionMatchVisible(false);
+          setSelectedTenderForVersion(null);
+          fetchTenders(); // Обновить список тендеров после создания новой версии
+        }}
+        tender={selectedTenderForVersion}
+      />
     </div>
   );
 };
