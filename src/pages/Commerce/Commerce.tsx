@@ -4,7 +4,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { Card, Spin, Empty } from 'antd';
-import { useCommerceData, useCommerceActions } from './hooks';
+import { useCommerceData, useCommerceActions, usePricingConsistency } from './hooks';
 import { TenderSelector, CommerceTable, CommerceHeader } from './components';
 import { exportCommerceToExcel } from './utils/exportToExcel';
 
@@ -43,6 +43,9 @@ export default function Commerce() {
     loadTenders,
     loadPositions
   );
+
+  // Проверка консистентности коммерческих цен
+  const { consistencyCheck, recheckConsistency } = usePricingConsistency(selectedTenderId);
 
   // Обработка выбора наименования тендера
   const handleTenderTitleChange = (title: string) => {
@@ -117,6 +120,7 @@ export default function Commerce() {
           loading={loading}
           calculating={calculating}
           positionsCount={positions.length}
+          consistencyCheck={consistencyCheck}
           onBack={handleBack}
           onTenderTitleChange={handleTenderTitleChange}
           onVersionChange={handleVersionChange}

@@ -2,25 +2,28 @@ import { useState, useCallback } from 'react';
 import { message } from 'antd';
 import { supabase, MarkupParameter } from '../../../../lib/supabase';
 
+/**
+ * Хук для работы с глобальным справочником параметров наценок
+ *
+ * ВАЖНО: markup_parameters - это ГЛОБАЛЬНЫЙ справочник параметров,
+ * НЕ связанный с конкретными тактиками!
+ * Параметры тактик хранятся в JSONB поле sequences внутри markup_tactics.
+ */
 export const useMarkupParameters = () => {
   const [markupParameters, setMarkupParameters] = useState<MarkupParameter[]>([]);
   const [loadingParameters, setLoadingParameters] = useState(false);
   const [editingParameterId, setEditingParameterId] = useState<string | null>(null);
   const [editingParameterLabel, setEditingParameterLabel] = useState('');
 
-  const fetchParameters = useCallback(async (tacticId: string | null) => {
-    if (!tacticId) {
-      setMarkupParameters([]);
-      return;
-    }
-
+  // Загрузка всех активных параметров из глобального справочника
+  const fetchParameters = useCallback(async () => {
     setLoadingParameters(true);
     try {
       const { data, error } = await supabase
         .from('markup_parameters')
         .select('*')
-        .eq('tactic_id', tacticId)
-        .order('order_number', { ascending: true });
+        .eq('is_active', true)
+        .order('order_num', { ascending: true });
 
       if (error) throw error;
       setMarkupParameters(data || []);
@@ -32,35 +35,30 @@ export const useMarkupParameters = () => {
     }
   }, []);
 
-  const addParameter = useCallback(async (
-    tacticId: string,
-    parameterData: {
-      parameter_name: string;
-      base_value: string;
-      coefficient: number;
-      is_percentage: boolean;
-    }
-  ) => {
+  // Добавление нового параметра в глобальный справочник
+  const addParameter = useCallback(async (parameterData: {
+    key: string;
+    label: string;
+    default_value?: number;
+  }) => {
     try {
-      // Получаем максимальный order_number
+      // Получаем максимальный order_num
       const { data: existing } = await supabase
         .from('markup_parameters')
-        .select('order_number')
-        .eq('tactic_id', tacticId)
-        .order('order_number', { ascending: false })
+        .select('order_num')
+        .order('order_num', { ascending: false })
         .limit(1);
 
-      const maxOrder = existing && existing.length > 0 ? existing[0].order_number : 0;
+      const maxOrder = existing && existing.length > 0 ? existing[0].order_num : 0;
 
       const { data, error } = await supabase
         .from('markup_parameters')
         .insert({
-          tactic_id: tacticId,
-          parameter_name: parameterData.parameter_name,
-          base_value: parameterData.base_value,
-          coefficient: parameterData.coefficient,
-          is_percentage: parameterData.is_percentage,
-          order_number: maxOrder + 1,
+          key: parameterData.key,
+          label: parameterData.label,
+          default_value: parameterData.default_value || 0,
+          is_active: true,
+          order_num: maxOrder + 1,
         })
         .select()
         .single();
@@ -73,9 +71,11 @@ export const useMarkupParameters = () => {
     } catch (error) {
       console.error('Error adding parameter:', error);
       message.error('Ошибка добавления параметра наценки');
+      throw error;
     }
   }, []);
 
+  // Удаление параметра из глобального справочника
   const deleteParameter = useCallback(async (parameterId: string) => {
     try {
       const { error } = await supabase
@@ -93,6 +93,7 @@ export const useMarkupParameters = () => {
     }
   }, []);
 
+  // Обновление параметра
   const updateParameter = useCallback(async (
     parameterId: string,
     updates: Partial<MarkupParameter>
@@ -115,6 +116,7 @@ export const useMarkupParameters = () => {
     }
   }, []);
 
+  // Изменение порядка параметров
   const reorderParameters = useCallback(async (
     parameterId: string,
     direction: 'up' | 'down'
@@ -146,16 +148,19 @@ export const useMarkupParameters = () => {
     }
   }, [markupParameters, updateParameter]);
 
+  // Начало редактирования названия параметра
   const startEditingParameter = useCallback((parameterId: string, label: string) => {
     setEditingParameterId(parameterId);
     setEditingParameterLabel(label);
   }, []);
 
+  // Отмена редактирования
   const cancelEditingParameter = useCallback(() => {
     setEditingParameterId(null);
     setEditingParameterLabel('');
   }, []);
 
+  // Сохранение отредактированного названия
   const saveEditingParameter = useCallback(async () => {
     if (!editingParameterId || !editingParameterLabel.trim()) {
       message.error('Название не может быть пустым');

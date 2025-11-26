@@ -34,12 +34,12 @@ export interface MarkupStep {
 }
 
 export type TabKey =
-  | 'works'
-  | 'materials'
-  | 'subcontract_works'
-  | 'subcontract_materials'
-  | 'work_comp'
-  | 'material_comp';
+  | 'раб'
+  | 'мат'
+  | 'суб-раб'
+  | 'суб-мат'
+  | 'раб-комп.'
+  | 'мат-комп.';
 
 export type ActionType = 'multiply' | 'divide' | 'add' | 'subtract';
 export type OperandType = 'markup' | 'step' | 'number';

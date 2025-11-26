@@ -16,7 +16,7 @@ export const usePricingDistribution = () => {
     setLoadingPricing(true);
     try {
       const { data, error } = await supabase
-        .from('pricing_distribution')
+        .from('tender_pricing_distribution')
         .select('*')
         .eq('tender_id', tenderId)
         .maybeSingle();
@@ -39,7 +39,7 @@ export const usePricingDistribution = () => {
     try {
       // Проверяем существование записи
       const { data: existing } = await supabase
-        .from('pricing_distribution')
+        .from('tender_pricing_distribution')
         .select('id')
         .eq('tender_id', tenderId)
         .maybeSingle();
@@ -48,7 +48,7 @@ export const usePricingDistribution = () => {
       if (existing) {
         // Обновляем существующую запись
         const { data, error } = await supabase
-          .from('pricing_distribution')
+          .from('tender_pricing_distribution')
           .update(distributionData)
           .eq('tender_id', tenderId)
           .select()
@@ -59,7 +59,7 @@ export const usePricingDistribution = () => {
       } else {
         // Создаем новую запись
         const { data, error } = await supabase
-          .from('pricing_distribution')
+          .from('tender_pricing_distribution')
           .insert({ ...distributionData, tender_id: tenderId })
           .select()
           .single();

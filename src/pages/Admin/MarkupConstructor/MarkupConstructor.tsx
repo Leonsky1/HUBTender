@@ -17,6 +17,7 @@ import {
   BasePercentagesTab,
   PricingTab,
 } from './components';
+import { MarkupConstructorProvider } from './MarkupConstructorContext';
 import './MarkupConstructor.css';
 
 const MarkupConstructor: React.FC = () => {
@@ -25,10 +26,11 @@ const MarkupConstructor: React.FC = () => {
   // Основные состояния
   const [, setTenders] = useState<Tender[]>([]);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>('works');
+  const [activeTab, setActiveTab] = useState<TabKey>('раб');
   const [isTacticSelected, setIsTacticSelected] = useState(false);
   const [isAddParameterModalOpen, setIsAddParameterModalOpen] = useState(false);
   const [newParameterForm] = Form.useForm();
+  const [markupForm] = Form.useForm();
 
   // Хуки
   const tacticsHook = useMarkupTactics();
@@ -39,6 +41,7 @@ const MarkupConstructor: React.FC = () => {
   // Загрузка данных при монтировании
   useEffect(() => {
     fetchTenders();
+    parametersHook.fetchParameters(); // Загружаем глобальный справочник параметров
   }, []);
 
   // Загрузка тактик при выборе тендера
@@ -49,12 +52,6 @@ const MarkupConstructor: React.FC = () => {
     }
   }, [selectedTenderId]);
 
-  // Загрузка параметров при выборе тактики
-  useEffect(() => {
-    if (tacticsHook.currentTacticId) {
-      parametersHook.fetchParameters(tacticsHook.currentTacticId);
-    }
-  }, [tacticsHook.currentTacticId]);
 
   const fetchTenders = async () => {
     try {
@@ -205,16 +202,16 @@ const MarkupConstructor: React.FC = () => {
     try {
       const values = await newParameterForm.validateFields();
 
-      if (!tacticsHook.currentTacticId) {
-        message.error('Сначала создайте или выберите схему наценок');
-        return;
-      }
+      // Генерируем уникальный key из label (в snake_case)
+      const key = values.parameterLabel
+        .toLowerCase()
+        .replace(/[^a-zа-яё0-9\s]/gi, '')
+        .replace(/\s+/g, '_');
 
-      await parametersHook.addParameter(tacticsHook.currentTacticId, {
-        parameter_name: values.parameterLabel,
-        base_value: 'materials', // значение по умолчанию
-        coefficient: 1,
-        is_percentage: true,
+      await parametersHook.addParameter({
+        key: key,
+        label: values.parameterLabel,
+        default_value: 0,
       });
 
       newParameterForm.resetFields();
@@ -269,39 +266,49 @@ const MarkupConstructor: React.FC = () => {
                     onSelectTactic={handleSelectTactic}
                   />
                 ) : (
-                  <div>
-                    <TacticEditorHeader
-                      currentTacticName={tacticsHook.currentTacticName}
-                      isEditingName={tacticsHook.isEditingName}
-                      editingName={tacticsHook.editingName}
-                      canDelete={!!tacticsHook.currentTacticId}
-                      onBackToList={handleBackToList}
-                      onStartEditingName={() =>
-                        tacticsHook.startEditingName(tacticsHook.currentTacticName)
-                      }
-                      onSaveName={tacticsHook.saveEditingName}
-                      onCancelEditingName={tacticsHook.cancelEditingName}
-                      onEditingNameChange={tacticsHook.setEditingName}
-                      onCopyTactic={handleCopyTactic}
-                      onDeleteTactic={handleDeleteTactic}
-                      onSaveTactic={handleSaveTactic}
-                    />
+                  <MarkupConstructorProvider
+                    value={{
+                      tactics: tacticsHook,
+                      parameters: parametersHook,
+                      sequences: sequencesHook,
+                      pricing: pricingHook,
+                      form: markupForm,
+                    }}
+                  >
+                    <div>
+                      <TacticEditorHeader
+                        currentTacticName={tacticsHook.currentTacticName}
+                        isEditingName={tacticsHook.isEditingName}
+                        editingName={tacticsHook.editingName}
+                        canDelete={!!tacticsHook.currentTacticId}
+                        onBackToList={handleBackToList}
+                        onStartEditingName={() =>
+                          tacticsHook.startEditingName(tacticsHook.currentTacticName)
+                        }
+                        onSaveName={tacticsHook.saveEditingName}
+                        onCancelEditingName={tacticsHook.cancelEditingName}
+                        onEditingNameChange={tacticsHook.setEditingName}
+                        onCopyTactic={handleCopyTactic}
+                        onDeleteTactic={handleDeleteTactic}
+                        onSaveTactic={handleSaveTactic}
+                      />
 
-                    <Tabs
-                      activeKey={activeTab}
-                      onChange={(key) => setActiveTab(key as TabKey)}
-                      style={{ overflow: 'visible', marginTop: 16 }}
-                      items={Object.entries(TAB_LABELS).map(([key, label]) => ({
-                        key,
-                        label,
-                        children: (
-                          <SequenceTab
-                            tabKey={key as TabKey}
-                          />
-                        ),
-                      }))}
-                    />
-                  </div>
+                      <Tabs
+                        activeKey={activeTab}
+                        onChange={(key) => setActiveTab(key as TabKey)}
+                        style={{ overflow: 'visible', marginTop: 16 }}
+                        items={Object.entries(TAB_LABELS).map(([key, label]) => ({
+                          key,
+                          label,
+                          children: (
+                            <SequenceTab
+                              tabKey={key as TabKey}
+                            />
+                          ),
+                        }))}
+                      />
+                    </div>
+                  </MarkupConstructorProvider>
                 )}
               </div>
             ),

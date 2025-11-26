@@ -12,15 +12,13 @@ export const useMarkupTactics = () => {
   const [editingName, setEditingName] = useState('');
   const [tacticSearchText, setTacticSearchText] = useState('');
 
-  const fetchTactics = useCallback(async (tenderId: string | null) => {
-    if (!tenderId) return;
-
+  const fetchTactics = useCallback(async (tenderId: string | null = null) => {
     setLoadingTactics(true);
     try {
+      // Загружаем все тактики (глобальные и пользовательские)
       const { data, error } = await supabase
         .from('markup_tactics')
         .select('*')
-        .or(`tender_id.eq.${tenderId},tender_id.is.null`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -38,17 +36,12 @@ export const useMarkupTactics = () => {
     name: string,
     onSuccess?: (tacticId: string) => void
   ) => {
-    if (!tenderId) {
-      message.error('Не выбран тендер');
-      return;
-    }
-
     try {
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('markup_tactics')
         .insert({
-          tender_id: tenderId,
-          tactic_name: name,
+          name: name,
+          is_global: false,
         })
         .select()
         .single();
