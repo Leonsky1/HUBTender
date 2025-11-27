@@ -47,7 +47,13 @@
       "Bash(tree:*)",
       "Bash(find:*)",
       "Bash(while read f)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(dir:*)",
+      "mcp__supabase__list_tables",
+      "Bash(node scripts/test-category-breakdown.js:*)",
+      "Bash(node scripts/test-financial-data-structure.js:*)",
+      "Bash(git -C /c/Users/odintsov.a.a/WebstormProjects/HUBTender log --oneline --all --graph)",
+      "Bash(del nul)"
     ],
     "deny": [],
     "ask": []

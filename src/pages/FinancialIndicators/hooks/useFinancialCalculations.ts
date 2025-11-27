@@ -13,6 +13,11 @@ export interface IndicatorRow {
   is_total?: boolean;
   is_yellow?: boolean;
   tooltip?: string;
+  // Промежуточные расчеты для роста стоимости
+  works_su10_growth?: number;
+  materials_su10_growth?: number;
+  works_sub_growth?: number;
+  materials_sub_growth?: number;
 }
 
 const addNotification = async (
@@ -131,9 +136,8 @@ export const useFinancialCalculations = () => {
       });
 
       const subcontractTotal = subcontractWorks + subcontractMaterials;
-      const su10Total = works + materials;
+      const su10Total = works + materials + materialsComp + worksComp;
       const directCostsTotal = subcontractTotal + su10Total;
-      const directCostsTotalWithComp = directCostsTotal + materialsComp + worksComp;
 
       const areaSp = tender?.area_sp || 0;
       const areaClient = tender?.area_client || 0;
@@ -340,7 +344,7 @@ export const useFinancialCalculations = () => {
       const baseForSubcontractProfit = baseForSubcontractOOZ + overheadSubcontractCost;
       const profitSubcontractCost = baseForSubcontractProfit * (profitSubcontractCoeff / 100);
 
-      const grandTotal = directCostsTotalWithComp +
+      const grandTotal = directCostsTotal +
                         mechanizationCost +
                         mvpGsmCost +
                         warrantyCost +
@@ -377,9 +381,9 @@ export const useFinancialCalculations = () => {
           row_number: 1,
           indicator_name: 'Прямые затраты, в т.ч.',
           coefficient: '',
-          sp_cost: areaSp > 0 ? directCostsTotalWithComp / areaSp : 0,
-          customer_cost: areaClient > 0 ? directCostsTotalWithComp / areaClient : 0,
-          total_cost: directCostsTotalWithComp,
+          sp_cost: areaSp > 0 ? directCostsTotal / areaSp : 0,
+          customer_cost: areaClient > 0 ? directCostsTotal / areaClient : 0,
+          total_cost: directCostsTotal,
           tooltip: `Состав прямых затрат:\n` +
                    `Субподряд работы: ${subcontractWorks.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
                    `+ Субподряд материалы: ${subcontractMaterials.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
@@ -387,7 +391,7 @@ export const useFinancialCalculations = () => {
                    `+ Материалы СУ-10: ${materials.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
                    `+ Работы комп.: ${worksComp.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
                    `+ Материалы комп.: ${materialsComp.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
-                   `= ${directCostsTotalWithComp.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} руб.`
+                   `= ${directCostsTotal.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} руб.`
         },
         {
           key: '2',
@@ -408,7 +412,7 @@ export const useFinancialCalculations = () => {
         {
           key: '4',
           row_number: 4,
-          indicator_name: 'Служба механизации раб (бурильщики, автотехника, электрики)',
+          indicator_name: 'Служба механизации',
           coefficient: mechanizationCoeff > 0 ? `${mechanizationCoeff.toFixed(2)}%` : '',
           sp_cost: areaSp > 0 ? mechanizationCost / areaSp : 0,
           customer_cost: areaClient > 0 ? mechanizationCost / areaClient : 0,
@@ -419,7 +423,7 @@ export const useFinancialCalculations = () => {
         {
           key: '5',
           row_number: 5,
-          indicator_name: 'МБП+ГСМ (топливо+масло)',
+          indicator_name: 'МБП+ГСМ',
           coefficient: mvpGsmCoeff > 0 ? `${mvpGsmCoeff.toFixed(2)}%` : '',
           sp_cost: areaSp > 0 ? mvpGsmCost / areaSp : 0,
           customer_cost: areaClient > 0 ? mvpGsmCost / areaClient : 0,
@@ -430,7 +434,7 @@ export const useFinancialCalculations = () => {
         {
           key: '6',
           row_number: 6,
-          indicator_name: 'Гарантийный период (Коэф. не применяется)',
+          indicator_name: 'Гарантийный период',
           coefficient: warrantyCoeff > 0 ? `${warrantyCoeff.toFixed(2)}%` : '',
           sp_cost: areaSp > 0 ? warrantyCost / areaSp : 0,
           customer_cost: areaClient > 0 ? warrantyCost / areaClient : 0,
@@ -441,7 +445,7 @@ export const useFinancialCalculations = () => {
         {
           key: '7',
           row_number: 7,
-          indicator_name: '0,6 к (Раб+СМ)',
+          indicator_name: '1,6',
           coefficient: coefficient06 > 0 ? `${coefficient06.toFixed(2)}%` : '',
           sp_cost: areaSp > 0 ? coefficient06Cost / areaSp : 0,
           customer_cost: areaClient > 0 ? coefficient06Cost / areaClient : 0,
@@ -465,6 +469,11 @@ export const useFinancialCalculations = () => {
           sp_cost: areaSp > 0 ? totalCostGrowth / areaSp : 0,
           customer_cost: areaClient > 0 ? totalCostGrowth / areaClient : 0,
           total_cost: totalCostGrowth,
+          // Промежуточные расчеты для роста стоимости
+          works_su10_growth: worksCostGrowthAmount,
+          materials_su10_growth: materialCostGrowthAmount,
+          works_sub_growth: subcontractWorksCostGrowthAmount,
+          materials_sub_growth: subcontractMaterialsCostGrowthAmount,
           tooltip: `Формула: Рост по каждой категории отдельно\n` +
                    `Работы СУ-10: (Работы + 0,6к + МБП + СМ) × ${worksCostGrowth}%\n` +
                    `  Работы: ${worksSu10Only.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
