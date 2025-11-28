@@ -629,3 +629,21 @@ export function mapBoqItemTypeToPricingType(boqItemType: BoqItemType): PricingIt
       return 'work';
   }
 }
+
+// =============================================
+// Типы для таблицы subcontract_growth_exclusions
+// =============================================
+
+export type SubcontractExclusionType = 'works' | 'materials';
+
+export interface SubcontractGrowthExclusionInsert {
+  tender_id: string;
+  detail_cost_category_id: string;
+  exclusion_type: SubcontractExclusionType;
+}
+
+export interface SubcontractGrowthExclusion extends SubcontractGrowthExclusionInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}

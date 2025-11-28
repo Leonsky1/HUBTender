@@ -11,6 +11,10 @@ interface PricingConsistencyIndicatorProps {
   financial: boolean;
   loading: boolean;
   error: string | null;
+  boqTotalBase?: number;
+  boqTotalCommercial?: number;
+  boqItemsCount?: number;
+  costsTotal?: number;
 }
 
 export default function PricingConsistencyIndicator({
@@ -18,7 +22,11 @@ export default function PricingConsistencyIndicator({
   costs,
   financial,
   loading,
-  error
+  error,
+  boqTotalBase,
+  boqTotalCommercial,
+  boqItemsCount,
+  costsTotal
 }: PricingConsistencyIndicatorProps) {
   if (loading) {
     return (
@@ -61,16 +69,23 @@ export default function PricingConsistencyIndicator({
 
   const allPassed = commerce && costs && financial;
 
+  const formatNumber = (num: number | undefined) => {
+    if (num === undefined) return 'н/д';
+    return num.toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' руб';
+  };
+
   return (
     <Tooltip
       title={
         <div>
-          <div style={{ marginBottom: 4, fontWeight: 'bold' }}>
-            Консистентность коммерческих цен:
+          <div style={{ marginBottom: 8, fontWeight: 'bold' }}>
+            Консистентность коммерческих цен
           </div>
-          <div>• Коммерция: {commerce ? '✓ Пройдено' : '✗ Не пройдено'}</div>
-          <div>• Затраты: {costs ? '✓ Пройдено' : '✗ Не пройдено'}</div>
-          <div>• Финансовые показатели: {financial ? '✓ Пройдено' : '✗ Не пройдено'}</div>
+
+          <div style={{ marginBottom: 4, fontWeight: 500 }}>Статус проверки:</div>
+          <div>• Коммерция: {commerce ? '✓ Пройдено' : '✗ Не пройдено'} - {formatNumber(boqTotalCommercial)}</div>
+          <div>• Затраты: {costs ? '✓ Пройдено' : '✗ Не пройдено'} - {formatNumber(costsTotal)}</div>
+          <div>• Финансовые показатели: {financial ? '✓ Пройдено' : '✗ Не пройдено'} - {formatNumber(boqTotalCommercial)}</div>
         </div>
       }
     >

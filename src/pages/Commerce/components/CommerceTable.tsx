@@ -99,7 +99,7 @@ export default function CommerceTable({
     {
       title: 'Цена за единицу материалов, Руб.',
       key: 'per_unit_material',
-      width: 150,
+      width: 130,
       align: 'right',
       render: (_, record) => {
         if (!record.manual_volume || record.manual_volume === 0) return '-';
@@ -114,7 +114,7 @@ export default function CommerceTable({
     {
       title: 'Цена за единицу работ, Руб.',
       key: 'per_unit_work',
-      width: 150,
+      width: 130,
       align: 'right',
       render: (_, record) => {
         if (!record.manual_volume || record.manual_volume === 0) return '-';
@@ -129,7 +129,7 @@ export default function CommerceTable({
     {
       title: 'Базовая стоимость',
       key: 'base_total',
-      width: 150,
+      width: 140,
       align: 'right',
       render: (_, record) => (
         <Text>{formatCommercialCost(record.base_total || 0)}</Text>
@@ -138,25 +138,47 @@ export default function CommerceTable({
     {
       title: 'Итого материалов (КП), руб',
       key: 'material_cost_total',
-      width: 180,
+      width: 160,
       align: 'right',
-      render: (_, record) => (
-        <Text>{formatCommercialCost(record.material_cost_total || 0)}</Text>
-      ),
+      render: (_, record) => {
+        const materialCost = record.material_cost_total || 0;
+        const total = record.commercial_total || 0;
+        const percentage = total > 0 ? ((materialCost / total) * 100).toFixed(1) : '0.0';
+
+        return (
+          <div>
+            <Text>{formatCommercialCost(materialCost)}</Text>
+            <div style={{ fontSize: '10px', color: '#1890ff', fontWeight: 500 }}>
+              ({percentage}%)
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'Итого работ (КП), руб',
       key: 'work_cost_total',
-      width: 180,
+      width: 160,
       align: 'right',
-      render: (_, record) => (
-        <Text>{formatCommercialCost(record.work_cost_total || 0)}</Text>
-      ),
+      render: (_, record) => {
+        const workCost = record.work_cost_total || 0;
+        const total = record.commercial_total || 0;
+        const percentage = total > 0 ? ((workCost / total) * 100).toFixed(1) : '0.0';
+
+        return (
+          <div>
+            <Text>{formatCommercialCost(workCost)}</Text>
+            <div style={{ fontSize: '10px', color: '#52c41a', fontWeight: 500 }}>
+              ({percentage}%)
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: 'Коммерческая стоимость',
       key: 'commercial_total',
-      width: 180,
+      width: 160,
       align: 'right',
       render: (_, record) => (
         <Text strong style={{ color: '#52c41a' }}>
@@ -167,7 +189,7 @@ export default function CommerceTable({
     {
       title: 'Коэфф.',
       key: 'markup',
-      width: 120,
+      width: 100,
       align: 'center',
       render: (_, record) => {
         const coefficient = record.markup_percentage || 1;
@@ -198,12 +220,15 @@ export default function CommerceTable({
         emptyText: <Empty description="Нет позиций заказчика" />
       }}
       pagination={false}
-      scroll={{ y: 'calc(100vh - 320px)' }}
+      scroll={{ y: 'calc(100vh - 360px)' }}
       summary={() => {
         const totalBase = positions.reduce((sum, pos) => sum + (pos.base_total || 0), 0);
         const totalMaterials = positions.reduce((sum, pos) => sum + (pos.material_cost_total || 0), 0);
         const totalWorks = positions.reduce((sum, pos) => sum + (pos.work_cost_total || 0), 0);
         const totalCommercial = positions.reduce((sum, pos) => sum + (pos.commercial_total || 0), 0);
+
+        const materialPercent = totalCommercial > 0 ? ((totalMaterials / totalCommercial) * 100).toFixed(1) : '0.0';
+        const workPercent = totalCommercial > 0 ? ((totalWorks / totalCommercial) * 100).toFixed(1) : '0.0';
 
         return (
           <Table.Summary fixed>
@@ -215,10 +240,20 @@ export default function CommerceTable({
                 <Text strong>{formatCommercialCost(totalBase)}</Text>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={6} align="right">
-                <Text strong>{formatCommercialCost(totalMaterials)}</Text>
+                <div>
+                  <Text strong>{formatCommercialCost(totalMaterials)}</Text>
+                  <div style={{ fontSize: '10px', color: '#1890ff', fontWeight: 500 }}>
+                    ({materialPercent}%)
+                  </div>
+                </div>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={7} align="right">
-                <Text strong>{formatCommercialCost(totalWorks)}</Text>
+                <div>
+                  <Text strong>{formatCommercialCost(totalWorks)}</Text>
+                  <div style={{ fontSize: '10px', color: '#52c41a', fontWeight: 500 }}>
+                    ({workPercent}%)
+                  </div>
+                </div>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={8} align="right">
                 <Text strong style={{ color: '#52c41a' }}>

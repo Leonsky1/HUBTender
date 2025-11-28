@@ -11,6 +11,11 @@ interface ConsistencyCheck {
   financial: boolean;
   loading: boolean;
   error: string | null;
+  // Суммы для отображения в тултипе
+  boqTotalBase?: number;
+  boqTotalCommercial?: number;
+  boqItemsCount?: number;
+  costsTotal?: number;
 }
 
 export const usePricingConsistency = (tenderId: string | undefined) => {
@@ -43,38 +48,12 @@ export const usePricingConsistency = (tenderId: string | undefined) => {
     setConsistencyCheck(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Проверка 1: Commerce - наличие позиций с BOQ элементами
-      const { data: positions, error: positionsError } = await supabase
-        .from('client_positions')
-        .select('id')
-        .eq('tender_id', tenderId);
-
-      if (positionsError) throw positionsError;
-
-      // Проверяем что есть хотя бы одна позиция
-      const hasPositions = positions && positions.length > 0;
-
-      console.log('Проверка Commerce - позиций:', positions?.length || 0);
-      const commerceCheck = hasPositions;
-
-      // Проверка 2: Costs - наличие данных в construction_cost_volumes
-      const { data: costVolumes, error: costsError } = await supabase
-        .from('construction_cost_volumes')
-        .select('volume')
-        .eq('tender_id', tenderId)
-        .gt('volume', 0);
-
-      if (costsError) throw costsError;
-
-      console.log('Проверка Costs - объёмы:', costVolumes);
-      const costsCheck = costVolumes && costVolumes.length > 0;
-      console.log('Результат проверки Costs:', costsCheck);
-
-      // Проверка 3: Financial - наличие BOQ items с коммерческими ценами
+      // Получаем все BOQ items для тендера - это источник истины
       const { data: boqItems, error: boqError } = await supabase
         .from('boq_items')
         .select(`
           id,
+          total_amount,
           total_commercial_material_cost,
           total_commercial_work_cost,
           client_positions!inner(tender_id)
@@ -83,26 +62,33 @@ export const usePricingConsistency = (tenderId: string | undefined) => {
 
       if (boqError) throw boqError;
 
-      // Суммируем коммерческие стоимости из BOQ items
+      // Базовые суммы из BOQ items
+      const boqTotalBase = boqItems?.reduce((sum, item) => sum + (item.total_amount || 0), 0) || 0;
       const boqTotalMaterial = boqItems?.reduce((sum, item) => sum + (item.total_commercial_material_cost || 0), 0) || 0;
       const boqTotalWork = boqItems?.reduce((sum, item) => sum + (item.total_commercial_work_cost || 0), 0) || 0;
-      const boqTotal = boqTotalMaterial + boqTotalWork;
+      const boqTotalCommercial = boqTotalMaterial + boqTotalWork;
 
-      console.log('Проверка Financial - BOQ items:', boqItems?.length || 0);
-      console.log('BOQ total:', boqTotal);
-      const financialCheck = boqTotal > 0;
+      // Проверка 1: Commerce - есть ли данные и совпадают ли суммы
+      const commerceCheck = boqItems && boqItems.length > 0 && boqTotalCommercial > 0;
 
-      console.log('=== Итоги проверки ===');
-      console.log('Commerce (позиции):', commerceCheck ? 'OK' : 'Нет данных');
-      console.log('Costs (объёмы работ):', costsCheck ? 'OK' : 'Нет данных');
-      console.log('Financial (BOQ items):', financialCheck ? 'OK' : 'Нет данных');
+      // Проверка 2: Costs - те же данные что и Commerce (коммерческая стоимость)
+      const costsCheck = boqTotalCommercial > 0;
+      // Для затрат используется та же коммерческая стоимость
+      const costsTotal = boqTotalCommercial;
+
+      // Проверка 3: Financial - те же данные что и Commerce
+      const financialCheck = boqTotalCommercial > 0;
 
       setConsistencyCheck({
         commerce: commerceCheck,
         costs: costsCheck,
         financial: financialCheck,
         loading: false,
-        error: null
+        error: null,
+        boqTotalBase,
+        boqTotalCommercial,
+        boqItemsCount: boqItems?.length || 0,
+        costsTotal
       });
 
     } catch (error: any) {

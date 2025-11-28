@@ -8,6 +8,7 @@ import { loadMarkupParameters } from './parameters';
 import {
   loadPricingDistribution,
   calculateBoqItemCost,
+  loadSubcontractGrowthExclusions,
   type TacticApplicationResult
 } from './calculation';
 
@@ -91,8 +92,11 @@ export async function applyTacticToBoqItem(
     // Загружаем настройки ценообразования для тендера
     const pricingDistribution = await loadPricingDistribution(boqItem.tender_id);
 
+    // Загружаем исключения роста субподряда
+    const exclusions = await loadSubcontractGrowthExclusions(boqItem.tender_id);
+
     // Выполняем расчет
-    const result = calculateBoqItemCost(boqItem, tactic, markupParameters, pricingDistribution);
+    const result = calculateBoqItemCost(boqItem, tactic, markupParameters, pricingDistribution, exclusions);
     if (!result) {
       return {
         success: false,
@@ -194,13 +198,16 @@ export async function applyTacticToPosition(
     // Загружаем настройки ценообразования один раз для всех элементов
     const pricingDistribution = await loadPricingDistribution(tenderId);
 
+    // Загружаем исключения роста субподряда
+    const exclusions = await loadSubcontractGrowthExclusions(tenderId);
+
     // Применяем тактику к каждому элементу
     const details: TacticApplicationResult['details'] = [];
     let successCount = 0;
     const errors: string[] = [];
 
     for (const item of boqItems) {
-      const result = calculateBoqItemCost(item, tactic, markupParameters, pricingDistribution);
+      const result = calculateBoqItemCost(item, tactic, markupParameters, pricingDistribution, exclusions);
 
       if (!result) {
         errors.push(`Элемент ${item.id}: отсутствует последовательность для типа "${item.boq_item_type}"`);
@@ -303,6 +310,14 @@ export async function applyTacticToTender(
     const pricingDistribution = await loadPricingDistribution(tenderId);
     console.log('💰 Настройки ценообразования:', pricingDistribution ? 'загружены' : 'используются defaults');
 
+    // Загружаем исключения роста субподряда
+    const exclusions = await loadSubcontractGrowthExclusions(tenderId);
+    const totalExclusions = exclusions.works.size + exclusions.materials.size;
+
+    if (totalExclusions > 0) {
+      console.log(`🚫 Найдено ${totalExclusions} исключений роста субподряда (работ: ${exclusions.works.size}, материалов: ${exclusions.materials.size})`);
+    }
+
     // Загружаем ВСЕ элементы BOQ тендера за один запрос
     const { data: allBoqItems, error: itemsError } = await supabase
       .from('boq_items')
@@ -332,7 +347,7 @@ export async function applyTacticToTender(
     const errors: string[] = [];
 
     for (const item of allBoqItems) {
-      const result = calculateBoqItemCost(item, tactic, markupParameters, pricingDistribution);
+      const result = calculateBoqItemCost(item, tactic, markupParameters, pricingDistribution, exclusions);
 
       if (!result) {
         errors.push(`Элемент ${item.id}: отсутствует последовательность для типа "${item.boq_item_type}"`);

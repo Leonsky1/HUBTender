@@ -12,10 +12,12 @@ import {
   Row,
   Col,
   Tag,
+  Tabs,
 } from 'antd';
 import { SaveOutlined, ReloadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { supabase, Tender, TenderMarkupPercentageInsert, MarkupParameter, MarkupTactic } from '../../../lib/supabase';
 import { parseNumberInput, formatNumberInput } from '../../../utils/numberFormat';
+import { SubcontractGrowthTab } from './SubcontractGrowthTab';
 
 const { Title, Text } = Typography;
 
@@ -468,90 +470,106 @@ const MarkupPercentages: React.FC = () => {
         </Space>
       }
     >
-      <Spin spinning={loading || loadingParameters}>
-        {loadingParameters ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <Text>Загрузка параметров наценок...</Text>
-          </div>
-        ) : markupParameters.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <Text type="danger">Параметры наценок не найдены. Проверьте базу данных.</Text>
-          </div>
-        ) : (
-          <Form
-            form={form}
-            layout="horizontal"
-            labelCol={{ style: { width: '250px', textAlign: 'left' } }}
-            wrapperCol={{ style: { flex: 1 } }}
-            initialValues={{
-              ...markupParameters.reduce((acc, param) => ({
-                ...acc,
-                [param.key]: param.default_value || 0
-              }), {}),
-              tender_id: selectedTenderId
-            }}
-          >
-            <div style={{ marginBottom: '24px' }}>
-              <Form.Item
-                label="Порядок расчета"
-                style={{ marginBottom: 0 }}
-              >
-                <Select
-                  placeholder="Выберите порядок расчета"
-                  value={selectedTacticId}
-                  onChange={handleTacticChange}
-                  showSearch
-                  optionFilterProp="label"
-                  filterOption={(input, option) =>
-                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  optionRender={(option) => {
-                    const tactic = tactics.find(t => t.id === option.value);
-                    return (
-                      <span>
-                        {option.label}
-                        {tactic?.is_global && (
-                          <Tag color="green" style={{ marginLeft: 8, fontSize: 11 }}>
-                            Глобальная
-                          </Tag>
-                        )}
-                      </span>
-                    );
-                  }}
-                  options={tactics.map(tactic => ({
-                    label: tactic.name || 'Без названия',
-                    value: tactic.id,
-                  }))}
-                  style={{ width: '250px' }}
-                />
-              </Form.Item>
-            </div>
-
-            <Row gutter={[16, 0]}>
-              {markupParameters.map((param, index) => (
-                <Col span={24} key={param.id}>
-                  <Form.Item
-                    label={`${index + 1}. ${param.label}`}
-                    name={param.key}
-                    style={{ marginBottom: '4px' }}
+      <Tabs
+        defaultActiveKey="percentages"
+        items={[
+          {
+            key: 'percentages',
+            label: 'Базовые проценты',
+            children: (
+              <Spin spinning={loading || loadingParameters}>
+                {loadingParameters ? (
+                  <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                    <Text>Загрузка параметров наценок...</Text>
+                  </div>
+                ) : markupParameters.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                    <Text type="danger">Параметры наценок не найдены. Проверьте базу данных.</Text>
+                  </div>
+                ) : (
+                  <Form
+                    form={form}
+                    layout="horizontal"
+                    labelCol={{ style: { width: '250px', textAlign: 'left' } }}
+                    wrapperCol={{ style: { flex: 1 } }}
+                    initialValues={{
+                      ...markupParameters.reduce((acc, param) => ({
+                        ...acc,
+                        [param.key]: param.default_value || 0
+                      }), {}),
+                      tender_id: selectedTenderId
+                    }}
                   >
-                    <InputNumber
-                      min={0}
-                      max={999.99}
-                      step={0.01}
-                      addonAfter="%"
-                      style={{ width: '120px' }}
-                      precision={2}
-                      parser={parseNumberInput}
-                      formatter={formatNumberInput}
-                    />
-                  </Form.Item>
-                </Col>
-              ))}
-            </Row>
-          </Form>
-        )}
-      </Spin>
+                    <div style={{ marginBottom: '24px' }}>
+                      <Form.Item
+                        label="Порядок расчета"
+                        style={{ marginBottom: 0 }}
+                      >
+                        <Select
+                          placeholder="Выберите порядок расчета"
+                          value={selectedTacticId}
+                          onChange={handleTacticChange}
+                          showSearch
+                          optionFilterProp="label"
+                          filterOption={(input, option) =>
+                            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                          }
+                          optionRender={(option) => {
+                            const tactic = tactics.find(t => t.id === option.value);
+                            return (
+                              <span>
+                                {option.label}
+                                {tactic?.is_global && (
+                                  <Tag color="green" style={{ marginLeft: 8, fontSize: 11 }}>
+                                    Глобальная
+                                  </Tag>
+                                )}
+                              </span>
+                            );
+                          }}
+                          options={tactics.map(tactic => ({
+                            label: tactic.name || 'Без названия',
+                            value: tactic.id,
+                          }))}
+                          style={{ width: '250px' }}
+                        />
+                      </Form.Item>
+                    </div>
+
+                    <Row gutter={[16, 0]}>
+                      {markupParameters.map((param, index) => (
+                        <Col span={24} key={param.id}>
+                          <Form.Item
+                            label={`${index + 1}. ${param.label}`}
+                            name={param.key}
+                            style={{ marginBottom: '4px' }}
+                          >
+                            <InputNumber
+                              min={0}
+                              max={999.99}
+                              step={0.01}
+                              addonAfter="%"
+                              style={{ width: '120px' }}
+                              precision={2}
+                              parser={parseNumberInput}
+                              formatter={formatNumberInput}
+                            />
+                          </Form.Item>
+                        </Col>
+                      ))}
+                    </Row>
+                  </Form>
+                )}
+              </Spin>
+            ),
+          },
+          {
+            key: 'subcontract_growth',
+            label: 'Рост субподряда',
+            children: <SubcontractGrowthTab tenderId={selectedTenderId} />,
+          },
+        ]}
+      />
     </Card>
   );
 };

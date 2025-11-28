@@ -115,12 +115,16 @@ export default function CommerceHeader({
           <DollarOutlined /> Коммерция
         </Title>
         <PricingConsistencyIndicator
-          commerce={consistencyCheck.commerce}
-          costs={consistencyCheck.costs}
-          financial={consistencyCheck.financial}
-          loading={consistencyCheck.loading}
-          error={consistencyCheck.error}
-        />
+            commerce={consistencyCheck.commerce}
+            costs={consistencyCheck.costs}
+            financial={consistencyCheck.financial}
+            loading={consistencyCheck.loading}
+            error={consistencyCheck.error}
+            boqTotalBase={consistencyCheck.boqTotalBase}
+            boqTotalCommercial={consistencyCheck.boqTotalCommercial}
+            boqItemsCount={consistencyCheck.boqItemsCount}
+            costsTotal={consistencyCheck.costsTotal}
+          />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <Space size="middle" wrap>

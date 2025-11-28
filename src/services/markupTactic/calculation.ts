@@ -202,19 +202,156 @@ interface MarkupTactic {
 }
 
 /**
+ * Структура для хранения исключений роста субподряда
+ */
+export interface SubcontractGrowthExclusions {
+  works: Set<string>;      // Категории исключенные для суб-раб
+  materials: Set<string>;  // Категории исключенные для суб-мат
+}
+
+/**
+ * Загружает исключения роста субподряда для тендера
+ */
+export async function loadSubcontractGrowthExclusions(tenderId: string): Promise<SubcontractGrowthExclusions> {
+  const { data, error } = await supabase
+    .from('subcontract_growth_exclusions')
+    .select('detail_cost_category_id, exclusion_type')
+    .eq('tender_id', tenderId);
+
+  const exclusions: SubcontractGrowthExclusions = {
+    works: new Set(),
+    materials: new Set()
+  };
+
+  if (error || !data) {
+    return exclusions;
+  }
+
+  // Разделяем исключения по типам
+  data.forEach(e => {
+    if (e.exclusion_type === 'works') {
+      exclusions.works.add(e.detail_cost_category_id);
+    } else if (e.exclusion_type === 'materials') {
+      exclusions.materials.add(e.detail_cost_category_id);
+    }
+  });
+
+  return exclusions;
+}
+
+/**
+ * Проверяет, исключен ли элемент из роста субподряда
+ */
+function isExcludedFromGrowth(
+  item: BoqItem,
+  exclusions: SubcontractGrowthExclusions
+): boolean {
+  // Если нет категории, не исключаем
+  if (!item.detail_cost_category_id) {
+    return false;
+  }
+
+  // Проверяем для суб-раб
+  if (item.boq_item_type === 'суб-раб') {
+    return exclusions.works.has(item.detail_cost_category_id);
+  }
+
+  // Проверяем для суб-мат
+  if (item.boq_item_type === 'суб-мат') {
+    return exclusions.materials.has(item.detail_cost_category_id);
+  }
+
+  return false;
+}
+
+/**
+ * Фильтрует последовательность наценок, удаляя параметры роста субподряда для исключенных категорий
+ */
+function filterSequenceForExclusions(
+  sequence: MarkupStep[],
+  isExcluded: boolean,
+  itemType: string
+): MarkupStep[] {
+  if (!isExcluded) {
+    return sequence;
+  }
+
+  // Определяем какой ключ роста нужно убрать в зависимости от типа элемента
+  const growthKeyToRemove = itemType === 'суб-раб'
+    ? 'subcontract_works_cost_growth'
+    : 'subcontract_materials_cost_growth';
+
+  // Находим индексы шагов, которые нужно удалить
+  const removedIndices: number[] = [];
+  sequence.forEach((step, index) => {
+    const operandKeys = [
+      step.operand1Key,
+      step.operand2Key,
+      step.operand3Key,
+      step.operand4Key,
+      step.operand5Key
+    ].filter(Boolean);
+
+    if (operandKeys.includes(growthKeyToRemove)) {
+      removedIndices.push(index);
+    }
+  });
+
+  // Фильтруем последовательность
+  const filtered = sequence.filter((_, index) => !removedIndices.includes(index));
+
+  // ВАЖНО: Пересчитываем baseIndex для оставшихся шагов
+  // Если шаг ссылался на удаленный шаг, он должен ссылаться на базовую стоимость (-1)
+  // Если шаг ссылался на сохраненный шаг, нужно скорректировать индекс
+  return filtered.map((step, newIndex) => {
+    let newBaseIndex = step.baseIndex;
+
+    if (newBaseIndex >= 0) {
+      // Проверяем, был ли удален шаг, на который ссылается baseIndex
+      if (removedIndices.includes(newBaseIndex)) {
+        // Если да, то теперь применяем к базовой стоимости
+        newBaseIndex = -1;
+      } else {
+        // Если нет, пересчитываем индекс с учетом удаленных шагов
+        // Считаем сколько шагов было удалено до текущего baseIndex
+        const removedBefore = removedIndices.filter(i => i < newBaseIndex).length;
+        newBaseIndex = newBaseIndex - removedBefore;
+      }
+    }
+
+    return {
+      ...step,
+      baseIndex: newBaseIndex
+    };
+  });
+}
+
+/**
  * Выполняет расчет коммерческой стоимости для элемента BOQ
  */
 export function calculateBoqItemCost(
   item: BoqItem,
   tactic: MarkupTactic,
   markupParameters: Map<string, number>,
-  pricingDistribution: PricingDistribution | null
+  pricingDistribution: PricingDistribution | null,
+  exclusions?: SubcontractGrowthExclusions
 ): { materialCost: number; workCost: number; markupCoefficient: number } | null {
   try {
     // Получаем последовательность для типа элемента
-    const sequence = tactic.sequences[item.boq_item_type];
+    let sequence = tactic.sequences[item.boq_item_type];
     if (!sequence || sequence.length === 0) {
       return null;
+    }
+
+    // Проверяем, исключен ли элемент из роста субподряда
+    const isExcluded = exclusions
+      ? isExcludedFromGrowth(item, exclusions)
+      : false;
+
+    // Если исключен, фильтруем последовательность
+    if (isExcluded) {
+      sequence = filterSequenceForExclusions(sequence, true, item.boq_item_type);
+      console.log(`🚫 Элемент ${item.id} (${item.boq_item_type}) исключен из роста субподряда, применяем фильтрованную последовательность`);
     }
 
     // Создаем контекст и выполняем расчет

@@ -32,14 +32,27 @@ supabase db push     # Apply migrations
 supabase db reset    # Reset local database
 
 # Utility scripts (Node.js scripts for debugging/maintenance)
-# Located in /scripts/ directory - ~30+ debugging and calculation verification scripts
+# Located in /scripts/ directory
 node scripts/recalculate-boq-items.js        # Recalculate BOQ item prices
-node scripts/check-tender-params.js          # Check tender parameters
+node scripts/list-tenders.js                 # List all tenders
 node scripts/show-tactic-details.js          # Show markup tactic details
-node scripts/check-commercial-costs.js       # Verify commercial cost calculations
-node scripts/debug-position-calculation.js   # Debug position-level calculations
-node scripts/test-material-growth.js         # Test material growth coefficients
-# See /scripts/ directory for complete list of debugging utilities
+node scripts/setup-markup-parameters.js      # Setup markup parameters
+node scripts/list-all-tactics.js             # List all markup tactics
+node scripts/generate-ai-context.cjs         # Generate AI-friendly DB schema exports
+
+# AI Context Generation
+# Creates optimized schema extracts for AI assistants (Claude Code, Copilot)
+node scripts/generate-ai-context.cjs
+# Output: supabase/ai_context/ directory with:
+# - ai_manifest.json (metadata + SHA256 hashes)
+# - ai_tables_min.json (compact table schemas)
+# - ai_relations.json (FK relationships graph)
+# - ai_functions_min.json (function signatures)
+# - ai_triggers_min.json (trigger mappings)
+# - ai_enums_min.json (enum definitions)
+# - ai_tables_full.json (full schemas with indexes)
+# - ai_functions_full.json (functions with side effects)
+# - ai_examples.sql (sample queries)
 ```
 
 ## 🚨 CRITICAL DATABASE RULES 🚨
@@ -54,10 +67,13 @@ supabase/schemas/prod.sql
 - Business tables defined in migrations (001-014+)
 
 MIGRATION WORKFLOW:
-- Create migration files in supabase/migrations/
+- ALL database migrations MUST be created in supabase/migrations/ directory
+- Use sequential numbering: 001_, 002_, 003_, etc.
+- NEVER create SQL files in scripts/ directory for migrations
 - NEVER apply migrations automatically or update prod.sql directly
 - ALWAYS provide SQL code to user for manual execution in Supabase SQL Editor
 - User will manually run SQL and update prod.sql when needed
+- After migration execution, may need to run: NOTIFY pgrst, 'reload schema';
 ```
 
 **Current Tables**:
@@ -76,7 +92,59 @@ MIGRATION WORKFLOW:
 - `markup_parameters` - Markup calculation parameters with ordered execution
 - `markup_tactics` - Markup strategies and rules
 - `tender_markup_percentage` - Tender-specific markup percentages
+- `subcontract_growth_exclusions` - Exclusions from subcontract growth markup (separate for works and materials)
 - ENUM: `boq_item_type` ('мат', 'суб-мат', 'мат-комп.', 'раб', 'суб-раб', 'раб-комп.')
+
+## 🤖 AI Context for Database Schema
+
+### What is AI Context?
+The `supabase/ai_context/` directory contains optimized database schema extracts specifically designed for AI assistants (Claude Code, GitHub Copilot, etc.). These files provide a compact, AI-friendly representation of the entire database structure.
+
+### Generated Files (Total: ~130 KB)
+Located in `supabase/ai_context/`:
+
+**Minimal Schemas** (for quick reference):
+- `ai_tables_min.json` (37 KB) - Table structures with columns, types, and foreign keys
+- `ai_relations.json` (7 KB) - Foreign key relationship graph between tables
+- `ai_functions_min.json` (3.6 KB) - Function signatures with brief descriptions
+- `ai_triggers_min.json` (3.6 KB) - Trigger → Function → Event mappings
+- `ai_enums_min.json` (1 KB) - Enum types and their allowed values
+
+**Full Schemas** (for detailed analysis):
+- `ai_tables_full.json` (62 KB) - Complete schemas with indexes, CHECK, and UNIQUE constraints
+- `ai_functions_full.json` (5.3 KB) - Functions with side effects and affected tables
+
+**Examples & Metadata**:
+- `ai_examples.sql` (8.8 KB) - 12 reference SQL queries demonstrating correct usage
+- `ai_manifest.json` (0.6 KB) - Generation metadata with SHA256 hashes of source files
+
+### When to Regenerate
+Run `node scripts/generate-ai-context.cjs` after:
+- Database migrations
+- Schema changes in `prod.sql`
+- Updates to triggers or functions
+- Changes in `supabase/exports/` files
+
+The manifest tracks SHA256 hashes to detect when source files have changed.
+
+### How to Use
+These files are automatically available to Claude Code when working in this repository. You can reference them directly:
+
+```
+"Using ai_tables_min.json and ai_relations.json, write a query to get all BOQ items
+with commercial prices for tender X, including material and work breakdowns"
+```
+
+Claude Code will use these compact schemas instead of scanning the full `prod.sql` file (185 KB), saving context tokens and improving response accuracy.
+
+### Key Benefits
+- **Compact**: 37 KB vs 185 KB for minimal table schema
+- **Structured**: JSON format for easy parsing
+- **Comprehensive**: Covers tables, functions, triggers, enums, and relationships
+- **Examples**: Real SQL queries demonstrating best practices
+- **Versioned**: SHA256 hashes track source file changes
+
+See `supabase/ai_context/README.md` for detailed documentation.
 
 ## Architecture & Patterns
 

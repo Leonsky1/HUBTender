@@ -189,9 +189,21 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
     const newValue = e.target.value;
     // Разрешаем цифры, операторы, запятую, ^, и буквы для sqrt
     if (/^[0-9+\-*/.(),^sqrtа-яА-ЯёЁ\s]*$/.test(newValue) || newValue === '') {
-      // Если текущее значение "0" и пользователь вводит цифру, заменяем 0
-      if (calcValue === '0' && newValue.length > 1 && /^[0-9]/.test(newValue.charAt(newValue.length - 1))) {
-        setCalcValue(newValue.replace(/^0/, ''));
+      // Убираем все пробелы для проверки
+      const cleanValue = newValue.replace(/\s/g, '');
+      const cleanCurrentValue = calcValue.replace(/\s/g, '');
+
+      // Если текущее значение "0" и пользователь вводит что-то
+      if (cleanCurrentValue === '0' && cleanValue.length > 0) {
+        // Если новое значение начинается с цифры (не оператора)
+        if (/^[0-9]/.test(cleanValue)) {
+          // Убираем все начальные и конечные нули, кроме случая "0,"
+          const withoutZero = cleanValue.replace(/^0+|0+$/g, '').replace(/^$/, '0');
+          setCalcValue(withoutZero);
+        } else {
+          // Если начинается с оператора, сохраняем как есть
+          setCalcValue(cleanValue);
+        }
       } else {
         setCalcValue(newValue || '0');
       }

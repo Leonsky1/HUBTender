@@ -103,9 +103,21 @@ export const useFinancialCalculations = () => {
 
       if (boqError) throw boqError;
 
+      // Загрузка исключений роста субподряда для текущего тендера
+      const { data: exclusions } = await supabase
+        .from('subcontract_growth_exclusions')
+        .select('detail_cost_category_id')
+        .eq('tender_id', selectedTenderId);
+
+      const excludedCategoryIds = new Set(
+        exclusions?.map(e => e.detail_cost_category_id) || []
+      );
+
       // Расчет прямых затрат
       let subcontractWorks = 0;
       let subcontractMaterials = 0;
+      let subcontractWorksForGrowth = 0; // Субподряд работы для расчета роста (с учетом исключений)
+      let subcontractMaterialsForGrowth = 0; // Субподряд материалы для расчета роста (с учетом исключений)
       let works = 0;
       let materials = 0;
       let materialsComp = 0;
@@ -113,12 +125,21 @@ export const useFinancialCalculations = () => {
 
       boqItems?.forEach(item => {
         const baseCost = item.total_amount || 0;
+        const categoryId = item.detail_cost_category_id;
+        const isExcludedFromGrowth = categoryId && excludedCategoryIds.has(categoryId);
+
         switch (item.boq_item_type) {
           case 'суб-раб':
-            subcontractWorks += baseCost;
+            subcontractWorks += baseCost; // Всегда включаем в общую сумму
+            if (!isExcludedFromGrowth) {
+              subcontractWorksForGrowth += baseCost; // Включаем в базу для роста только если не исключено
+            }
             break;
           case 'суб-мат':
-            subcontractMaterials += baseCost;
+            subcontractMaterials += baseCost; // Всегда включаем в общую сумму
+            if (!isExcludedFromGrowth) {
+              subcontractMaterialsForGrowth += baseCost; // Включаем в базу для роста только если не исключено
+            }
             break;
           case 'раб':
             works += baseCost;
@@ -317,8 +338,9 @@ export const useFinancialCalculations = () => {
       const worksWithMarkup = worksSu10Only + coefficient06Cost + mvpGsmCost + mechanizationCost;
       const worksCostGrowthAmount = worksWithMarkup * (worksCostGrowth / 100);
       const materialCostGrowthAmount = materials * (materialCostGrowth / 100);
-      const subcontractWorksCostGrowthAmount = subcontractWorks * (subcontractWorksCostGrowth / 100);
-      const subcontractMaterialsCostGrowthAmount = subcontractMaterials * (subcontractMaterialsCostGrowth / 100);
+      // Используем отфильтрованные суммы для расчета роста субподряда
+      const subcontractWorksCostGrowthAmount = subcontractWorksForGrowth * (subcontractWorksCostGrowth / 100);
+      const subcontractMaterialsCostGrowthAmount = subcontractMaterialsForGrowth * (subcontractMaterialsCostGrowth / 100);
 
       const totalCostGrowth = worksCostGrowthAmount +
                               materialCostGrowthAmount +
@@ -483,8 +505,10 @@ export const useFinancialCalculations = () => {
                    `  = ${worksWithMarkup.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
                    `  Рост: ${worksWithMarkup.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} × ${worksCostGrowth}% = ${worksCostGrowthAmount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
                    `Материалы СУ-10: ${materials.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} × ${materialCostGrowth}% = ${materialCostGrowthAmount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
-                   `Работы субподряд: ${subcontractWorks.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} × ${subcontractWorksCostGrowth}% = ${subcontractWorksCostGrowthAmount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
-                   `Материалы субподряд: ${subcontractMaterials.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} × ${subcontractMaterialsCostGrowth}% = ${subcontractMaterialsCostGrowthAmount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
+                   `Работы субподряд: ${subcontractWorksForGrowth.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} × ${subcontractWorksCostGrowth}% = ${subcontractWorksCostGrowthAmount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
+                   `  (База для роста: ${subcontractWorksForGrowth.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} из ${subcontractWorks.toLocaleString('ru-RU', { maximumFractionDigits: 2 })})\n` +
+                   `Материалы субподряд: ${subcontractMaterialsForGrowth.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} × ${subcontractMaterialsCostGrowth}% = ${subcontractMaterialsCostGrowthAmount.toLocaleString('ru-RU', { maximumFractionDigits: 2 })}\n` +
+                   `  (База для роста: ${subcontractMaterialsForGrowth.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} из ${subcontractMaterials.toLocaleString('ru-RU', { maximumFractionDigits: 2 })})\n` +
                    `Итого: ${totalCostGrowth.toLocaleString('ru-RU', { maximumFractionDigits: 2 })} руб.`
         },
         {
