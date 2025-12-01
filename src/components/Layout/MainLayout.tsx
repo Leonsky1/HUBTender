@@ -27,6 +27,7 @@ import {
   BarChartOutlined,
   LineChartOutlined,
   DeleteOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -246,9 +247,21 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
       label: 'Позиции заказчика',
     },
     {
-      key: '/commerce',
-      icon: <CalculatorOutlined />,
+      key: 'commerce-group',
+      icon: <DollarOutlined />,
       label: 'Коммерция',
+      children: [
+        {
+          key: '/commerce/proposal',
+          icon: <FileTextOutlined />,
+          label: 'Форма КП',
+        },
+        {
+          key: '/commerce/redistribution',
+          icon: <SwapOutlined />,
+          label: 'Перераспределение',
+        },
+      ],
     },
     {
       key: 'library',

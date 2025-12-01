@@ -14,6 +14,7 @@ import Templates from './pages/Library/Templates';
 import ClientPositions from './pages/ClientPositions/ClientPositions';
 import PositionItems from './pages/PositionItems/PositionItems';
 import Commerce from './pages/Commerce';
+import CostRedistribution from './pages/CostRedistribution';
 import Bsm from './pages/Bsm/Bsm';
 import ObjectComparison from './pages/Analytics/ObjectComparison';
 import FinancialIndicators from './pages/FinancialIndicators/FinancialIndicators';
@@ -40,7 +41,9 @@ function AppContent() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="positions" element={<ClientPositions />} />
             <Route path="positions/:positionId/items" element={<PositionItems />} />
-            <Route path="commerce" element={<Commerce />} />
+            <Route path="commerce/proposal" element={<Commerce />} />
+            <Route path="commerce/redistribution" element={<CostRedistribution />} />
+            <Route path="commerce" element={<Navigate to="/commerce/proposal" replace />} />
             <Route path="library" element={<Library />} />
             <Route path="library/templates" element={<Templates />} />
             <Route path="bsm" element={<Bsm />} />

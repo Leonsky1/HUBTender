@@ -647,3 +647,42 @@ export interface SubcontractGrowthExclusion extends SubcontractGrowthExclusionIn
   created_at: string;
   updated_at: string;
 }
+
+// =============================================
+// Типы для таблицы cost_redistribution_results
+// =============================================
+
+export interface RedistributionRule {
+  deductions: Array<{
+    level: 'category' | 'detail';
+    category_id?: string;
+    detail_cost_category_id?: string;
+    category_name: string;
+    percentage: number;
+  }>;
+  targets: Array<{
+    level: 'category' | 'detail';
+    category_id?: string;
+    detail_cost_category_id?: string;
+    category_name: string;
+  }>;
+}
+
+export interface CostRedistributionResultInsert {
+  tender_id: string;
+  markup_tactic_id: string;
+  boq_item_id: string;
+  original_work_cost?: number | null;
+  deducted_amount?: number;
+  added_amount?: number;
+  final_work_cost?: number | null;
+  redistribution_rules?: RedistributionRule | null;
+  created_by?: string;
+}
+
+export interface CostRedistributionResult extends CostRedistributionResultInsert {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string | null;
+}
