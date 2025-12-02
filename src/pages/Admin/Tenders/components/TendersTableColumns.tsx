@@ -32,10 +32,56 @@ export const getTendersTableColumns = (params: GetColumnsParams): ColumnsType<Te
       ),
     },
     {
+      title: 'Класс жилья',
+      dataIndex: 'housingClass',
+      key: 'housingClass',
+      width: 100,
+      align: 'center',
+      render: (housingClass?: string) => {
+        if (!housingClass) return <Text type="secondary">—</Text>;
+
+        const colorMap: Record<string, string> = {
+          'комфорт': 'blue',
+          'бизнес': 'green',
+          'премиум': 'purple',
+          'делюкс': 'gold',
+        };
+
+        return (
+          <Tag color={colorMap[housingClass] || 'default'} style={{ margin: 0 }}>
+            {housingClass}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: 'Объем стр-ва',
+      dataIndex: 'constructionScope',
+      key: 'constructionScope',
+      width: 110,
+      align: 'center',
+      render: (constructionScope?: string) => {
+        if (!constructionScope) return <Text type="secondary">—</Text>;
+
+        const colorMap: Record<string, string> = {
+          'генподряд': 'cyan',
+          'коробка': 'orange',
+          'монолит': 'red',
+        };
+
+        return (
+          <Tag color={colorMap[constructionScope] || 'default'} style={{ margin: 0 }}>
+            {constructionScope}
+          </Tag>
+        );
+      },
+    },
+    {
       title: 'Время до дедлайна',
       dataIndex: 'deadline',
       key: 'deadline',
       width: 110,
+      align: 'center',
       render: (deadline: string, record: TenderRecord) => (
         <div>
           <Text>{record.status === 'completed' ? 'Завершён' : 'В работе'}</Text>
@@ -66,9 +112,11 @@ export const getTendersTableColumns = (params: GetColumnsParams): ColumnsType<Te
       dataIndex: 'estimatedCost',
       key: 'estimatedCost',
       width: 110,
-      align: 'right',
+      align: 'center',
       render: (cost: number) => (
-        <Text strong style={{ fontSize: 12 }}>{cost.toLocaleString('ru-RU')} ₽</Text>
+        <Text strong style={{ fontSize: 12 }}>
+          {Math.round(cost).toLocaleString('ru-RU')}
+        </Text>
       ),
     },
     {
@@ -76,7 +124,7 @@ export const getTendersTableColumns = (params: GetColumnsParams): ColumnsType<Te
       dataIndex: 'areaSp',
       key: 'areaSp',
       width: 90,
-      align: 'right',
+      align: 'center',
       render: (area: number) => (
         <Text style={{ fontSize: 12 }}>{area.toLocaleString('ru-RU')} м²</Text>
       ),
@@ -86,7 +134,7 @@ export const getTendersTableColumns = (params: GetColumnsParams): ColumnsType<Te
       dataIndex: 'areaClient',
       key: 'areaClient',
       width: 110,
-      align: 'right',
+      align: 'center',
       render: (area: number) => (
         <Text style={{ fontSize: 12 }}>{area > 0 ? `${area.toLocaleString('ru-RU')} м²` : '—'}</Text>
       ),
@@ -205,6 +253,7 @@ export const getTendersTableColumns = (params: GetColumnsParams): ColumnsType<Te
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 80,
+      align: 'center',
       render: (date: string) => (
         <Text type="secondary" style={{ fontSize: 11 }}>{date}</Text>
       ),
@@ -214,6 +263,7 @@ export const getTendersTableColumns = (params: GetColumnsParams): ColumnsType<Te
       dataIndex: 'description',
       key: 'description',
       width: 150,
+      align: 'center',
       ellipsis: true,
       render: (text: string) => (
         <Text type="secondary" style={{ fontSize: 11 }}>{text || '—'}</Text>

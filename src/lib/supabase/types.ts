@@ -19,6 +19,8 @@ export interface TenderInsert {
   tz_link?: string;
   qa_form_link?: string;
   markup_tactic_id?: string; // Ссылка на тактику наценок для данного тендера
+  housing_class?: HousingClassType;
+  construction_scope?: ConstructionScopeType;
 }
 
 export interface Tender extends TenderInsert {
@@ -37,6 +39,8 @@ export type MaterialType = 'основн.' | 'вспомогат.';
 export type BoqItemType = 'мат' | 'суб-мат' | 'мат-комп.' | 'раб' | 'суб-раб' | 'раб-комп.';
 export type CurrencyType = 'RUB' | 'USD' | 'EUR' | 'CNY';
 export type DeliveryPriceType = 'в цене' | 'не в цене' | 'суммой';
+export type HousingClassType = 'комфорт' | 'бизнес' | 'премиум' | 'делюкс';
+export type ConstructionScopeType = 'генподряд' | 'коробка' | 'монолит';
 
 // Подтипы для материалов и работ (для удобства использования в UI)
 export type ItemType = Extract<BoqItemType, 'мат' | 'суб-мат' | 'мат-комп.'>;

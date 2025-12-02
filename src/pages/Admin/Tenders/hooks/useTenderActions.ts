@@ -30,6 +30,8 @@ export const useTenderActions = (onRefresh: () => void) => {
       form.setFieldsValue({
         title: data.title,
         tender_number: data.tender_number,
+        housing_class: data.housing_class,
+        construction_scope: data.construction_scope,
         description: data.description,
         client_name: data.client_name,
         submission_deadline: data.submission_deadline ? dayjs(data.submission_deadline) : null,
@@ -104,7 +106,9 @@ export const useTenderActions = (onRefresh: () => void) => {
         upload_folder: values.upload_folder || null,
         bsm_link: values.bsm_link || null,
         tz_link: values.tz_link || null,
-        qa_form_link: values.qa_form_link || null
+        qa_form_link: values.qa_form_link || null,
+        housing_class: values.housing_class || null,
+        construction_scope: values.construction_scope || null
       };
 
       if (isEditMode && editingTender) {

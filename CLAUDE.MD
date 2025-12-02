@@ -32,12 +32,18 @@ supabase db push     # Apply migrations
 supabase db reset    # Reset local database
 
 # Utility scripts (Node.js scripts for debugging/maintenance)
-# Located in /scripts/ directory
+# Located in /scripts/ directory - ~30+ scripts available
 node scripts/recalculate-boq-items.js        # Recalculate BOQ item prices
-node scripts/list-tenders.js                 # List all tenders
+node scripts/check-tender-params.js          # Check tender parameters
 node scripts/show-tactic-details.js          # Show markup tactic details
-node scripts/setup-markup-parameters.js      # Setup markup parameters
+node scripts/check-commercial-costs.js       # Verify commercial cost calculations
+node scripts/debug-position-calculation.js   # Debug position-level calculations
+node scripts/test-material-growth.js         # Test material growth coefficients
+node scripts/check-admiral-tactic.js         # Check specific tactic details
+node scripts/simulate-mat-calculation.js     # Simulate material calculations
+node scripts/list-tenders.js                 # List all tenders
 node scripts/list-all-tactics.js             # List all markup tactics
+node scripts/trigger-admiral-recalc.js       # Trigger Admiral tactic recalculation
 node scripts/generate-ai-context.cjs         # Generate AI-friendly DB schema exports
 
 # AI Context Generation
@@ -226,6 +232,81 @@ Both accept: `size`, `color`, `className` props
 - **Base URL**: http://localhost:3001 (for tests, different from dev port)
 - **Test Files**: Commerce flow tests, markup calculation verification tests
 
+## Performance Optimization Patterns
+
+### React Performance Best Practices
+**CRITICAL**: Always follow these patterns for optimal performance with large datasets (500+ rows):
+
+1. **useMemo for Expensive Computations**:
+   ```typescript
+   // Memoize column definitions
+   const columns = useMemo(() => [...], [dependencies]);
+
+   // Memoize derived data
+   const tenderTitles = useMemo(() => {
+     // computation
+   }, [tenders]);
+   ```
+
+2. **useCallback for Event Handlers**:
+   ```typescript
+   const handleRowClick = useCallback((record, index) => {
+     // handler logic
+   }, [dependencies]);
+   ```
+
+3. **Pre-compute Complex Checks**:
+   ```typescript
+   // BAD: O(n) computation called O(n) times = O(n²)
+   const isLeafPosition = (index: number): boolean => {
+     // expensive logic on each call
+   };
+
+   // GOOD: Compute once, store in Set for O(1) lookup
+   const leafPositionIndices = useMemo(() => {
+     const leafIndices = new Set<number>();
+     positions.forEach((pos, idx) => {
+       // compute once
+       if (isLeaf) leafIndices.add(idx);
+     });
+     return leafIndices;
+   }, [positions]);
+
+   // Usage: leafPositionIndices.has(index) - O(1)
+   ```
+
+4. **Virtual Scrolling for Large Tables**:
+   ```typescript
+   <Table
+     virtual  // Enable for 500+ rows
+     scroll={{ x: 1200, y: 600 }}  // y must be number, not CSS string
+     columns={columns}
+     dataSource={data}
+   />
+   ```
+
+5. **Minimize Database Queries**:
+   ```typescript
+   // BAD: 3 separate queries
+   await fetchPositions();
+   await fetchCounts();
+   await fetchTotals();
+
+   // GOOD: 2 queries, process data in memory
+   const positions = await fetchPositions();
+   const boqData = await supabase
+     .from('boq_items')
+     .select('client_position_id, boq_item_type, total_amount')
+     .in('client_position_id', positionIds);
+
+   // Process counts and totals in memory from single dataset
+   ```
+
+**Real-world example**: ClientPositions page optimization:
+- Before: O(n³) complexity, 3 DB queries, no virtualization
+- After: O(n) complexity, 2 DB queries, virtual scrolling
+- Result: 30-40% faster load, 90%+ faster rendering
+
 ## Code Constraints
 
 ### File Size Rule
@@ -401,6 +482,23 @@ algorithm: currentTheme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorith
 ### Ant Design Reset
 Required in main.tsx: `import 'antd/dist/reset.css'`
 
+### Dark Theme Modal Pattern
+For modals that need dark theme adaptation, use `rootClassName` prop:
+```typescript
+Modal.confirm({
+  title: 'Confirmation',
+  content: 'Message here',
+  rootClassName: currentTheme === 'dark' ? 'dark-modal' : '',
+  // ...
+});
+```
+
+CSS in `App.css` provides:
+- Dark background (#1f1f1f) with white text
+- Proper button styling (pale red for danger buttons)
+- Yellow warning icons (#faad14)
+- All text elements forced to white with `.dark-modal .ant-modal-body *`
+
 ## Unit Color System
 Standardized colors for measurement units across the application:
 ```typescript
@@ -473,7 +571,7 @@ Color coding for material/work types in Library:
 - Two volume fields:
   - `volume` - Volume from client
   - `manual_volume` - Manual volume (ГП - general contractor volume)
-- Navigation: Click on leaf position name → opens `/positions/:positionId/items`
+- Navigation: Click on leaf position name → opens `/positions/:positionId/items` **in new browser tab**
 - Return navigation preserves context with URL params and highlights edited row
 - Inline editing for manual_volume and manual_note
 
@@ -486,6 +584,9 @@ Color coding for material/work types in Library:
 - Additional works are leaf positions (can contain works/materials)
 - Cannot create nested additional works (button hidden for ДОП positions)
 - Editable fields in PositionItems: work name, unit code, GP volume, GP note
+- **Delete button** for ДОП works: pale red tag with confirmation modal
+  - Deletes all associated boq_items before removing position
+  - Modal adapted for dark theme with white text and yellow warning icon
 
 ### BOQ Items (`/positions/:positionId/items`)
 **Works and materials management for each client position**
@@ -514,6 +615,10 @@ Color coding for material/work types in Library:
 - Profit calculation and percentage analysis
 - Color-coded profit indicators
 - Real-time updates from BOQ changes
+- Navigation: Click on leaf position → opens `/positions/:positionId/items` **in new browser tab**
+- **Excel Export**: "Коммерческие стоимости_{tender}_{version}.xlsx"
+  - Highlights zero-cost leaf rows in pale red (#FFCCCC)
+  - ДОП works styled with orange "ДОП" tag inline with work name
 
 ## Construction Costs Pages
 

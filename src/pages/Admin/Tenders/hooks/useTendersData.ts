@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { supabase, type Tender } from '../../../../lib/supabase';
+import { supabase, type Tender, type HousingClassType, type ConstructionScopeType } from '../../../../lib/supabase';
 import dayjs from 'dayjs';
 
 export interface TenderRecord {
@@ -27,6 +27,8 @@ export interface TenderRecord {
   description: string;
   status: 'completed' | 'in_progress' | 'pending';
   version: string;
+  housingClass?: HousingClassType;
+  constructionScope?: ConstructionScopeType;
 }
 
 export const useTendersData = () => {
@@ -55,38 +57,24 @@ export const useTendersData = () => {
         return;
       }
 
-      // Получаем все позиции для всех тендеров одним запросом
+      // Получаем все boq_items для всех тендеров одним запросом через tender_id
       const tenderIds = data.map(t => t.id);
-      const { data: allPositions } = await supabase
-        .from('client_positions')
-        .select('id, tender_id')
+      let commercialCostsByTender: Record<string, number> = {};
+
+      const { data: allBoqItems } = await supabase
+        .from('boq_items')
+        .select('tender_id, total_commercial_material_cost, total_commercial_work_cost')
         .in('tender_id', tenderIds);
 
-      // Получаем все boq_items для всех позиций одним запросом
-      let commercialCostsByTender: Record<string, number> = {};
-      if (allPositions && allPositions.length > 0) {
-        const positionIds = allPositions.map(p => p.id);
-        const { data: allBoqItems } = await supabase
-          .from('boq_items')
-          .select('client_position_id, total_commercial_material_cost, total_commercial_work_cost')
-          .in('client_position_id', positionIds);
-
-        if (allBoqItems) {
-          // Группируем по tender_id
-          const positionToTender = new Map(allPositions.map(p => [p.id, p.tender_id]));
-
-          allBoqItems.forEach(item => {
-            const tenderId = positionToTender.get(item.client_position_id);
-            if (tenderId) {
-              if (!commercialCostsByTender[tenderId]) {
-                commercialCostsByTender[tenderId] = 0;
-              }
-              commercialCostsByTender[tenderId] +=
-                (item.total_commercial_material_cost || 0) +
-                (item.total_commercial_work_cost || 0);
-            }
-          });
-        }
+      if (allBoqItems) {
+        allBoqItems.forEach(item => {
+          if (!commercialCostsByTender[item.tender_id]) {
+            commercialCostsByTender[item.tender_id] = 0;
+          }
+          commercialCostsByTender[item.tender_id] +=
+            (item.total_commercial_material_cost || 0) +
+            (item.total_commercial_work_cost || 0);
+        });
       }
 
       // Форматируем данные
@@ -114,7 +102,9 @@ export const useTendersData = () => {
         createdAt: dayjs(tender.created_at).format('DD.MM.YYYY'),
         description: tender.description || '',
         status: 'in_progress' as const,
-        version: tender.version?.toString() || '1'
+        version: tender.version?.toString() || '1',
+        housingClass: tender.housing_class || undefined,
+        constructionScope: tender.construction_scope || undefined
       }));
 
       setTendersData(formattedData);

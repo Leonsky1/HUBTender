@@ -5,6 +5,7 @@ import {
   Input,
   InputNumber,
   DatePicker,
+  Select,
   Row,
   Col,
   Divider,
@@ -108,6 +109,40 @@ const TenderModal: React.FC<TenderModalProps> = ({
               <Input
                 placeholder="Например: T-2025-001"
               />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="housing_class"
+              label="Класс жилья"
+            >
+              <Select
+                placeholder="Выберите класс жилья"
+                allowClear
+              >
+                <Select.Option value="комфорт">Комфорт</Select.Option>
+                <Select.Option value="бизнес">Бизнес</Select.Option>
+                <Select.Option value="премиум">Премиум</Select.Option>
+                <Select.Option value="делюкс">Делюкс</Select.Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="construction_scope"
+              label="Объем строительства"
+            >
+              <Select
+                placeholder="Выберите объем строительства"
+                allowClear
+              >
+                <Select.Option value="генподряд">Генподряд</Select.Option>
+                <Select.Option value="коробка">Коробка</Select.Option>
+                <Select.Option value="монолит">Монолит</Select.Option>
+              </Select>
             </Form.Item>
           </Col>
         </Row>
