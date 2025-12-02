@@ -690,3 +690,171 @@ export interface CostRedistributionResult extends CostRedistributionResultInsert
   updated_at: string;
   created_by?: string | null;
 }
+
+// =============================================
+// Типы для таблицы users (пользователи портала)
+// =============================================
+
+export type UserRole = 'Руководитель' | 'Администратор' | 'Разработчик' | 'Старший группы' | 'Инженер';
+export type AccessStatus = 'pending' | 'approved' | 'blocked';
+
+export interface UserInsert {
+  id: string; // UUID from auth.users
+  full_name: string;
+  email: string;
+  role: UserRole;
+  access_status?: AccessStatus;
+  allowed_pages?: string[];
+  approved_by?: string | null;
+  approved_at?: string | null;
+}
+
+export interface User extends UserInsert {
+  access_status: AccessStatus;
+  allowed_pages: string[];
+  registration_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Упрощенный тип пользователя для AuthContext
+export interface AuthUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  access_status: AccessStatus;
+  allowed_pages: string[];
+}
+
+// =============================================
+// Константы прав доступа по ролям
+// =============================================
+
+// Все страницы портала (для Transfer component и проверки доступа)
+export const ALL_PAGES = [
+  '/dashboard',
+  '/admin/nomenclatures',
+  '/admin/tenders',
+  '/admin/construction_cost',
+  '/admin/markup_constructor',
+  '/admin/markup',
+  '/library',
+  '/library/templates',
+  '/positions',
+  '/positions/:positionId/items',
+  '/commerce',
+  '/commerce/proposal',
+  '/costs',
+  '/bsm',
+  '/analytics/comparison',
+  '/financial-indicators',
+  '/settings',
+  '/users',
+] as const;
+
+// Страницы по умолчанию для каждой роли
+// Пустой массив = полный доступ (для Администратора, Руководителя и Разработчика)
+export const DEFAULT_ROLE_PAGES: Record<UserRole, string[]> = {
+  'Руководитель': [], // Полный доступ
+  'Администратор': [], // Полный доступ
+  'Разработчик': [], // Полный доступ (для отладки и разработки)
+  'Старший группы': [
+    '/dashboard',
+    '/positions',
+    '/positions/:positionId/items',
+    '/commerce',
+    '/commerce/proposal',
+    '/library',
+    '/library/templates',
+    '/costs',
+    '/bsm',
+    '/analytics/comparison',
+    '/financial-indicators',
+    '/settings',
+  ],
+  'Инженер': [
+    '/dashboard',
+    '/positions',
+    '/positions/:positionId/items',
+    '/library',
+    '/library/templates',
+    '/bsm',
+    '/settings',
+  ],
+};
+
+// Названия страниц для Transfer component
+export const PAGE_LABELS: Record<string, string> = {
+  '/dashboard': 'Дашборд',
+  '/admin/nomenclatures': 'Номенклатуры',
+  '/admin/tenders': 'Управление тендерами',
+  '/admin/construction_cost': 'Справочник затрат',
+  '/admin/markup_constructor': 'Конструктор наценок',
+  '/admin/markup': 'Проценты наценок',
+  '/library': 'Библиотека',
+  '/library/templates': 'Шаблоны',
+  '/positions': 'Позиции заказчика',
+  '/positions/:positionId/items': 'Работы и материалы',
+  '/commerce': 'Коммерция',
+  '/commerce/proposal': 'Коммерческое предложение',
+  '/costs': 'Затраты на строительство',
+  '/bsm': 'БСМ',
+  '/analytics/comparison': 'Сравнение объектов',
+  '/financial-indicators': 'Финансовые показатели',
+  '/settings': 'Настройки',
+  '/users': 'Пользователи',
+};
+
+// =============================================
+// Вспомогательные функции для работы с пользователями
+// =============================================
+
+/**
+ * Проверка, может ли пользователь управлять другими пользователями
+ * (одобрять регистрации, блокировать, редактировать права)
+ */
+export const canManageUsers = (role: UserRole): boolean => {
+  return role === 'Администратор' || role === 'Руководитель' || role === 'Разработчик';
+};
+
+/**
+ * Проверка доступа пользователя к странице
+ * @param user - Авторизованный пользователь
+ * @param pagePath - Путь страницы (например, '/dashboard' или '/positions/123/items')
+ * @returns true если пользователь имеет доступ к странице
+ */
+export const hasPageAccess = (user: AuthUser, pagePath: string): boolean => {
+  // Администраторы и Руководители имеют полный доступ
+  if (canManageUsers(user.role)) {
+    return true;
+  }
+
+  // Пустой массив allowed_pages = полный доступ
+  if (user.allowed_pages.length === 0) {
+    return true;
+  }
+
+  // Проверяем, соответствует ли текущий путь хотя бы одному разрешенному
+  return user.allowed_pages.some((allowedPath) => {
+    // Преобразуем паттерн маршрута в regex
+    // Например, /positions/:positionId/items -> /positions/[^/]+/items
+    const pattern = '^' + allowedPath.replace(/:[^/]+/g, '[^/]+') + '$';
+    const regex = new RegExp(pattern);
+    return regex.test(pagePath);
+  });
+};
+
+/**
+ * Проверка, является ли пользователь администратором
+ */
+export const isAdmin = (role: UserRole): boolean => {
+  return role === 'Администратор';
+};
+
+/**
+ * Проверка, является ли пользователь руководителем
+ */
+export const isLeader = (role: UserRole): boolean => {
+  return role === 'Руководитель';
+};

@@ -1,7 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import MainLayout from './components/Layout/MainLayout';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Nomenclatures from './pages/Admin/Nomenclatures/Nomenclatures';
 import Tenders from './pages/Admin/Tenders/Tenders';
@@ -18,6 +22,7 @@ import CostRedistribution from './pages/CostRedistribution';
 import Bsm from './pages/Bsm/Bsm';
 import ObjectComparison from './pages/Analytics/ObjectComparison';
 import FinancialIndicators from './pages/FinancialIndicators/FinancialIndicators';
+import Users from './pages/Users/Users';
 import './App.css';
 
 function AppContent() {
@@ -36,7 +41,19 @@ function AppContent() {
     >
       <AntApp>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          {/* Публичные маршруты */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Защищенные маршруты */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="positions" element={<ClientPositions />} />
@@ -60,9 +77,11 @@ function AppContent() {
             </Route>
             <Route path="costs" element={<ConstructionCostNew />} />
             <Route path="financial-indicators" element={<FinancialIndicators />} />
-            <Route path="users" element={<div>Пользователи</div>} />
+            <Route path="users" element={<Users />} />
             <Route path="settings" element={<div>Настройки</div>} />
           </Route>
+
+          {/* Перенаправление на главную для неизвестных маршрутов */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AntApp>
@@ -73,7 +92,9 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Layout, Menu, Avatar, Badge, Switch, theme, Dropdown, List, Typography, Space, Empty, Button, Popover, Input } from 'antd';
+import { Layout, Menu, Avatar, Badge, Switch, theme, Dropdown, List, Typography, Space, Empty, Button, Popover, Input, Tag } from 'antd';
 import type { MenuProps } from 'antd';
 const { Text } = Typography;
 import {
@@ -31,6 +31,7 @@ import {
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { LogoIcon } from '../Icons';
 import { supabase, type Notification } from '../../lib/supabase';
 import dayjs from 'dayjs';
@@ -58,6 +59,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme: currentTheme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -599,11 +601,48 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
               </Badge>
             </Dropdown>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span>Пользователь</span>
-              <Avatar style={{ backgroundColor: '#10b981' }} icon={<UserOutlined />} />
-            </div>
-            <LogoutOutlined style={{ fontSize: '18px', cursor: 'pointer' }} />
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'profile',
+                    label: (
+                      <div style={{ padding: '8px 0' }}>
+                        <div style={{ marginBottom: 4 }}>
+                          <Text strong style={{ fontSize: 14 }}>{user?.full_name || 'Пользователь'}</Text>
+                        </div>
+                        <div style={{ marginBottom: 4 }}>
+                          <Text type="secondary" style={{ fontSize: 12 }}>{user?.email}</Text>
+                        </div>
+                        <div>
+                          <Tag color="blue" style={{ margin: 0 }}>{user?.role}</Tag>
+                        </div>
+                      </div>
+                    ),
+                    disabled: true,
+                  },
+                  {
+                    type: 'divider',
+                  },
+                  {
+                    key: 'logout',
+                    label: 'Выйти',
+                    icon: <LogoutOutlined />,
+                    onClick: signOut,
+                    danger: true,
+                  },
+                ],
+              }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                <span>{user?.full_name || 'Пользователь'}</span>
+                <Avatar style={{ backgroundColor: '#10b981' }}>
+                  {user?.full_name?.charAt(0).toUpperCase() || 'П'}
+                </Avatar>
+              </div>
+            </Dropdown>
           </div>
         </Header>
         <Content
