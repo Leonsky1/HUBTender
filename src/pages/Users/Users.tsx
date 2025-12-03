@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tabs, Table, Button, Space, Tag, Modal, Form, Transfer, message, Popconfirm, Typography } from 'antd';
+import { Card, Tabs, Table, Button, Space, Tag, Modal, Form, Checkbox, Select, message, Popconfirm, Typography, Alert } from 'antd';
 import { CheckOutlined, CloseOutlined, EditOutlined, StopOutlined, UnlockOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import type { TransferProps } from 'antd';
+import type { CheckboxProps } from 'antd';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { canManageUsers, ALL_PAGES, PAGE_LABELS, type User, type UserRole, type AccessStatus } from '../../lib/supabase/types';
+import { canManageUsers, ALL_PAGES, PAGE_LABELS, PAGES_STRUCTURE, type User, type UserRole, type AccessStatus } from '../../lib/supabase/types';
 import dayjs from 'dayjs';
 
 const { TabPane } = Tabs;
@@ -220,6 +220,15 @@ const Users: React.FC = () => {
     setIsEditModalVisible(true);
   };
 
+  // Обработка изменения роли
+  const handleRoleChange = (newRole: UserRole) => {
+    // Если роль Администратор, Руководитель или Разработчик - открываем полный доступ
+    if (newRole === 'Администратор' || newRole === 'Руководитель' || newRole === 'Разработчик') {
+      form.setFieldsValue({ allowed_pages: [] });
+      message.info(`Роль "${newRole}" имеет полный доступ ко всем страницам`);
+    }
+  };
+
   // Сохранение изменений
   const handleSaveEdit = async () => {
     if (!editingUser) return;
@@ -272,10 +281,11 @@ const Users: React.FC = () => {
       width: 150,
       render: (role: UserRole) => {
         const colors: Record<UserRole, string> = {
-          'Руководитель': 'purple',
-          'Администратор': 'red',
-          'Старший группы': 'blue',
-          'Инженер': 'green',
+          'Инженер': 'blue',
+          'Старший группы': 'lime',
+          'Администратор': 'gold',
+          'Руководитель': 'orange',
+          'Разработчик': 'volcano',
         };
         return <Tag color={colors[role]}>{role}</Tag>;
       },
@@ -342,10 +352,11 @@ const Users: React.FC = () => {
       width: 150,
       render: (role: UserRole) => {
         const colors: Record<UserRole, string> = {
-          'Руководитель': 'purple',
-          'Администратор': 'red',
-          'Старший группы': 'blue',
-          'Инженер': 'green',
+          'Инженер': 'blue',
+          'Старший группы': 'lime',
+          'Администратор': 'gold',
+          'Руководитель': 'orange',
+          'Разработчик': 'volcano',
         };
         return <Tag color={colors[role]}>{role}</Tag>;
       },
@@ -434,11 +445,31 @@ const Users: React.FC = () => {
     },
   ];
 
-  // Transfer data для выбора страниц
-  const transferDataSource: TransferProps['dataSource'] = ALL_PAGES.map((page) => ({
-    key: page,
-    title: PAGE_LABELS[page] || page,
-  }));
+  // Роли пользователей
+  const userRoles: UserRole[] = ['Администратор', 'Руководитель', 'Разработчик', 'Старший группы', 'Инженер'];
+
+  // Роли с полным доступом
+  const fullAccessRoles: UserRole[] = ['Администратор', 'Руководитель', 'Разработчик'];
+
+  // Получить текущую роль из формы
+  const currentRole = Form.useWatch('role', form);
+
+  // Обработчик изменения выбранных страниц
+  const handlePagesChange = (selectedPages: string[]) => {
+    let updatedPages = [...selectedPages];
+
+    // Если выбрана страница "Позиции заказчика", автоматически добавляем "Работы и материалы"
+    if (selectedPages.includes('/positions') && !selectedPages.includes('/positions/:positionId/items')) {
+      updatedPages.push('/positions/:positionId/items');
+    }
+
+    // Если убрана страница "Позиции заказчика", автоматически убираем "Работы и материалы"
+    if (!selectedPages.includes('/positions') && selectedPages.includes('/positions/:positionId/items')) {
+      updatedPages = updatedPages.filter(page => page !== '/positions/:positionId/items');
+    }
+
+    form.setFieldsValue({ allowed_pages: updatedPages });
+  };
 
   useEffect(() => {
     if (hasAccess) {
@@ -528,7 +559,7 @@ const Users: React.FC = () => {
         }}
         okText="Сохранить"
         cancelText="Отмена"
-        width={600}
+        width={700}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -536,33 +567,88 @@ const Users: React.FC = () => {
             label="Роль"
             rules={[{ required: true, message: 'Выберите роль' }]}
           >
-            <Tag color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
-              {editingUser?.role}
-            </Tag>
+            <Select
+              placeholder="Выберите роль"
+              onChange={handleRoleChange}
+              options={userRoles.map((role) => ({
+                value: role,
+                label: role,
+              }))}
+            />
           </Form.Item>
+
+          {currentRole && fullAccessRoles.includes(currentRole) && (
+            <Alert
+              message="Полный доступ"
+              description={`Роль "${currentRole}" имеет доступ ко всем страницам портала. Список страниц недоступен для редактирования.`}
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+          )}
 
           <Form.Item
             name="allowed_pages"
             label="Доступные страницы"
-            tooltip="Пустой список = полный доступ (для Администратора и Руководителя)"
+            tooltip="Если ничего не выбрано - полный доступ"
           >
-            <Transfer
-              dataSource={transferDataSource}
-              titles={['Доступные', 'Выбранные']}
-              targetKeys={form.getFieldValue('allowed_pages') || []}
-              onChange={(targetKeys) => form.setFieldsValue({ allowed_pages: targetKeys })}
-              render={(item) => item.title || ''}
-              listStyle={{
-                width: 250,
-                height: 300,
-              }}
-              locale={{
-                itemUnit: 'страница',
-                itemsUnit: 'страниц',
-                searchPlaceholder: 'Поиск...',
-              }}
-            />
+            <Checkbox.Group
+              style={{ width: '100%' }}
+              disabled={currentRole && fullAccessRoles.includes(currentRole)}
+              onChange={handlePagesChange}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {PAGES_STRUCTURE.map((group, groupIndex) => {
+                  // Фильтруем страницы группы, оставляя только те, что есть в ALL_PAGES
+                  const groupPages = group.pages.filter((page) => ALL_PAGES.includes(page));
+
+                  if (groupPages.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div key={groupIndex}>
+                      {group.title && (
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: 13,
+                            color: '#666',
+                            marginBottom: 8,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          {group.title}
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8,
+                          paddingLeft: group.title ? 12 : 0,
+                        }}
+                      >
+                        {groupPages.map((page) => (
+                          <Checkbox key={page} value={page}>
+                            {PAGE_LABELS[page] || page}
+                          </Checkbox>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Checkbox.Group>
           </Form.Item>
+
+          <Alert
+            message="Важно"
+            description="Для применения изменений пользователю необходимо выйти и снова войти в систему."
+            type="warning"
+            showIcon
+          />
         </Form>
       </Modal>
     </div>

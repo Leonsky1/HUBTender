@@ -34,6 +34,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogoIcon } from '../Icons';
 import { supabase, type Notification } from '../../lib/supabase';
+import { hasPageAccess } from '../../lib/supabase/types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/ru';
@@ -395,6 +396,44 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
     };
   });
 
+  // Фильтруем меню на основе прав доступа пользователя
+  const filterMenuByAccess = (items: any[]): any[] => {
+    if (!user) return items;
+
+    return items
+      .map((item: any) => {
+        // Если у пункта есть дочерние элементы
+        if (item.children) {
+          const filteredChildren = item.children.filter((child: any) => {
+            // Пропускаем разделители
+            if (child.type === 'divider') return true;
+            // Проверяем доступ к дочернему пункту
+            return child.key ? hasPageAccess(user, child.key) : true;
+          });
+
+          // Проверяем, есть ли реальные страницы (не только разделители)
+          const hasAccessiblePages = filteredChildren.some(
+            (child: any) => child.type !== 'divider'
+          );
+
+          // Если после фильтрации остались доступные страницы, оставляем родительский пункт
+          if (hasAccessiblePages) {
+            return {
+              ...item,
+              children: filteredChildren,
+            };
+          }
+          return null;
+        }
+
+        // Для обычных пунктов проверяем доступ
+        return item.key ? (hasPageAccess(user, item.key) ? item : null) : item;
+      })
+      .filter(Boolean); // Убираем null элементы
+  };
+
+  const filteredMenuItems = filterMenuByAccess(processedMenuItems);
+
   return (
     <Layout style={{ minHeight: '100vh', height: '100vh' }}>
       <Sider
@@ -439,7 +478,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
             location.pathname.startsWith('/analytics') ? ['analytics'] :
             []
           }
-          items={processedMenuItems}
+          items={filteredMenuItems}
           onClick={handleMenuClick}
           style={{
             background: 'transparent',

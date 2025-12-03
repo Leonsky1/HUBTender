@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Result, Spin, Button } from 'antd';
 import { LoadingOutlined, ClockCircleOutlined, StopOutlined } from '@ant-design/icons';
@@ -16,6 +16,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, signOut } = useAuth();
   const location = useLocation();
+  const lastRedirectPath = useRef<string | null>(null);
 
   // Показываем загрузку пока проверяем авторизацию
   if (loading) {
@@ -123,40 +124,47 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Проверяем доступ к текущей странице
-  if (!hasPageAccess(user, location.pathname)) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          padding: 24,
-        }}
-      >
-        <Result
-          status="403"
-          title="Доступ запрещен"
-          subTitle={
-            <div style={{ maxWidth: 500, margin: '0 auto' }}>
-              <p>
-                У вас нет прав для доступа к этой странице.
-              </p>
-              <p style={{ marginTop: 16, color: '#666', fontSize: 14 }}>
-                <strong>Ваша роль:</strong> {user.role}<br />
-                <strong>Запрошенная страница:</strong> {location.pathname}
-              </p>
-            </div>
-          }
-          extra={
-            <Button type="primary" onClick={() => window.history.back()}>
-              Назад
-            </Button>
-          }
-        />
-      </div>
-    );
+  const hasAccess = hasPageAccess(user, location.pathname);
+
+  if (!hasAccess) {
+    // Если нет доступа к странице, перенаправляем на доступную
+    const redirectPath = user.allowed_pages.length === 0
+      ? '/dashboard'
+      : user.allowed_pages[0];
+
+    // Защита от циклических редиректов
+    if (lastRedirectPath.current === redirectPath) {
+      // Если мы уже пытались перенаправить на этот путь, показываем ошибку
+      return (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            padding: 24,
+          }}
+        >
+          <Result
+            status="403"
+            title="Ошибка доступа"
+            subTitle="Произошла ошибка при проверке прав доступа. Пожалуйста, обратитесь к администратору."
+            extra={
+              <Button type="primary" onClick={signOut}>
+                Выйти
+              </Button>
+            }
+          />
+        </div>
+      );
+    }
+
+    lastRedirectPath.current = redirectPath;
+    return <Navigate to={redirectPath} replace />;
   }
+
+  // Сбрасываем last redirect при успешном доступе
+  lastRedirectPath.current = null;
 
   // Пользователь авторизован, одобрен и имеет доступ к странице
   return <>{children}</>;

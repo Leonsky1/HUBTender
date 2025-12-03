@@ -745,6 +745,7 @@ export const ALL_PAGES = [
   '/positions/:positionId/items',
   '/commerce',
   '/commerce/proposal',
+  '/commerce/redistribution',
   '/costs',
   '/bsm',
   '/analytics/comparison',
@@ -784,27 +785,66 @@ export const DEFAULT_ROLE_PAGES: Record<UserRole, string[]> = {
   ],
 };
 
-// Названия страниц для Transfer component
+// Названия страниц (соответствуют левому боковому меню)
 export const PAGE_LABELS: Record<string, string> = {
   '/dashboard': 'Дашборд',
-  '/admin/nomenclatures': 'Номенклатуры',
-  '/admin/tenders': 'Управление тендерами',
-  '/admin/construction_cost': 'Справочник затрат',
-  '/admin/markup_constructor': 'Конструктор наценок',
-  '/admin/markup': 'Проценты наценок',
-  '/library': 'Библиотека',
-  '/library/templates': 'Шаблоны',
   '/positions': 'Позиции заказчика',
-  '/positions/:positionId/items': 'Работы и материалы',
-  '/commerce': 'Коммерция',
-  '/commerce/proposal': 'Коммерческое предложение',
+  '/commerce/proposal': 'Форма КП',
+  '/commerce/redistribution': 'Перераспределение',
+  '/library': 'Материалы и работы',
+  '/library/templates': 'Шаблоны',
+  '/bsm': 'Базовая стоимость',
   '/costs': 'Затраты на строительство',
-  '/bsm': 'БСМ',
-  '/analytics/comparison': 'Сравнение объектов',
   '/financial-indicators': 'Финансовые показатели',
-  '/settings': 'Настройки',
+  '/analytics/comparison': 'Сравнение объектов',
+  '/admin/nomenclatures': 'Номенклатуры',
+  '/admin/tenders': 'Тендеры',
+  '/admin/construction_cost': 'Справочник затрат',
+  '/admin/markup': 'Проценты наценок',
+  '/admin/markup_constructor': 'Конструктор наценок',
   '/users': 'Пользователи',
+  '/settings': 'Настройки',
+  '/positions/:positionId/items': 'Работы и материалы',
+  '/commerce': 'Форма КП', // Старый путь, оставлен для совместимости
 };
+
+// Структура страниц с группировкой (для UI модального окна)
+export const PAGES_STRUCTURE = [
+  {
+    title: null, // Без группы
+    pages: ['/dashboard', '/positions'],
+  },
+  {
+    title: 'Коммерция',
+    pages: ['/commerce/proposal', '/commerce/redistribution'],
+  },
+  {
+    title: 'Библиотеки',
+    pages: ['/library', '/library/templates'],
+  },
+  {
+    title: null, // Без группы
+    pages: ['/bsm', '/costs', '/financial-indicators'],
+  },
+  {
+    title: 'Аналитика',
+    pages: ['/analytics/comparison'],
+  },
+  {
+    title: 'Администрирование',
+    pages: [
+      '/admin/nomenclatures',
+      '/admin/tenders',
+      '/admin/construction_cost',
+      '/admin/markup',
+      '/admin/markup_constructor',
+    ],
+  },
+  {
+    title: null, // Без группы
+    pages: ['/users', '/settings'],
+  },
+] as const;
 
 // =============================================
 // Вспомогательные функции для работы с пользователями

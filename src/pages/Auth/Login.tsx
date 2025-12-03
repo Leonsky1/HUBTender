@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -18,10 +18,33 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { refreshUser } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Получаем путь, с которого пользователь был перенаправлен
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+
+  // Автоматический редирект если пользователь уже авторизован
+  useEffect(() => {
+    // Если пользователь уже авторизован и одобрен, перенаправляем
+    if (user && user.access_status === 'approved' && !authLoading) {
+      // Определяем, куда перенаправить пользователя
+      let targetPath = from;
+
+      // Если пользователь пытается попасть на страницу, к которой у него нет доступа
+      // или это дефолтный редирект на /dashboard
+      if (from === '/dashboard' || from === '/') {
+        // Если allowed_pages пуст - полный доступ, идем на /dashboard
+        if (user.allowed_pages.length === 0) {
+          targetPath = '/dashboard';
+        } else {
+          // Иначе берем первую доступную страницу
+          targetPath = user.allowed_pages[0];
+        }
+      }
+
+      navigate(targetPath, { replace: true });
+    }
+  }, [user, authLoading, navigate, from]);
 
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
@@ -41,49 +64,19 @@ const Login: React.FC = () => {
         } else {
           message.error(`Ошибка входа: ${authError.message}`);
         }
+        setLoading(false);
         return;
       }
 
       if (!authData.user) {
         message.error('Не удалось получить данные пользователя');
+        setLoading(false);
         return;
       }
 
-      // 2. Проверяем статус пользователя в public.users
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('access_status')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (userError) {
-        console.error('Ошибка загрузки данных пользователя:', userError);
-
-        // Если пользователь не найден в public.users - выходим
-        await supabase.auth.signOut();
-        message.error('Пользователь не найден в системе');
-        return;
-      }
-
-      // 3. Проверяем статус доступа
-      if (userData.access_status === 'pending') {
-        await supabase.auth.signOut();
-        message.warning('Ваш запрос на регистрацию еще не одобрен администратором');
-        return;
-      }
-
-      if (userData.access_status === 'blocked') {
-        await supabase.auth.signOut();
-        message.error('Ваш доступ к системе заблокирован');
-        return;
-      }
-
-      // 4. Обновляем данные пользователя в контексте
-      await refreshUser();
-
-      // 5. Успешный вход
+      // 2. Успешный вход - AuthContext автоматически обновит пользователя через onAuthStateChange
+      // useEffect сработает когда user загрузится и сделает редирект
       message.success('Вход выполнен успешно');
-      navigate(from, { replace: true });
     } catch (error) {
       console.error('Неожиданная ошибка при входе:', error);
       message.error('Произошла неожиданная ошибка при входе');

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, Button, Typography, Tag, Input, InputNumber, Select, Modal, message } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useParams, useNavigate } from 'react-router-dom';
 import WorkEditForm from './WorkEditForm';
 import MaterialEditForm from './MaterialEditForm';
 import { useBoqItems } from './hooks/useBoqItems';
@@ -16,7 +16,6 @@ const { Text, Title } = Typography;
 const PositionItems: React.FC = () => {
   const { positionId } = useParams<{ positionId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const [workSearchText, setWorkSearchText] = useState<string>('');
   const [materialSearchText, setMaterialSearchText] = useState<string>('');
@@ -129,28 +128,13 @@ const PositionItems: React.FC = () => {
     <div style={{ padding: '0 8px' }}>
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => {
-                const tenderId = searchParams.get('tenderId');
-                const positionId = searchParams.get('positionId');
-                if (tenderId && positionId) {
-                  navigate(`/positions?tenderId=${tenderId}&positionId=${positionId}`);
-                } else {
-                  navigate('/positions');
-                }
-              }}
-            >
-              Назад
-            </Button>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {position.is_additional && <Tag color="orange">ДОП</Tag>}
-                <Title level={4} style={{ margin: 0 }}>
-                  {position.position_number}. {position.work_name}
-                </Title>
-              </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {position.is_additional && <Tag color="orange">ДОП</Tag>}
+              <Title level={4} style={{ margin: 0 }}>
+                {position.position_number}. {position.work_name}
+              </Title>
+            </div>
 
               {!position.is_additional && (
                 <div style={{ marginTop: 8 }}>
@@ -216,7 +200,6 @@ const PositionItems: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
