@@ -69,6 +69,31 @@ node scripts/generate-ai-context.cjs
 # - ai_examples.sql (sample queries)
 ```
 
+## Vercel Deployment
+
+**Setup (one-time):**
+1. Install Vercel CLI: `npm i -g vercel`
+2. Login: `vercel login`
+3. Link project: `vercel link`
+4. Set env vars in Vercel dashboard:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - `VITE_SUPABASE_SERVICE_ROLE_KEY`
+
+**Deploy workflow:**
+```bash
+git add .
+git commit -m "message"
+git push origin main    # Auto-deploys to Vercel (production)
+vercel --prod           # Manual deploy to production
+vercel                  # Deploy to preview
+```
+
+**Shared database:**
+- Local and Vercel use same Supabase instance
+- No separate staging database needed
+- All changes immediately visible on both environments
+
 ## 🚨 CRITICAL DATABASE RULES 🚨
 
 ```
@@ -107,7 +132,10 @@ MIGRATION WORKFLOW:
 - `markup_tactics` - Markup strategies and rules
 - `tender_markup_percentage` - Tender-specific markup percentages
 - `subcontract_growth_exclusions` - Exclusions from subcontract growth markup (separate for works and materials)
+- `roles` - Role definitions with page permissions (code, name, allowed_pages, color)
+- `users` - Custom user management table (id, full_name, email, password, role_code, access_status, allowed_pages)
 - ENUM: `boq_item_type` ('мат', 'суб-мат', 'мат-комп.', 'раб', 'суб-раб', 'раб-комп.')
+- ENUM: `access_status_type` ('pending', 'approved', 'rejected')
 
 ## 🤖 AI Context for Database Schema
 
@@ -175,6 +203,8 @@ App.tsx
 ```
 
 ### Implemented Routes
+- `/login` - Login page with authentication (✅ complete)
+- `/register` - Registration page with role assignment (✅ complete)
 - `/` and `/dashboard` - Tender dashboard with statistics and tender table (✅ complete)
 - `/admin/nomenclatures` - Materials, Works, Locations, Cost Categories (✅ complete, Supabase integrated)
 - `/admin/tenders` - Tender management table (✅ UI complete, Supabase ready)
@@ -426,8 +456,9 @@ All database migrations have been executed and consolidated into `supabase/schem
 - ✅ TypeScript types defined for all database tables
 - ✅ Environment variables configured (.env.local required)
 - ✅ Price calculation system integrated
-- ❌ No authentication UI yet
-- ❌ No RLS policies enabled
+- ✅ Authentication system with login/register pages
+- ✅ Role-based access control (RBAC) with custom user management
+- ❌ No RLS policies enabled (custom authorization in application layer)
 
 ### UI Implementation Status
 **Fully Implemented with Supabase:**
@@ -722,3 +753,59 @@ const { data } = await supabase
   .eq('template_id', templateId)
   .order('position');
 ```
+
+## Authentication & Authorization System
+
+### Custom User Management (Not Supabase Auth)
+**CRITICAL**: This system uses a custom `users` table, NOT Supabase Auth's `auth.users`
+
+**Tables:**
+- `roles` - Role definitions with permissions
+- `users` - User records with passwords and access control
+
+**Architecture:**
+- Password hashing handled in application layer
+- AuthContext (`src/contexts/AuthContext.tsx`) manages session state
+- Login/Register pages in `src/pages/Auth/`
+- Protected routes via ProtectedRoute component
+
+### Role-Based Access Control (RBAC)
+
+**Role Structure (`roles` table):**
+```typescript
+{
+  code: string;          // 'administrator', 'engineer', etc.
+  name: string;          // Human-readable Russian name
+  allowed_pages: string[]; // Array of allowed routes (empty = full access)
+  color: string;         // Color for UI display
+  is_system_role: boolean; // Cannot be deleted
+}
+```
+
+**User Structure (`users` table):**
+```typescript
+{
+  id: uuid;
+  full_name: string;
+  email: string;
+  password: string;      // Hashed in application
+  role_code: string;     // FK to roles.code
+  access_status: 'pending' | 'approved' | 'rejected';
+  approved_by: uuid;     // FK to users.id (self-reference)
+  approved_at: timestamp;
+  allowed_pages: string[]; // User-specific overrides (empty = use role defaults)
+  access_enabled: boolean; // Quick disable without deletion
+}
+```
+
+**Access Control Flow:**
+1. User registers → `access_status = 'pending'`
+2. Admin approves → `access_status = 'approved'`
+3. Page access checked via:
+   - User `access_enabled = true`
+   - User `access_status = 'approved'`
+   - User `allowed_pages` (if not empty) OR role `allowed_pages` (if not empty)
+   - Empty `allowed_pages` = full access
+
+**Protected Routes:**
+All routes except `/login` and `/register` require authentication and appropriate permissions.

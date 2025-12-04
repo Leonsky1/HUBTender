@@ -74,7 +74,51 @@ const Login: React.FC = () => {
         return;
       }
 
-      // 2. Успешный вход - AuthContext автоматически обновит пользователя через onAuthStateChange
+      // 2. Проверяем пользователя в таблице users (теперь мы авторизованы)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (userError || !userData) {
+        console.error('Ошибка загрузки данных пользователя:', userError);
+        await supabase.auth.signOut(); // Выходим из auth
+        message.error('Ошибка загрузки данных пользователя');
+        setLoading(false);
+        return;
+      }
+
+      // 3. Проверяем пароль из таблицы users (если установлен)
+      if (userData.password && userData.password !== values.password) {
+        await supabase.auth.signOut(); // Выходим из auth
+        message.error('Неверный пароль');
+        setLoading(false);
+        return;
+      }
+
+      // 4. Проверяем access_enabled
+      if (!userData.access_enabled) {
+        await supabase.auth.signOut(); // Выходим из auth
+        message.error('Доступ запрещен. Обратитесь к Администратору');
+        setLoading(false);
+        return;
+      }
+
+      // 5. Проверяем статус одобрения
+      if (userData.access_status !== 'approved') {
+        await supabase.auth.signOut(); // Выходим из auth
+
+        if (userData.access_status === 'pending') {
+          message.warning('Ваша заявка ожидает одобрения администратором');
+        } else if (userData.access_status === 'blocked') {
+          message.error('Ваш аккаунт заблокирован. Обратитесь к Администратору');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // 6. Успешный вход - AuthContext автоматически обновит пользователя через onAuthStateChange
       // useEffect сработает когда user загрузится и сделает редирект
       message.success('Вход выполнен успешно');
     } catch (error) {

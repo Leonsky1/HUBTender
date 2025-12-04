@@ -49,7 +49,8 @@ interface RoleRecord {
 
 const Users: React.FC = () => {
   const { user: currentUser } = useAuth();
-  const { theme: currentTheme } = useTheme();
+  const { theme } = useTheme();
+  const currentTheme = theme;
   const [activeTab, setActiveTab] = useState('pending');
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [users, setUsers] = useState<UserRecord[]>([]);

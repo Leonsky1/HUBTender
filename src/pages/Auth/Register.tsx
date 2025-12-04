@@ -7,6 +7,9 @@ import { HeaderIcon } from '../../components/Icons/HeaderIcon';
 
 const { Title, Text } = Typography;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEFAULT_ROLE_PAGES = [];
+
 interface RegisterFormValues {
   full_name: string;
   email: string;
@@ -88,7 +91,7 @@ const Register: React.FC = () => {
 
       // 4. Создаем уведомления для администраторов, руководителей и разработчиков
       const userId = authData.user?.id;
-      if (admins && admins.length > 0 && userId) {
+      if (admins && admins.length > 0 && userId && authData.user) {
         const notifications = admins.map((admin) => ({
           user_id: admin.id,
           type: 'pending' as const,

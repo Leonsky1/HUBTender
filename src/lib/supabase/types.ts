@@ -681,7 +681,7 @@ export interface CostRedistributionResultInsert {
   added_amount?: number;
   final_work_cost?: number | null;
   redistribution_rules?: RedistributionRule | null;
-  created_by?: string;
+  created_by?: string | null;
 }
 
 export interface CostRedistributionResult extends CostRedistributionResultInsert {
