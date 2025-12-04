@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, Button, Space, Input, Typography } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import { useMaterials } from './hooks/useMaterials.tsx';
 import { useWorks } from './hooks/useWorks.tsx';
 import { useUnits } from './hooks/useUnits.tsx';
-import { MaterialsTab } from './components/MaterialsTab';
-import { WorksTab } from './components/WorksTab';
-import { UnitsTab } from './components/UnitsTab';
+import { MaterialsTab, type MaterialsTabRef } from './components/MaterialsTab';
+import { WorksTab, type WorksTabRef } from './components/WorksTab';
+import { UnitsTab, type UnitsTabRef } from './components/UnitsTab';
 
 const { Title } = Typography;
 
@@ -27,6 +27,11 @@ const Nomenclatures: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState('materials');
+
+  const materialsTabRef = useRef<MaterialsTabRef>(null);
+  const worksTabRef = useRef<WorksTabRef>(null);
+  const unitsTabRef = useRef<UnitsTabRef>(null);
 
   const materials = useMaterials();
   const works = useWorks();
@@ -62,12 +67,23 @@ const Nomenclatures: React.FC = () => {
     }
   };
 
+  const handleAddClick = () => {
+    if (activeTab === 'materials') {
+      materialsTabRef.current?.openAddModal();
+    } else if (activeTab === 'works') {
+      worksTabRef.current?.openAddModal();
+    } else if (activeTab === 'units') {
+      unitsTabRef.current?.openAddModal();
+    }
+  };
+
   const tabItems: TabsProps['items'] = [
     {
       key: 'materials',
       label: 'Материалы',
       children: (
         <MaterialsTab
+          ref={materialsTabRef}
           data={filteredMaterialsData}
           loading={materials.loading}
           unitsList={units.unitsList}
@@ -85,6 +101,7 @@ const Nomenclatures: React.FC = () => {
       label: 'Работы',
       children: (
         <WorksTab
+          ref={worksTabRef}
           data={filteredWorksData}
           loading={works.loading}
           unitsList={units.unitsList}
@@ -102,6 +119,7 @@ const Nomenclatures: React.FC = () => {
       label: 'Единицы измерения',
       children: (
         <UnitsTab
+          ref={unitsTabRef}
           data={filteredUnitsData}
           loading={units.loading}
           unitColors={unitColors}
@@ -124,6 +142,7 @@ const Nomenclatures: React.FC = () => {
         defaultActiveKey="materials"
         items={tabItems}
         size="large"
+        onChange={(key) => setActiveTab(key)}
         tabBarExtraContent={
           <Space>
             <Input
@@ -132,7 +151,7 @@ const Nomenclatures: React.FC = () => {
               style={{ width: 200 }}
               onChange={(e) => setSearchText(e.target.value)}
             />
-            <Button type="primary" icon={<PlusOutlined />}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
               Добавить
             </Button>
           </Space>

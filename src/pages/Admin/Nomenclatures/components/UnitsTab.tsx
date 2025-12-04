@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Table, Button, Space, Tooltip, Tag, Modal, Form, Input, InputNumber, Switch } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -15,7 +15,11 @@ interface UnitsTabProps {
   onPageChange: (page: number, newPageSize: number) => void;
 }
 
-export const UnitsTab: React.FC<UnitsTabProps> = ({
+export interface UnitsTabRef {
+  openAddModal: () => void;
+}
+
+export const UnitsTab = forwardRef<UnitsTabRef, UnitsTabProps>(({
   data,
   loading,
   unitColors,
@@ -24,10 +28,18 @@ export const UnitsTab: React.FC<UnitsTabProps> = ({
   onDelete,
   onSave,
   onPageChange,
-}) => {
+}, ref) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<UnitRecord | null>(null);
   const [form] = Form.useForm();
+
+  useImperativeHandle(ref, () => ({
+    openAddModal: () => {
+      setEditingUnit(null);
+      form.resetFields();
+      setModalOpen(true);
+    },
+  }));
 
   const handleEditClick = (record: UnitRecord) => {
     setEditingUnit(record);
@@ -235,4 +247,6 @@ export const UnitsTab: React.FC<UnitsTabProps> = ({
       </Modal>
     </>
   );
-};
+});
+
+UnitsTab.displayName = 'UnitsTab';

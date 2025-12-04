@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Table, Button, Space, Tooltip, Tag, Modal, Form, AutoComplete, Select } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -16,7 +16,11 @@ interface WorksTabProps {
   onPageChange: (page: number, newPageSize: number) => void;
 }
 
-export const WorksTab: React.FC<WorksTabProps> = ({
+export interface WorksTabRef {
+  openAddModal: () => void;
+}
+
+export const WorksTab = forwardRef<WorksTabRef, WorksTabProps>(({
   data,
   loading,
   unitsList,
@@ -26,10 +30,18 @@ export const WorksTab: React.FC<WorksTabProps> = ({
   onDelete,
   onSave,
   onPageChange,
-}) => {
+}, ref) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingWork, setEditingWork] = useState<WorkRecord | null>(null);
   const [form] = Form.useForm();
+
+  useImperativeHandle(ref, () => ({
+    openAddModal: () => {
+      setEditingWork(null);
+      form.resetFields();
+      setModalOpen(true);
+    },
+  }));
 
   const handleEditClick = (record: WorkRecord) => {
     setEditingWork(record);
@@ -199,4 +211,6 @@ export const WorksTab: React.FC<WorksTabProps> = ({
       </Modal>
     </>
   );
-};
+});
+
+WorksTab.displayName = 'WorksTab';
