@@ -12,6 +12,8 @@ export const usePositionActions = (
   currentTheme: string
 ) => {
   const [copiedPositionId, setCopiedPositionId] = useState<string | null>(null);
+  const [copiedNoteValue, setCopiedNoteValue] = useState<string | null>(null);
+  const [copiedNotePositionId, setCopiedNotePositionId] = useState<string | null>(null);
 
   // Обновление позиции в БД
   const handleUpdatePosition = async (
@@ -112,6 +114,107 @@ export const usePositionActions = (
     }
   };
 
+  // Копирование примечания ГП
+  const handleCopyNote = (positionId: string, noteValue: string | null, event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    if (!noteValue || noteValue.trim() === '') {
+      message.warning('Примечание ГП пустое. Нечего копировать.');
+      return;
+    }
+
+    setCopiedNoteValue(noteValue);
+    setCopiedNotePositionId(positionId);
+    message.success('Примечание ГП скопировано в буфер обмена');
+  };
+
+  // Вставка примечания ГП
+  const handlePasteNote = async (targetPositionId: string, event: React.MouseEvent, selectedTenderId: string | null) => {
+    event.stopPropagation();
+
+    if (!copiedNoteValue || !copiedNotePositionId) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('client_positions')
+        .update({ manual_note: copiedNoteValue })
+        .eq('id', targetPositionId);
+
+      if (error) throw error;
+
+      // Сбросить состояние
+      setCopiedNoteValue(null);
+      setCopiedNotePositionId(null);
+
+      // Обновить таблицу
+      if (selectedTenderId) {
+        await fetchClientPositions(selectedTenderId);
+      }
+
+      message.success('Примечание ГП успешно вставлено');
+    } catch (error: any) {
+      console.error('Ошибка вставки примечания:', error);
+      message.error('Ошибка вставки примечания: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Удаление всех работ и материалов
+  const handleDeleteBoqItems = async (
+    positionId: string,
+    positionName: string,
+    selectedTenderId: string | null,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+
+    Modal.confirm({
+      title: 'Удалить все работы и материалы?',
+      content: `Вы уверены, что хотите удалить все работы и материалы из позиции "${positionName}"? Это действие нельзя отменить.`,
+      okText: 'Удалить',
+      cancelText: 'Отмена',
+      okButtonProps: { danger: true },
+      rootClassName: currentTheme === 'dark' ? 'dark-modal' : '',
+      onOk: async () => {
+        setLoading(true);
+        try {
+          // 1. Удалить все boq_items
+          const { error: deleteError } = await supabase
+            .from('boq_items')
+            .delete()
+            .eq('client_position_id', positionId);
+
+          if (deleteError) throw deleteError;
+
+          // 2. Обнулить totals позиции
+          const { error: updateError } = await supabase
+            .from('client_positions')
+            .update({
+              total_material: 0,
+              total_works: 0,
+            })
+            .eq('id', positionId);
+
+          if (updateError) throw updateError;
+
+          // 3. Обновить таблицу
+          if (selectedTenderId) {
+            await fetchClientPositions(selectedTenderId);
+          }
+
+          message.success('Все работы и материалы успешно удалены');
+        } catch (error: any) {
+          console.error('Ошибка удаления работ и материалов:', error);
+          message.error('Ошибка удаления: ' + error.message);
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
+
   // Удаление ДОП работы
   const handleDeleteAdditionalPosition = async (
     positionId: string,
@@ -165,9 +268,13 @@ export const usePositionActions = (
 
   return {
     copiedPositionId,
+    copiedNotePositionId,
     handleUpdatePosition,
     handleCopyPosition,
     handlePastePosition,
+    handleCopyNote,
+    handlePasteNote,
+    handleDeleteBoqItems,
     handleExportToExcel,
     handleDeleteAdditionalPosition,
   };

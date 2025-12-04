@@ -1,6 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, Table, Typography, Tag, Tooltip, Space, Button } from 'antd';
-import { PlusOutlined, CopyOutlined, CheckOutlined, DownloadOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  CopyOutlined,
+  CheckOutlined,
+  DownloadOutlined,
+  DeleteOutlined,
+  MoreOutlined,
+  ClearOutlined,
+  FileTextOutlined,
+  FileAddOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { ClientPosition, Tender } from '../../../lib/supabase';
 
@@ -11,6 +21,7 @@ interface PositionTableProps {
   selectedTender: Tender | null;
   loading: boolean;
   copiedPositionId: string | null;
+  copiedNotePositionId: string | null;
   positionCounts: Record<string, { works: number; materials: number }>;
   currentTheme: string;
   leafPositionIndices: Set<number>;
@@ -18,6 +29,9 @@ interface PositionTableProps {
   onOpenAdditionalModal: (parentId: string, event: React.MouseEvent) => void;
   onCopyPosition: (positionId: string, event: React.MouseEvent) => void;
   onPastePosition: (positionId: string, event: React.MouseEvent) => void;
+  onCopyNote: (positionId: string, noteValue: string | null, event: React.MouseEvent) => void;
+  onPasteNote: (positionId: string, event: React.MouseEvent) => void;
+  onDeleteBoqItems: (positionId: string, positionName: string, event: React.MouseEvent) => void;
   onDeleteAdditionalPosition: (positionId: string, positionName: string, event: React.MouseEvent) => void;
   onExportToExcel: () => void;
 }
@@ -27,6 +41,7 @@ export const PositionTable: React.FC<PositionTableProps> = ({
   selectedTender,
   loading,
   copiedPositionId,
+  copiedNotePositionId,
   positionCounts,
   currentTheme,
   leafPositionIndices,
@@ -34,9 +49,15 @@ export const PositionTable: React.FC<PositionTableProps> = ({
   onOpenAdditionalModal,
   onCopyPosition,
   onPastePosition,
+  onCopyNote,
+  onPasteNote,
+  onDeleteBoqItems,
   onDeleteAdditionalPosition,
   onExportToExcel,
 }) => {
+  // Состояние для отслеживания открытой позиции
+  const [expandedPositionId, setExpandedPositionId] = useState<string | null>(null);
+
   const columns: ColumnsType<ClientPosition> = useMemo(() => [
     {
       title: <div style={{ textAlign: 'center' }}>№</div>,
@@ -154,83 +175,189 @@ export const PositionTable: React.FC<PositionTableProps> = ({
     {
       title: <div style={{ textAlign: 'center' }}>Итого</div>,
       key: 'total',
-      width: 220,
+      width: 110,
       align: 'center',
       render: (_, record, index) => {
-        const total = (record.total_material || 0) + (record.total_works || 0);
-        const counts = positionCounts[record.id] || { works: 0, materials: 0 };
         const isLeaf = leafPositionIndices.has(index);
-        const isAdditional = record.is_additional;
+        const counts = positionCounts[record.id] || { works: 0, materials: 0 };
+        const total = (record.total_works || 0) + (record.total_material || 0);
+        const isExpanded = expandedPositionId === record.id;
+
+        const tooltipColor = currentTheme === 'dark' ? {
+          overlayInnerStyle: { backgroundColor: '#434343', color: '#fff' }
+        } : {};
 
         return (
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: 8 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
-              {!isAdditional && (
-                <Tooltip title="Добавить ДОП работу">
-                  <Tag
-                    color="success"
-                    style={{ cursor: 'pointer', margin: 0 }}
-                    onClick={(e) => onOpenAdditionalModal(record.id, e)}
-                  >
-                    <PlusOutlined />
-                  </Tag>
-                </Tooltip>
-              )}
-              {isAdditional && (
-                <Tooltip title="Удалить ДОП работу">
-                  <Tag
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', minHeight: '48px' }}>
+            {/* Пустой div для баланса слева */}
+            <div style={{ flex: 1, minWidth: 0 }} />
+
+            {/* ЦЕНТР: Счетчики и сумма */}
+            {(counts.works > 0 || counts.materials > 0) && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                {/* Сумма */}
+                {total > 0 && (
+                  <Text
                     style={{
-                      cursor: 'pointer',
-                      margin: 0,
-                      backgroundColor: currentTheme === 'dark' ? '#2d1818' : '#ffe6e6',
-                      borderColor: currentTheme === 'dark' ? '#5a3030' : '#ffb3b3',
-                      color: currentTheme === 'dark' ? '#d49999' : '#a65050',
+                      fontWeight: 600,
+                      fontSize: 15,
+                      color: currentTheme === 'dark' ? '#52c41a' : '#389e0d',
                     }}
-                    onClick={(e) => onDeleteAdditionalPosition(record.id, record.work_name, e)}
                   >
-                    <DeleteOutlined />
-                  </Tag>
-                </Tooltip>
-              )}
-              {isLeaf && copiedPositionId !== record.id && (
-                <Tooltip title="Скопировать работы и материалы">
-                  <Tag
-                    color="processing"
-                    style={{ cursor: 'pointer', margin: 0 }}
-                    onClick={(e) => onCopyPosition(record.id, e)}
-                  >
-                    <CopyOutlined />
-                  </Tag>
-                </Tooltip>
-              )}
-              {isLeaf && copiedPositionId !== null && (
-                <Tooltip title="Вставить работы и материалы">
+                    {Math.round(total).toLocaleString('ru-RU')}
+                  </Text>
+                )}
+                {/* Счётчики */}
+                <div style={{ display: 'flex', gap: 8, fontSize: 13 }}>
+                  <span>
+                    Р: <span style={{ color: '#ff9800', fontWeight: 600 }}>{counts.works}</span>
+                  </span>
+                  <span>
+                    М: <span style={{ color: '#1890ff', fontWeight: 600 }}>{counts.materials}</span>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* СПРАВА: Кнопки действий */}
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4, alignSelf: 'center' }}>
+              {/* Кнопка "Вставить работы и материалы" */}
+              {isLeaf && copiedPositionId && copiedPositionId !== record.id && (
+                <Tooltip title="Вставить работы и материалы" {...tooltipColor}>
                   <Tag
                     color="success"
                     style={{ cursor: 'pointer', margin: 0 }}
-                    onClick={(e) => onPastePosition(record.id, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPastePosition(record.id, e);
+                    }}
                   >
                     <CheckOutlined />
                   </Tag>
                 </Tooltip>
               )}
-            </div>
-            {/* Показываем сумму и счетчики для любой позиции, у которой есть работы/материалы, независимо от того, листовая она или нет */}
-            {(counts.works > 0 || counts.materials > 0) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
-                {total > 0 && (
-                  <Text style={{ margin: 0, fontWeight: 600, fontSize: 15, color: currentTheme === 'dark' ? '#52c41a' : '#389e0d' }}>
-                    {Math.round(total).toLocaleString('ru-RU')}
-                  </Text>
-                )}
-                <div style={{ display: 'flex', gap: 8, fontSize: 15, fontWeight: 600 }}>
-                  <span style={{ color: currentTheme === 'dark' ? '#fff' : '#000' }}>Р:</span>
-                  <span style={{ color: '#ff9800' }}>{counts.works}</span>
-                  <span style={{ color: currentTheme === 'dark' ? '#fff' : '#000' }}>М:</span>
-                  <span style={{ color: '#1890ff' }}>{counts.materials}</span>
+
+              {/* Кнопка "Вставить примечание ГП" */}
+              {copiedNotePositionId && copiedNotePositionId !== record.id && (
+                <Tooltip title="Вставить примечание ГП" {...tooltipColor}>
+                  <Tag
+                    color="lime"
+                    style={{ cursor: 'pointer', margin: 0 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPasteNote(record.id, e);
+                    }}
+                  >
+                    <FileAddOutlined />
+                  </Tag>
+                </Tooltip>
+              )}
+
+              {/* Раскрывающиеся кнопки действий */}
+              {isExpanded && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {/* Строка 1: Копирование (только для листовых) */}
+                  {isLeaf && (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {/* Скопировать работы и материалы */}
+                      {copiedPositionId !== record.id && (
+                        <Tooltip title="Скопировать работы и материалы" {...tooltipColor}>
+                          <Tag
+                            color="blue"
+                            style={{ cursor: 'pointer', margin: 0 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onCopyPosition(record.id, e);
+                            }}
+                          >
+                            <CopyOutlined />
+                          </Tag>
+                        </Tooltip>
+                      )}
+
+                      {/* Скопировать примечание ГП */}
+                      <Tooltip title="Скопировать примечание ГП" {...tooltipColor}>
+                        <Tag
+                          color="purple"
+                          style={{ cursor: 'pointer', margin: 0 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onCopyNote(record.id, record.manual_note, e);
+                          }}
+                        >
+                          <FileTextOutlined />
+                        </Tag>
+                      </Tooltip>
+                    </div>
+                  )}
+
+                  {/* Строка 2: Добавление/Удаление */}
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {/* Добавить ДОП работу (для НЕ-ДОП позиций) */}
+                    {!record.is_additional && (
+                      <Tooltip title="Добавить ДОП работу" {...tooltipColor}>
+                        <Tag
+                          color="success"
+                          style={{ cursor: 'pointer', margin: 0 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenAdditionalModal(record.id, e);
+                          }}
+                        >
+                          <PlusOutlined />
+                        </Tag>
+                      </Tooltip>
+                    )}
+
+                    {/* Удалить ДОП работу (для ДОП позиций) */}
+                    {record.is_additional && (
+                      <Tooltip title="Удалить ДОП работу" {...tooltipColor}>
+                        <Tag
+                          color="error"
+                          style={{ cursor: 'pointer', margin: 0 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteAdditionalPosition(record.id, record.work_name, e);
+                          }}
+                        >
+                          <DeleteOutlined />
+                        </Tag>
+                      </Tooltip>
+                    )}
+
+                    {/* Удалить работы и материалы (только для листовых) */}
+                    {isLeaf && (
+                      <Tooltip title="Удалить работы и материалы" {...tooltipColor}>
+                        <Tag
+                          color="orange"
+                          style={{ cursor: 'pointer', margin: 0 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteBoqItems(record.id, record.work_name, e);
+                          }}
+                        >
+                          <ClearOutlined />
+                        </Tag>
+                      </Tooltip>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Кнопка троеточия */}
+              <Tooltip title="Действия" {...tooltipColor}>
+                <Tag
+                  color="default"
+                  style={{ cursor: 'pointer', margin: 0 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedPositionId(isExpanded ? null : record.id);
+                  }}
+                >
+                  <MoreOutlined />
+                </Tag>
+              </Tooltip>
+            </div>
           </div>
         );
       },
@@ -239,11 +366,16 @@ export const PositionTable: React.FC<PositionTableProps> = ({
     positionCounts,
     leafPositionIndices,
     copiedPositionId,
+    copiedNotePositionId,
     currentTheme,
+    expandedPositionId,
     onOpenAdditionalModal,
     onDeleteAdditionalPosition,
     onCopyPosition,
     onPastePosition,
+    onCopyNote,
+    onPasteNote,
+    onDeleteBoqItems,
   ]);
 
   return (

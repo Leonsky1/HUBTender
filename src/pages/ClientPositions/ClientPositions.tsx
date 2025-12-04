@@ -49,8 +49,12 @@ const ClientPositions: React.FC = () => {
 
   const {
     copiedPositionId,
+    copiedNotePositionId,
     handleCopyPosition,
     handlePastePosition,
+    handleCopyNote,
+    handlePasteNote,
+    handleDeleteBoqItems,
     handleExportToExcel,
     handleDeleteAdditionalPosition,
   } = usePositionActions(clientPositions, setClientPositions, setLoading, fetchClientPositions, currentTheme);
@@ -197,6 +201,7 @@ const ClientPositions: React.FC = () => {
           selectedTender={selectedTender}
           loading={loading}
           copiedPositionId={copiedPositionId}
+          copiedNotePositionId={copiedNotePositionId}
           positionCounts={positionCounts}
           currentTheme={currentTheme}
           leafPositionIndices={leafPositionIndices}
@@ -204,6 +209,11 @@ const ClientPositions: React.FC = () => {
           onOpenAdditionalModal={handleOpenAdditionalModal}
           onCopyPosition={handleCopyPosition}
           onPastePosition={(positionId, event) => handlePastePosition(positionId, event, selectedTenderId)}
+          onCopyNote={handleCopyNote}
+          onPasteNote={(positionId, event) => handlePasteNote(positionId, event, selectedTenderId)}
+          onDeleteBoqItems={(positionId, positionName, event) =>
+            handleDeleteBoqItems(positionId, positionName, selectedTenderId, event)
+          }
           onDeleteAdditionalPosition={(positionId, positionName, event) =>
             handleDeleteAdditionalPosition(positionId, positionName, selectedTenderId, event)
           }
