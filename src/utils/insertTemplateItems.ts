@@ -158,7 +158,7 @@ export async function insertTemplateItems(
       unit_code: unitCode,
       quantity: quantity,
       base_quantity: !isWork ? 1 : null,
-      consumption_coefficient: !isWork ? (ti.conversation_coeff || 1) : null,
+      consumption_coefficient: !isWork ? (library.consumption_coefficient || 1) : null,
       conversion_coefficient: !isWork && ti.conversation_coeff ? ti.conversation_coeff : null,
       parent_work_item_id: null, // Temporarily null, will update in step 3
       currency_type: currencyType,
