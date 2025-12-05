@@ -139,8 +139,8 @@ export async function insertTemplateItems(
       const deliveryPriceType = library.delivery_price_type;
       const deliveryAmount = library.delivery_amount || 0;
 
-      if (deliveryPriceType === 'не в цене' && deliveryAmount) {
-        deliveryPrice = unitRate * currencyRate * (deliveryAmount / 100);
+      if (deliveryPriceType === 'не в цене') {
+        deliveryPrice = unitRate * currencyRate * 0.03;
       } else if (deliveryPriceType === 'суммой' && deliveryAmount) {
         deliveryPrice = deliveryAmount;
       }

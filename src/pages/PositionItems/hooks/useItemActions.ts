@@ -122,8 +122,8 @@ export const useItemActions = ({
       const rate = getCurrencyRate(matLib.currency_type as CurrencyType);
 
       let deliveryPrice = 0;
-      if (matLib.delivery_price_type === 'не в цене' && matLib.delivery_amount) {
-        deliveryPrice = unitRate * rate * (matLib.delivery_amount / 100);
+      if (matLib.delivery_price_type === 'не в цене') {
+        deliveryPrice = unitRate * rate * 0.03;
       } else if (matLib.delivery_price_type === 'суммой' && matLib.delivery_amount) {
         deliveryPrice = matLib.delivery_amount;
       }
@@ -226,8 +226,8 @@ export const useItemActions = ({
         const rate = getCurrencyRate(material.currency_type as CurrencyType);
         let deliveryPrice = 0;
 
-        if (material.delivery_price_type === 'не в цене' && material.delivery_amount) {
-          deliveryPrice = unitRate * rate * (material.delivery_amount / 100);
+        if (material.delivery_price_type === 'не в цене') {
+          deliveryPrice = unitRate * rate * 0.03;
         } else if (material.delivery_price_type === 'суммой' && material.delivery_amount) {
           deliveryPrice = material.delivery_amount;
         }

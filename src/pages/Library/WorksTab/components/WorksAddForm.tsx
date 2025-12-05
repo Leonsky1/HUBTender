@@ -86,6 +86,7 @@ export const WorksAddForm: React.FC<WorksAddFormProps> = ({
                   option!.value.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1
                 }
                 placeholder="Начните вводить..."
+                autoComplete="off"
               />
             </Form.Item>
           </Col>

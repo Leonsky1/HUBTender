@@ -172,7 +172,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       key: 'conversion',
       width: 70,
       align: 'center',
-      render: (value: number) => value?.toFixed(3) || '-',
+      render: (value: number) => value?.toFixed(4) || '-',
     },
     {
       title: <div style={{ textAlign: 'center' }}>К расх</div>,
@@ -190,7 +190,7 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       align: 'center',
       render: (value: number, record: BoqItemFull) => {
         const isMaterial = ['мат', 'суб-мат', 'мат-комп.'].includes(record.boq_item_type);
-        const displayValue = value?.toFixed(2) || '-';
+        const displayValue = value?.toFixed(5) || '-';
 
         if (isMaterial && value) {
           let tooltipTitle = '';
@@ -199,11 +199,11 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
             const workQty = parentWork?.quantity || 0;
             const convCoef = record.conversion_coefficient || 1;
             const consCoef = record.consumption_coefficient || 1;
-            tooltipTitle = `Кол-во = ${workQty.toFixed(2)} (кол-во работы) × ${convCoef.toFixed(3)} (К перв) × ${consCoef.toFixed(4)} (К расх) = ${displayValue}`;
+            tooltipTitle = `Кол-во = ${workQty.toFixed(5)} (кол-во работы) × ${convCoef.toFixed(4)} (К перв) × ${consCoef.toFixed(4)} (К расх) = ${displayValue}`;
           } else if (record.base_quantity) {
             const baseQty = record.base_quantity;
             const consCoef = record.consumption_coefficient || 1;
-            tooltipTitle = `Кол-во = ${baseQty.toFixed(2)} (базовое кол-во) × ${consCoef.toFixed(4)} (К расх) = ${displayValue}`;
+            tooltipTitle = `Кол-во = ${baseQty.toFixed(5)} (базовое кол-во) × ${consCoef.toFixed(4)} (К расх) = ${displayValue}`;
           }
 
           return (
@@ -296,9 +296,9 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
               deliveryPrice = record.delivery_amount || 0;
             }
 
-            tooltipTitle = `${total.toFixed(2)} = ${qty.toFixed(2)} × (${price.toFixed(2)} * ${rate.toFixed(2)} + ${deliveryPrice.toFixed(2)})`;
+            tooltipTitle = `${total.toFixed(2)} = ${qty.toFixed(5)} × (${price.toFixed(2)} * ${rate.toFixed(2)} + ${deliveryPrice.toFixed(2)})`;
           } else {
-            tooltipTitle = `${total.toFixed(2)} = ${qty.toFixed(2)} × (${price.toFixed(2)} * ${rate.toFixed(2)} + 0)`;
+            tooltipTitle = `${total.toFixed(2)} = ${qty.toFixed(5)} × (${price.toFixed(2)} * ${rate.toFixed(2)} + 0)`;
           }
 
           return (
