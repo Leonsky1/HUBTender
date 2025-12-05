@@ -47,6 +47,7 @@ export async function insertTemplateItems(
         material_type,
         delivery_price_type,
         delivery_amount,
+        consumption_coefficient,
         material_names(name, unit)
       )
     `)
