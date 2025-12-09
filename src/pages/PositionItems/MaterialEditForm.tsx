@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Select, AutoComplete, InputNumber, Input, message } from 'antd';
+import { Button, Select, AutoComplete, InputNumber, Input, message, Tag } from 'antd';
 import { CloseOutlined, SaveOutlined, LinkOutlined } from '@ant-design/icons';
 import type { BoqItemFull, CurrencyType } from '../../lib/supabase';
 
@@ -32,6 +32,20 @@ const getBorderColor = (type: string) => {
       return '#9ccc65';
     case 'мат-комп.':
       return '#00897b';
+    default:
+      return '#d9d9d9';
+  }
+};
+
+// Функция для получения цвета типа работы
+const getWorkTypeColor = (type: string) => {
+  switch (type) {
+    case 'раб':
+      return '#ff9800';
+    case 'суб-раб':
+      return '#9c27b0';
+    case 'раб-комп.':
+      return '#f44336';
     default:
       return '#d9d9d9';
   }
@@ -70,6 +84,16 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
   const [materialSearchText, setMaterialSearchText] = useState<string>(record.material_name || '');
 
   const [costSearchText, setCostSearchText] = useState<string>(record.detail_cost_category_full || '');
+
+  // Флаг для отслеживания ручного ввода количества (только для непривязанных материалов)
+  // Инициализируем как true если материал не привязан И quantity != gpVolume * consumption_coefficient
+  const [isManualQuantity, setIsManualQuantity] = useState<boolean>(() => {
+    if (record.parent_work_item_id) return false;
+    const autoQuantity = gpVolume * (record.consumption_coefficient || 1);
+    const actualQuantity = record.quantity || 0;
+    // Если разница больше 0.0001 - считаем что это ручное количество
+    return Math.abs(actualQuantity - autoQuantity) > 0.0001;
+  });
 
   // Функция для получения курса валюты
   const getCurrencyRate = (currency: CurrencyType): number => {
@@ -118,7 +142,9 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
 
   // Вычисление суммы
   const calculateTotal = (): number => {
-    const qty = calculateQuantity();
+    // Использовать formData.quantity напрямую, т.к. оно уже содержит правильное значение
+    // (либо автоматически рассчитанное, либо введенное вручную)
+    const qty = formData.quantity || 0;
     const rate = getCurrencyRate(formData.currency_type);
     const deliveryPrice = calculateDeliveryPrice();
     const total = qty * (formData.unit_rate * rate + deliveryPrice);
@@ -127,6 +153,13 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
 
   // Обновление количества при изменении зависимых полей
   useEffect(() => {
+    // Не обновлять количество автоматически если:
+    // 1. Материал не привязан к работе И
+    // 2. Пользователь вручную изменил количество
+    if (!formData.parent_work_item_id && isManualQuantity) {
+      return;
+    }
+
     const newQuantity = calculateQuantity();
     setFormData((prev: any) => ({ ...prev, quantity: newQuantity }));
   }, [
@@ -135,6 +168,13 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
     formData.consumption_coefficient,
     gpVolume,
   ]);
+
+  // Сбросить флаг ручного ввода при привязке материала к работе
+  useEffect(() => {
+    if (formData.parent_work_item_id) {
+      setIsManualQuantity(false);
+    }
+  }, [formData.parent_work_item_id]);
 
   // Обработчик сохранения
   const handleSave = async () => {
@@ -161,17 +201,25 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
 
     // Если материал не привязан к работе
     if (!formData.parent_work_item_id) {
-      // Проверка на корректность количества ГП
-      if (!gpVolume || gpVolume <= 0) {
-        message.error('Введите количество ГП');
-        return;
-      }
       // Явно устанавливаем null для отвязанного материала
       dataToSave.parent_work_item_id = null;
       dataToSave.conversion_coefficient = null;
-      // Использовать количество ГП как базовое количество
-      dataToSave.base_quantity = gpVolume;
-      dataToSave.quantity = gpVolume * formData.consumption_coefficient;
+
+      // Если количество введено вручную - использовать его
+      // Иначе вычислить из количества ГП
+      if (isManualQuantity) {
+        dataToSave.base_quantity = formData.quantity;
+        dataToSave.quantity = formData.quantity;
+      } else {
+        // Проверка на корректность количества ГП
+        if (!gpVolume || gpVolume <= 0) {
+          message.error('Введите количество ГП');
+          return;
+        }
+        // Использовать количество ГП как базовое количество
+        dataToSave.base_quantity = gpVolume;
+        dataToSave.quantity = gpVolume * formData.consumption_coefficient;
+      }
     } else {
       // Если материал привязан к работе, очистить base_quantity
       dataToSave.parent_work_item_id = formData.parent_work_item_id;
@@ -179,7 +227,10 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
       dataToSave.quantity = calculateQuantity();
     }
 
-    const totalAmount = calculateTotal();
+    // Вычислить total_amount на основе финального quantity в dataToSave
+    const rate = getCurrencyRate(formData.currency_type);
+    const deliveryPrice = calculateDeliveryPrice();
+    const totalAmount = Math.round(dataToSave.quantity * (formData.unit_rate * rate + deliveryPrice) * 100) / 100;
     dataToSave.total_amount = totalAmount;
 
     await onSave(dataToSave);
@@ -296,10 +347,33 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
             size="small"
             allowClear
             placeholder="Без привязки"
+            optionLabelProp="label"
             options={workItems.map((w) => ({
               value: w.id,
               label: w.work_name,
+              boqItemType: w.boq_item_type,
             }))}
+            optionRender={(option) => {
+              const workItem = workItems.find(w => w.id === option.data.value);
+              if (!workItem) return option.data.label;
+              const typeColor = getWorkTypeColor(workItem.boq_item_type);
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ flex: 1 }}>{option.data.label}</span>
+                  <Tag
+                    style={{
+                      margin: 0,
+                      fontSize: '11px',
+                      color: typeColor,
+                      backgroundColor: `${typeColor}20`,
+                      borderColor: `${typeColor}40`,
+                    }}
+                  >
+                    {workItem.boq_item_type}
+                  </Tag>
+                </div>
+              );
+            }}
           />
         </div>
       </div>
@@ -341,11 +415,19 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
           <FieldLabel label="Кол-во" />
           <InputNumber
             value={formData.quantity}
-            disabled
+            disabled={!!formData.parent_work_item_id}
+            onChange={(value) => {
+              // Установить флаг ручного ввода для непривязанных материалов
+              if (!formData.parent_work_item_id) {
+                setIsManualQuantity(true);
+                setFormData({ ...formData, quantity: value || 0 });
+              }
+            }}
             placeholder="0.00000"
             precision={5}
             style={{ width: '100%' }}
             size="small"
+            parser={(value) => parseFloat(value!.replace(/,/g, '.'))}
           />
         </div>
 

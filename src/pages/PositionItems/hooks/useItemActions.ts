@@ -115,7 +115,9 @@ export const useItemActions = ({
 
       const maxSort = Math.max(...items.map(i => i.sort_number || 0), 0);
 
-      const baseQuantity = 1;
+      // Для непривязанных материалов используем количество ГП из позиции
+      const gpVolume = position.manual_volume || 0;
+      const baseQuantity = gpVolume;
       const consumptionCoeff = matLib.consumption_coefficient || 1;
       const quantity = baseQuantity * consumptionCoeff;
       const unitRate = matLib.unit_rate || 0;
