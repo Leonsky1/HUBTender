@@ -66,3 +66,19 @@ body {
 .ant-select-selector {
   border-radius: 6px !important;
 }
+
+/* Предотвращение горизонтальных прыжков таблицы при появлении вертикального скроллбара */
+body {
+  overflow-y: scroll; /* Принудительно показываем скроллбар всегда */
+}
+
+.ant-table-wrapper,
+.ant-table-body {
+  scrollbar-gutter: stable;
+}
+
+/* Стабилизация layout таблицы с виртуализацией */
+.ant-table-wrapper {
+  transform: translateZ(0); /* GPU acceleration для плавного рендера */
+  backface-visibility: hidden; /* Оптимизация рендера */
+}
