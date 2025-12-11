@@ -318,13 +318,30 @@ export const useBoqItems = (positionId: string | undefined) => {
 
   const fetchWorkNames = async () => {
     try {
-      const { data, error } = await supabase
-        .from('work_names')
-        .select('*')
-        .order('name', { ascending: true });
+      let allWorks: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
-      setWorkNames(data || []);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('work_names')
+          .select('*')
+          .order('name', { ascending: true })
+          .range(from, from + batchSize - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allWorks = [...allWorks, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      setWorkNames(allWorks);
     } catch (error: any) {
       message.error('Ошибка загрузки наименований работ: ' + error.message);
     }
@@ -332,13 +349,30 @@ export const useBoqItems = (positionId: string | undefined) => {
 
   const fetchMaterialNames = async () => {
     try {
-      const { data, error } = await supabase
-        .from('material_names')
-        .select('*')
-        .order('name', { ascending: true });
+      let allMaterials: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
-      setMaterialNames(data || []);
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('material_names')
+          .select('*')
+          .order('name', { ascending: true })
+          .range(from, from + batchSize - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allMaterials = [...allMaterials, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      setMaterialNames(allMaterials);
     } catch (error: any) {
       message.error('Ошибка загрузки наименований материалов: ' + error.message);
     }

@@ -302,6 +302,12 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
             value={materialSearchText}
             onChange={(value) => {
               setMaterialSearchText(value);
+              // Сбросить material_name_id при изменении текста вручную
+              setFormData({
+                ...formData,
+                material_name_id: null,
+                unit_code: null,
+              });
             }}
             onSelect={(_value, option: any) => {
               setFormData({

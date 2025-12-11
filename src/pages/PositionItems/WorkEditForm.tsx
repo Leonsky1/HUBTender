@@ -158,6 +158,12 @@ const WorkEditForm: React.FC<WorkEditFormProps> = ({
             value={workSearchText}
             onChange={(value) => {
               setWorkSearchText(value);
+              // Сбросить work_name_id при изменении текста вручную
+              setFormData({
+                ...formData,
+                work_name_id: null,
+                unit_code: null,
+              });
             }}
             onSelect={(_value, option: any) => {
               setFormData({

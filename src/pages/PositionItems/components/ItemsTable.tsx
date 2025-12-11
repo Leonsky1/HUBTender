@@ -319,7 +319,22 @@ const ItemsTable: React.FC<ItemsTableProps> = ({
       key: 'quote_link',
       width: 100,
       align: 'center',
-      render: (value: string) => value || '-',
+      render: (value: string) => {
+        if (!value) return '-';
+
+        // Проверка является ли значение URL
+        const isUrl = value.startsWith('http://') || value.startsWith('https://');
+
+        if (isUrl) {
+          return (
+            <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: '#1890ff' }}>
+              Ссылка
+            </a>
+          );
+        }
+
+        return value;
+      },
     },
     {
       title: <div style={{ textAlign: 'center' }}>Примечание</div>,
