@@ -18,49 +18,83 @@ import {
 } from './styles';
 
 /**
- * Загружает все позиции заказчика для тендера
+ * Загружает все позиции заказчика для тендера с батчингом
  */
 async function loadClientPositions(tenderId: string): Promise<ClientPosition[]> {
-  const { data, error } = await supabase
-    .from('client_positions')
-    .select('*')
-    .eq('tender_id', tenderId)
-    .order('position_number', { ascending: true });
+  let allPositions: ClientPosition[] = [];
+  let from = 0;
+  const batchSize = 1000;
+  let hasMore = true;
 
-  if (error) {
-    throw new Error(`Ошибка загрузки позиций: ${error.message}`);
+  // Батчинг для обхода лимита Supabase 1000 rows
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('client_positions')
+      .select('*')
+      .eq('tender_id', tenderId)
+      .order('position_number', { ascending: true })
+      .range(from, from + batchSize - 1);
+
+    if (error) {
+      throw new Error(`Ошибка загрузки позиций: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      allPositions = [...allPositions, ...data];
+      from += batchSize;
+      hasMore = data.length === batchSize;
+    } else {
+      hasMore = false;
+    }
   }
 
-  return data || [];
+  return allPositions;
 }
 
 /**
- * Загружает ВСЕ BOQ items для всего тендера одним запросом
+ * Загружает ВСЕ BOQ items для всего тендера с батчингом
  */
 async function loadAllBoqItemsForTender(tenderId: string): Promise<Map<string, BoqItemFull[]>> {
-  const { data, error } = await supabase
-    .from('boq_items')
-    .select(`
-      *,
-      work_names(name, unit),
-      material_names(name, unit),
-      detail_cost_categories(
-        name,
-        location,
-        cost_categories(name)
-      )
-    `)
-    .eq('tender_id', tenderId)
-    .order('sort_number', { ascending: true });
+  let allItems: any[] = [];
+  let from = 0;
+  const batchSize = 1000;
+  let hasMore = true;
 
-  if (error) {
-    throw new Error(`Ошибка загрузки BOQ items: ${error.message}`);
+  // Батчинг для обхода лимита Supabase 1000 rows
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('boq_items')
+      .select(`
+        *,
+        work_names(name, unit),
+        material_names(name, unit),
+        detail_cost_categories(
+          name,
+          location,
+          cost_categories(name)
+        )
+      `)
+      .eq('tender_id', tenderId)
+      .order('sort_number', { ascending: true })
+      .range(from, from + batchSize - 1);
+
+    if (error) {
+      throw new Error(`Ошибка загрузки BOQ items: ${error.message}`);
+    }
+
+    if (data && data.length > 0) {
+      allItems = [...allItems, ...data];
+      from += batchSize;
+      hasMore = data.length === batchSize;
+    } else {
+      hasMore = false;
+    }
   }
 
   // Группировать по client_position_id
   const itemsByPosition = new Map<string, BoqItemFull[]>();
 
-  (data || []).forEach((item: any) => {
+  allItems.forEach((item: any) => {
     const positionId = item.client_position_id;
     if (!itemsByPosition.has(positionId)) {
       itemsByPosition.set(positionId, []);
