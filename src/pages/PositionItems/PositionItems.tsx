@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Card, Button, Typography, Tag, Input, InputNumber, Select, Modal, message } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Tag, Input, InputNumber, Select, Modal, message, AutoComplete } from 'antd';
+import { DeleteOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import WorkEditForm from './WorkEditForm';
 import MaterialEditForm from './MaterialEditForm';
@@ -22,6 +22,8 @@ const PositionItems: React.FC = () => {
   const [materialSearchText, setMaterialSearchText] = useState<string>('');
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [templateModalVisible, setTemplateModalVisible] = useState<boolean>(false);
+  const [selectedCostCategoryId, setSelectedCostCategoryId] = useState<string | null>(null);
+  const [costSearchText, setCostSearchText] = useState<string>('');
 
   const {
     position,
@@ -99,12 +101,15 @@ const PositionItems: React.FC = () => {
   };
 
   const handleClearAllItems = async () => {
+    const theme = localStorage.getItem('tenderHub_theme') || 'light';
+
     Modal.confirm({
       title: 'Очистить все элементы?',
       content: 'Вы действительно хотите удалить все работы и материалы из этой позиции? Это действие необратимо.',
       okText: 'Да, очистить',
       cancelText: 'Отмена',
       okButtonProps: { danger: true },
+      rootClassName: theme === 'dark' ? 'dark-modal' : '',
       onOk: async () => {
         try {
           // Удаляем все элементы позиции из БД
@@ -123,6 +128,61 @@ const PositionItems: React.FC = () => {
         }
       },
     });
+  };
+
+  const handleApplyCostToAll = async () => {
+    if (!selectedCostCategoryId) {
+      message.error('Выберите затрату на строительство');
+      return;
+    }
+
+    if (items.length === 0) {
+      message.warning('Нет элементов для применения затраты');
+      return;
+    }
+
+    const theme = localStorage.getItem('tenderHub_theme') || 'light';
+
+    Modal.confirm({
+      title: 'Распространить затрату на все строки?',
+      content: `Выбранная затрата будет применена ко всем ${items.length} элементам (работы и материалы). Продолжить?`,
+      okText: 'Да, применить',
+      cancelText: 'Отмена',
+      rootClassName: theme === 'dark' ? 'dark-modal' : '',
+      onOk: async () => {
+        try {
+          const itemIds = items.map(item => item.id);
+
+          const { error } = await supabase
+            .from('boq_items')
+            .update({ detail_cost_category_id: selectedCostCategoryId })
+            .in('id', itemIds);
+
+          if (error) throw error;
+
+          // Обновляем состояние
+          await fetchItems();
+          message.success(`Затрата успешно применена к ${items.length} элементам`);
+
+          // Очищаем выбор
+          setSelectedCostCategoryId(null);
+          setCostSearchText('');
+        } catch (error: any) {
+          message.error('Ошибка при применении затраты: ' + error.message);
+        }
+      },
+    });
+  };
+
+  // Получить опции для AutoComplete затрат
+  const getCostCategoryOptions = () => {
+    return costCategories
+      .filter((c) => c.label.toLowerCase().includes(costSearchText.toLowerCase()))
+      .map((c) => ({
+        value: c.label,
+        id: c.value,
+        label: c.label,
+      }));
   };
 
   if (!position) {
@@ -273,10 +333,33 @@ const PositionItems: React.FC = () => {
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Элементы позиции</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 'bold' }}>
-                Итого: <span style={{ color: '#10b981' }}>{Math.round(totalSum).toLocaleString('ru-RU')} ₽</span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <AutoComplete
+                value={costSearchText}
+                onChange={(value) => setCostSearchText(value)}
+                onSelect={(value, option: any) => {
+                  setSelectedCostCategoryId(option.id);
+                  setCostSearchText(option.label);
+                }}
+                options={getCostCategoryOptions()}
+                placeholder="Выберите затрату на строительство"
+                style={{ width: 525 }}
+                allowClear
+                onClear={() => {
+                  setCostSearchText('');
+                  setSelectedCostCategoryId(null);
+                }}
+                filterOption={false}
+                disabled={!canEditByDeadline || deadlineLoading}
+              />
+              <Button
+                type="primary"
+                icon={<ThunderboltOutlined />}
+                onClick={handleApplyCostToAll}
+                disabled={!selectedCostCategoryId || items.length === 0 || !canEditByDeadline || deadlineLoading}
+              >
+                Распространить затрату на все строки
+              </Button>
               <Button
                 danger
                 icon={<DeleteOutlined />}
@@ -285,6 +368,9 @@ const PositionItems: React.FC = () => {
               >
                 Очистить все
               </Button>
+              <div style={{ fontSize: 16, fontWeight: 'bold' }}>
+                Итого: <span style={{ color: '#10b981' }}>{Math.round(totalSum).toLocaleString('ru-RU')}</span>
+              </div>
             </div>
           </div>
         }
