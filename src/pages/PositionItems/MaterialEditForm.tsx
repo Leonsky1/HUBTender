@@ -131,7 +131,7 @@ const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
     const unitPriceInRub = formData.unit_rate * rate;
 
     if (formData.delivery_price_type === 'не в цене') {
-      return unitPriceInRub * 0.03;
+      return Math.round(unitPriceInRub * 0.03 * 100) / 100;
     } else if (formData.delivery_price_type === 'суммой') {
       return formData.delivery_amount || 0;
     } else {
