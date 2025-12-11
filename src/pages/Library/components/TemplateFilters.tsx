@@ -26,6 +26,17 @@ export const TemplateFilters: React.FC<TemplateFiltersProps> = ({
   const uniqueCostCategories = Array.from(new Set(templates.map(t => t.cost_category_name).filter(Boolean)));
   const uniqueDetailCategories = Array.from(new Set(templates.map(t => t.detail_category_name).filter(Boolean)));
 
+  // Уникальные имена шаблонов для поиска (без дублей)
+  const uniqueTemplateNames = Array.from(new Set(
+    templates
+      .filter((t) =>
+        !templateSearchText ||
+        templateSearchText.length < 2 ||
+        t.name.toLowerCase().includes(templateSearchText.toLowerCase())
+      )
+      .map((t) => t.name)
+  ));
+
   return (
     <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
       <Row gutter={16}>
@@ -34,20 +45,14 @@ export const TemplateFilters: React.FC<TemplateFiltersProps> = ({
             placeholder="Поиск по названию (мин. 2 символа)..."
             value={templateSearchText}
             onChange={(value) => setTemplateSearchText(value)}
-            options={templates
-              .filter((t) =>
-                !templateSearchText ||
-                templateSearchText.length < 2 ||
-                t.name.toLowerCase().includes(templateSearchText.toLowerCase())
-              )
-              .map((t) => ({
-                value: t.name,
-                label: t.name,
-              }))}
+            options={uniqueTemplateNames.map((name) => ({
+              value: name,
+              label: name,
+            }))}
             allowClear
             style={{ width: '100%' }}
             filterOption={false}
-            popupClassName={currentTheme === 'dark' ? 'autocomplete-dark' : ''}
+            classNames={currentTheme === 'dark' ? { popup: 'autocomplete-dark' } : undefined}
           />
         </Col>
         <Col span={8}>
@@ -73,7 +78,7 @@ export const TemplateFilters: React.FC<TemplateFiltersProps> = ({
             allowClear
             style={{ width: '100%' }}
             filterOption={false}
-            popupClassName={currentTheme === 'dark' ? 'autocomplete-dark' : ''}
+            classNames={currentTheme === 'dark' ? { popup: 'autocomplete-dark' } : undefined}
           />
         </Col>
         <Col span={8}>
@@ -99,7 +104,7 @@ export const TemplateFilters: React.FC<TemplateFiltersProps> = ({
             allowClear
             style={{ width: '100%' }}
             filterOption={false}
-            popupClassName={currentTheme === 'dark' ? 'autocomplete-dark' : ''}
+            classNames={currentTheme === 'dark' ? { popup: 'autocomplete-dark' } : undefined}
           />
         </Col>
       </Row>

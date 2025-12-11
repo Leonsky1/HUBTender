@@ -26,7 +26,6 @@ import {
 import type { TemplateWithDetails } from '../hooks/useTemplates';
 import type { TemplateItemWithDetails } from '../hooks/useTemplateItems';
 
-const { Panel } = Collapse;
 const { Text } = Typography;
 
 interface TemplatesListProps {
@@ -104,15 +103,14 @@ export const TemplatesList: React.FC<TemplatesListProps> = ({
         const templateId = typeof key === 'string' ? key : (Array.isArray(key) && key.length > 0 ? key[0] : null);
         setOpenedTemplate(templateId);
       }}
-    >
-      {templates.map((template) => {
+      items={templates.map((template) => {
         const items = loadedTemplateItems[template.id] || [];
         const worksCount = items.filter(i => i.kind === 'work').length;
         const materialsCount = items.filter(i => i.kind === 'material').length;
 
-        return (
-          <Panel
-            header={
+        return {
+          key: template.id,
+          label:
               editingTemplate === template.id ? (
                 <Form
                   form={editingTemplateForm}
@@ -151,7 +149,7 @@ export const TemplatesList: React.FC<TemplatesListProps> = ({
                       showSearch
                       allowClear
                       style={{ width: '100%' }}
-                      popupClassName={currentTheme === 'dark' ? 'autocomplete-dark' : ''}
+                      classNames={currentTheme === 'dark' ? { popup: 'autocomplete-dark' } : undefined}
                     />
                     <Form.Item
                       name="detail_cost_category_id"
@@ -249,11 +247,8 @@ export const TemplatesList: React.FC<TemplatesListProps> = ({
                     </Popconfirm>
                   </Space>
                 </div>
-              )
-            }
-            key={template.id}
-          >
-            {items.length > 0 ? (
+              ),
+          children: items.length > 0 ? (
               <>
                 {editingTemplateItems === template.id && (
                   <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -276,7 +271,7 @@ export const TemplatesList: React.FC<TemplatesListProps> = ({
                           }}
                           placeholder="Введите работу (2+ символа)..."
                           filterOption={false}
-                          popupClassName={currentTheme === 'dark' ? 'autocomplete-dark' : ''}
+                          classNames={currentTheme === 'dark' ? { popup: 'autocomplete-dark' } : undefined}
                         />
                         <Button
                           type="primary"
@@ -305,7 +300,7 @@ export const TemplatesList: React.FC<TemplatesListProps> = ({
                           }}
                           placeholder="Введите материал (2+ символа)..."
                           filterOption={false}
-                          popupClassName={currentTheme === 'dark' ? 'autocomplete-dark' : ''}
+                          classNames={currentTheme === 'dark' ? { popup: 'autocomplete-dark' } : undefined}
                         />
                         <Button
                           type="primary"
@@ -334,10 +329,9 @@ export const TemplatesList: React.FC<TemplatesListProps> = ({
               </>
             ) : (
               <Text type="secondary">Загрузка...</Text>
-            )}
-          </Panel>
-        );
+            )
+        };
       })}
-    </Collapse>
+    />
   );
 };

@@ -22,6 +22,8 @@ interface LeafPosition {
   work_name: string;
   hierarchy_level: number;
   tender_id: string;
+  parent_id: string | null;
+  is_additional: boolean;
 }
 
 interface InsertTemplateIntoPositionModalProps {
@@ -89,31 +91,83 @@ const InsertTemplateIntoPositionModal: React.FC<InsertTemplateIntoPositionModalP
     }
   };
 
+  // Вычисление листовых позиций (та же логика что в useClientPositions)
+  const computeLeafPositionIndices = (positions: LeafPosition[]): Set<number> => {
+    const leafIndices = new Set<number>();
+
+    positions.forEach((position, index) => {
+      if (index === positions.length - 1) {
+        leafIndices.add(index);
+        return;
+      }
+
+      const currentLevel = position.hierarchy_level || 0;
+      let nextIndex = index + 1;
+
+      // Пропускаем ДОП работы при определении листового узла
+      while (nextIndex < positions.length && positions[nextIndex].is_additional) {
+        nextIndex++;
+      }
+
+      if (nextIndex >= positions.length) {
+        leafIndices.add(index);
+        return;
+      }
+
+      const nextLevel = positions[nextIndex].hierarchy_level || 0;
+      if (currentLevel >= nextLevel) {
+        leafIndices.add(index);
+      }
+    });
+
+    return leafIndices;
+  };
+
   const fetchLeafPositions = async (tenderId: string) => {
     try {
-      const { data: allPositions, error } = await supabase
-        .from('client_positions')
-        .select('id, position_number, work_name, hierarchy_level, tender_id')
-        .eq('tender_id', tenderId)
-        .order('position_number', { ascending: true });
+      // Загружаем данные батчами (Supabase ограничивает 1000 строк за запрос)
+      let allPositions: LeafPosition[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('client_positions')
+          .select('*')
+          .eq('tender_id', tenderId)
+          .order('position_number', { ascending: true })
+          .range(from, from + batchSize - 1);
 
-      if (!allPositions || allPositions.length === 0) {
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allPositions = [...allPositions, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      if (allPositions.length === 0) {
         setLeafPositions([]);
         return;
       }
 
-      // Отфильтровать только конечные позиции (hierarchy_level >= 3)
-      // Уровни 1 и 2 - это родительские категории
-      const leaves = allPositions.filter(p =>
-        p.hierarchy_level !== null &&
-        p.hierarchy_level !== undefined &&
-        p.hierarchy_level >= 3
-      );
+      // Вычисляем индексы листовых позиций
+      const leafIndices = computeLeafPositionIndices(allPositions);
+
+      // Отфильтровать только листовые позиции и ДОП работы
+      const leaves = allPositions.filter((p, index) => {
+        // ДОП работы всегда включаем
+        if (p.is_additional) return true;
+        // Листовые позиции
+        return leafIndices.has(index);
+      });
 
       console.log('Всего позиций:', allPositions.length);
-      console.log('Конечных позиций (hierarchy_level >= 3):', leaves.length);
+      console.log('Листовых позиций + ДОП работ:', leaves.length);
 
       setLeafPositions(leaves);
     } catch (error: any) {

@@ -559,7 +559,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
             </div>
 
             <Dropdown
-              dropdownRender={() => (
+              popupRender={() => (
                 <div
                   style={{
                     backgroundColor: currentTheme === 'dark' ? '#1f1f1f' : '#fff',
