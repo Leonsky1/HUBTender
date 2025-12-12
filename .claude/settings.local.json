@@ -67,7 +67,8 @@
       "Bash(git remote add:*)",
       "Bash(git log:*)",
       "Bash(curl:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []
