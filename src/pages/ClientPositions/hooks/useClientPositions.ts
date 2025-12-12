@@ -7,7 +7,7 @@ export const useClientPositions = () => {
   const [selectedTender, setSelectedTender] = useState<Tender | null>(null);
   const [clientPositions, setClientPositions] = useState<ClientPosition[]>([]);
   const [loading, setLoading] = useState(false);
-  const [positionCounts, setPositionCounts] = useState<Record<string, { works: number; materials: number }>>({});
+  const [positionCounts, setPositionCounts] = useState<Record<string, { works: number; materials: number; total: number }>>({});
   const [totalSum, setTotalSum] = useState<number>(0);
   const [leafPositionIndices, setLeafPositionIndices] = useState<Set<number>>(new Set());
 
@@ -120,13 +120,13 @@ export const useClientPositions = () => {
         }
 
         // Обрабатываем данные в памяти
-        const counts: Record<string, { works: number; materials: number }> = {};
+        const counts: Record<string, { works: number; materials: number; total: number }> = {};
         let sum = 0;
 
         allBoqData.forEach((item) => {
           // Подсчет работ и материалов
           if (!counts[item.client_position_id]) {
-            counts[item.client_position_id] = { works: 0, materials: 0 };
+            counts[item.client_position_id] = { works: 0, materials: 0, total: 0 };
           }
 
           if (['раб', 'суб-раб', 'раб-комп.'].includes(item.boq_item_type)) {
@@ -135,8 +135,10 @@ export const useClientPositions = () => {
             counts[item.client_position_id].materials += 1;
           }
 
-          // Суммирование
-          sum += item.total_amount || 0;
+          // Суммирование для каждой позиции и общей суммы
+          const itemTotal = item.total_amount || 0;
+          counts[item.client_position_id].total += itemTotal;
+          sum += itemTotal;
         });
 
         setPositionCounts(counts);

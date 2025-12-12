@@ -51,8 +51,12 @@ const ClientPositions: React.FC = () => {
   const {
     copiedPositionId,
     copiedNotePositionId,
+    selectedTargetIds,
+    isBulkPasting,
     handleCopyPosition,
     handlePastePosition,
+    handleToggleSelection,
+    handleBulkPaste,
     handleCopyNote,
     handlePasteNote,
     handleDeleteBoqItems,
@@ -206,6 +210,8 @@ const ClientPositions: React.FC = () => {
           loading={loading}
           copiedPositionId={copiedPositionId}
           copiedNotePositionId={copiedNotePositionId}
+          selectedTargetIds={selectedTargetIds}
+          isBulkPasting={isBulkPasting}
           positionCounts={positionCounts}
           currentTheme={currentTheme}
           leafPositionIndices={leafPositionIndices}
@@ -214,6 +220,8 @@ const ClientPositions: React.FC = () => {
           onOpenAdditionalModal={handleOpenAdditionalModal}
           onCopyPosition={handleCopyPosition}
           onPastePosition={(positionId, event) => handlePastePosition(positionId, event, selectedTenderId)}
+          onToggleSelection={handleToggleSelection}
+          onBulkPaste={() => handleBulkPaste(selectedTenderId)}
           onCopyNote={handleCopyNote}
           onPasteNote={(positionId, event) => handlePasteNote(positionId, event, selectedTenderId)}
           onDeleteBoqItems={(positionId, positionName, event) =>

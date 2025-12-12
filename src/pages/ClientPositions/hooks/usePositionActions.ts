@@ -3,6 +3,7 @@ import { message, Modal } from 'antd';
 import { supabase, type ClientPosition } from '../../../lib/supabase';
 import { copyBoqItems } from '../../../utils/copyBoqItems';
 import { exportPositionsToExcel } from '../../../utils/excel';
+import { pluralize } from '../../../utils/pluralize';
 
 export const usePositionActions = (
   _clientPositions: ClientPosition[],
@@ -14,6 +15,8 @@ export const usePositionActions = (
   const [copiedPositionId, setCopiedPositionId] = useState<string | null>(null);
   const [copiedNoteValue, setCopiedNoteValue] = useState<string | null>(null);
   const [copiedNotePositionId, setCopiedNotePositionId] = useState<string | null>(null);
+  const [selectedTargetIds, setSelectedTargetIds] = useState<Set<string>>(new Set());
+  const [isBulkPasting, setIsBulkPasting] = useState(false);
 
   // Обновление позиции в БД
   const handleUpdatePosition = async (
@@ -65,6 +68,7 @@ export const usePositionActions = (
   const handleCopyPosition = (positionId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     setCopiedPositionId(positionId);
+    setSelectedTargetIds(new Set()); // Очистить выбранные строки
     message.success('Позиция скопирована в буфер обмена');
   };
 
@@ -88,6 +92,69 @@ export const usePositionActions = (
       message.error('Ошибка вставки: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Toggle выбора строки для массовой вставки
+  const handleToggleSelection = (positionId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    if (positionId === copiedPositionId) {
+      message.warning('Нельзя вставить позицию саму в себя');
+      return;
+    }
+
+    setSelectedTargetIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(positionId)) {
+        newSet.delete(positionId);
+      } else {
+        newSet.add(positionId);
+      }
+      return newSet;
+    });
+  };
+
+  // Массовая вставка в выбранные позиции
+  const handleBulkPaste = async (selectedTenderId: string | null) => {
+    if (!copiedPositionId || selectedTargetIds.size === 0) return;
+
+    setIsBulkPasting(true);
+    const results = { success: 0, failed: 0 };
+
+    try {
+      for (const targetId of selectedTargetIds) {
+        try {
+          await copyBoqItems(copiedPositionId, targetId);
+          results.success++;
+        } catch (error) {
+          console.error(`Failed to paste to ${targetId}:`, error);
+          results.failed++;
+        }
+      }
+
+      const total = selectedTargetIds.size;
+      if (results.failed === 0) {
+        message.success(
+          `Успешно вставлено в ${total} ${pluralize(total, 'позицию', 'позиции', 'позиций')}`
+        );
+      } else {
+        message.warning(
+          `Вставлено в ${results.success} из ${total} ${pluralize(total, 'позиции', 'позиций', 'позиций')}`
+        );
+      }
+
+      setSelectedTargetIds(new Set());
+      setCopiedPositionId(null); // Сбросить буфер обмена
+
+      if (selectedTenderId) {
+        await fetchClientPositions(selectedTenderId);
+      }
+    } catch (error: any) {
+      console.error('Ошибка массовой вставки:', error);
+      message.error('Ошибка массовой вставки: ' + error.message);
+    } finally {
+      setIsBulkPasting(false);
     }
   };
 
@@ -269,9 +336,13 @@ export const usePositionActions = (
   return {
     copiedPositionId,
     copiedNotePositionId,
+    selectedTargetIds,
+    isBulkPasting,
     handleUpdatePosition,
     handleCopyPosition,
     handlePastePosition,
+    handleToggleSelection,
+    handleBulkPaste,
     handleCopyNote,
     handlePasteNote,
     handleDeleteBoqItems,

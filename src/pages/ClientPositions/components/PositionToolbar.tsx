@@ -242,7 +242,7 @@ export const PositionToolbar: React.FC<PositionToolbarProps> = ({
               <div style={{ fontSize: 14, color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(0, 0, 0, 0.65)', lineHeight: '28px' }}>
                 Общая стоимость
               </div>
-              <div style={{ fontSize: 28, fontWeight: 600, color: currentTheme === 'dark' ? '#52c41a' : '#389e0d', letterSpacing: '0.5px', lineHeight: '28px' }}>
+              <div style={{ fontSize: 23, fontWeight: 600, color: currentTheme === 'dark' ? '#52c41a' : '#389e0d', letterSpacing: '0.5px', lineHeight: '26px' }}>
                 {Math.round(totalSum).toLocaleString('ru-RU')}
               </div>
             </div>

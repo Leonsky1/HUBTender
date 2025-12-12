@@ -22,7 +22,9 @@ interface PositionTableProps {
   loading: boolean;
   copiedPositionId: string | null;
   copiedNotePositionId: string | null;
-  positionCounts: Record<string, { works: number; materials: number }>;
+  selectedTargetIds: Set<string>;
+  isBulkPasting: boolean;
+  positionCounts: Record<string, { works: number; materials: number; total: number }>;
   currentTheme: string;
   leafPositionIndices: Set<number>;
   readOnly?: boolean;
@@ -30,6 +32,8 @@ interface PositionTableProps {
   onOpenAdditionalModal: (parentId: string, event: React.MouseEvent) => void;
   onCopyPosition: (positionId: string, event: React.MouseEvent) => void;
   onPastePosition: (positionId: string, event: React.MouseEvent) => void;
+  onToggleSelection: (positionId: string, event: React.MouseEvent) => void;
+  onBulkPaste: () => void;
   onCopyNote: (positionId: string, noteValue: string | null, event: React.MouseEvent) => void;
   onPasteNote: (positionId: string, event: React.MouseEvent) => void;
   onDeleteBoqItems: (positionId: string, positionName: string, event: React.MouseEvent) => void;
@@ -43,6 +47,8 @@ export const PositionTable: React.FC<PositionTableProps> = ({
   loading,
   copiedPositionId,
   copiedNotePositionId,
+  selectedTargetIds,
+  isBulkPasting,
   positionCounts,
   currentTheme,
   leafPositionIndices,
@@ -51,6 +57,8 @@ export const PositionTable: React.FC<PositionTableProps> = ({
   onOpenAdditionalModal,
   onCopyPosition,
   onPastePosition,
+  onToggleSelection,
+  onBulkPaste,
   onCopyNote,
   onPasteNote,
   onDeleteBoqItems,
@@ -181,8 +189,8 @@ export const PositionTable: React.FC<PositionTableProps> = ({
       align: 'center',
       render: (_, record, index) => {
         const isLeaf = leafPositionIndices.has(index);
-        const counts = positionCounts[record.id] || { works: 0, materials: 0 };
-        const total = (record.total_works || 0) + (record.total_material || 0);
+        const counts = positionCounts[record.id] || { works: 0, materials: 0, total: 0 };
+        const total = counts.total; // Используем реальную сумму из boq_items
         const isExpanded = expandedPositionId === record.id;
 
         const tooltipColor = currentTheme === 'dark' ? {
@@ -225,18 +233,24 @@ export const PositionTable: React.FC<PositionTableProps> = ({
             <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 4, alignSelf: 'center' }}>
               {/* Кнопка "Вставить работы и материалы" */}
               {isLeaf && copiedPositionId && copiedPositionId !== record.id && (
-                <Tooltip title="Вставить работы и материалы" {...tooltipColor}>
+                <Tooltip
+                  title={selectedTargetIds.has(record.id) ? "Отменить выбор для вставки" : "Выбрать для вставки"}
+                  {...tooltipColor}
+                >
                   <Tag
-                    color="success"
+                    color={selectedTargetIds.has(record.id) ? 'warning' : 'success'}
                     style={{
                       cursor: readOnly ? 'not-allowed' : 'pointer',
                       margin: 0,
                       opacity: readOnly ? 0.5 : 1,
-                      pointerEvents: readOnly ? 'none' : 'auto'
+                      pointerEvents: readOnly ? 'none' : 'auto',
+                      backgroundColor: selectedTargetIds.has(record.id) ? '#faad14' : undefined,
+                      borderColor: selectedTargetIds.has(record.id) ? '#faad14' : undefined,
+                      color: selectedTargetIds.has(record.id) ? '#fff' : undefined,
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onPastePosition(record.id, e);
+                      onToggleSelection(record.id, e);
                     }}
                   >
                     <CheckOutlined />
@@ -401,13 +415,27 @@ export const PositionTable: React.FC<PositionTableProps> = ({
       bordered={false}
       title="Позиции заказчика"
       extra={
-        <Button
-          icon={<DownloadOutlined />}
-          onClick={onExportToExcel}
-          disabled={!selectedTender || loading}
-        >
-          Экспорт в Excel
-        </Button>
+        <Space>
+          {copiedPositionId && selectedTargetIds.size > 0 && (
+            <Button
+              type="primary"
+              icon={<CheckOutlined />}
+              onClick={onBulkPaste}
+              loading={isBulkPasting}
+              disabled={loading}
+            >
+              Вставить ({selectedTargetIds.size})
+            </Button>
+          )}
+
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={onExportToExcel}
+            disabled={!selectedTender || loading}
+          >
+            Экспорт в Excel
+          </Button>
+        </Space>
       }
       style={{ marginTop: 24 }}
     >
