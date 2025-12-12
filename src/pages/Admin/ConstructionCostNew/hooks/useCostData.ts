@@ -127,7 +127,7 @@ export const useCostData = () => {
         .select(`
           detail_cost_category_id,
           boq_item_type,
-          ${costType === 'base' ? 'calculated_price, quantity' : 'total_commercial_material_cost, total_commercial_work_cost'},
+          ${costType === 'base' ? 'unit_rate, quantity' : 'total_commercial_material_cost, total_commercial_work_cost'},
           client_positions!inner(tender_id)
         `)
         .eq('client_positions.tender_id', selectedTenderId);
@@ -154,8 +154,8 @@ export const useCostData = () => {
         const costs = costMap.get(catId)!;
 
         if (costType === 'base') {
-          // Вычисляем реальную сумму из calculated_price * quantity вместо устаревшего total_amount
-          const amount = (item.calculated_price || 0) * (item.quantity || 0);
+          // Вычисляем реальную сумму из unit_rate * quantity вместо устаревшего total_amount
+          const amount = (item.unit_rate || 0) * (item.quantity || 0);
           switch (item.boq_item_type) {
             case 'мат':
               costs.materials += amount;
