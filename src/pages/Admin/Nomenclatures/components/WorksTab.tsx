@@ -1,6 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Table, Button, Space, Tooltip, Tag, Modal, Form, AutoComplete, Select } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, FilterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { WorkRecord } from '../hooks/useWorks.tsx';
 
@@ -11,9 +11,11 @@ interface WorksTabProps {
   unitColors: Record<string, string>;
   currentPage: number;
   pageSize: number;
+  showDuplicatesOnly: boolean;
   onDelete: (record: WorkRecord) => void;
   onSave: (values: any, editingId?: string) => Promise<boolean>;
   onPageChange: (page: number, newPageSize: number) => void;
+  onToggleDuplicates: () => void;
 }
 
 export interface WorksTabRef {
@@ -27,9 +29,11 @@ export const WorksTab = forwardRef<WorksTabRef, WorksTabProps>(({
   unitColors,
   currentPage,
   pageSize,
+  showDuplicatesOnly,
   onDelete,
   onSave,
   onPageChange,
+  onToggleDuplicates,
 }, ref) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingWork, setEditingWork] = useState<WorkRecord | null>(null);
@@ -136,6 +140,16 @@ export const WorksTab = forwardRef<WorksTabRef, WorksTabProps>(({
 
   return (
     <>
+      <div style={{ marginBottom: 16 }}>
+        <Button
+          icon={<FilterOutlined />}
+          onClick={onToggleDuplicates}
+          type={showDuplicatesOnly ? 'primary' : 'default'}
+        >
+          {showDuplicatesOnly ? 'Показать все' : 'Показать дубли'}
+        </Button>
+      </div>
+
       <Table
         columns={columns}
         dataSource={data}

@@ -110,6 +110,8 @@ export const useUnits = () => {
   };
 
   const deleteUnit = (record: UnitRecord) => {
+    const theme = localStorage.getItem('tenderHub_theme') || 'light';
+
     confirm({
       title: 'Подтверждение удаления',
       icon: <ExclamationCircleOutlined />,
@@ -117,6 +119,7 @@ export const useUnits = () => {
       okText: 'Удалить',
       cancelText: 'Отмена',
       okButtonProps: { danger: true },
+      rootClassName: theme === 'dark' ? 'dark-modal' : '',
       onOk: async () => {
         try {
           const { error } = await supabase

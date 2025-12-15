@@ -5,6 +5,19 @@ import { supabase } from '../../../../lib/supabase';
 
 const { confirm } = Modal;
 
+// Очистка имени для сравнения (убираем все лишние пробелы)
+const cleanName = (name: string): string => {
+  return name
+    .replace(/\s+/g, ' ')  // Схлопнуть все whitespace символы в один пробел
+    .trim()                // Убрать пробелы с краев
+    .replace(/[.,;:!?]+$/, ''); // Убрать trailing пунктуацию
+};
+
+// Унификация наименования для сравнения дубликатов
+const normalizeName = (name: string): string => {
+  return cleanName(name).toLowerCase();
+};
+
 export interface WorkRecord {
   key: string;
   id: string;
@@ -16,6 +29,7 @@ export interface WorkRecord {
 export const useWorks = () => {
   const [worksData, setWorksData] = useState<WorkRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
 
   const loadWorks = async () => {
     setLoading(true);
@@ -77,6 +91,25 @@ export const useWorks = () => {
         if (error) throw error;
         message.success('Работа обновлена');
       } else {
+        // Проверка на дубликат перед вставкой
+        const normalizedInputName = normalizeName(values.name);
+        const { data: existingWorks, error: checkError } = await supabase
+          .from('work_names')
+          .select('name, unit')
+          .eq('unit', values.unit);
+
+        if (checkError) throw checkError;
+
+        // Проверяем нормализованные имена
+        const duplicate = existingWorks?.find(
+          (work) => normalizeName(work.name) === normalizedInputName
+        );
+
+        if (duplicate) {
+          message.warning(`Работа "${duplicate.name}" с единицей "${duplicate.unit}" уже существует`);
+          return false;
+        }
+
         const { error } = await supabase
           .from('work_names')
           .insert([{
@@ -98,6 +131,8 @@ export const useWorks = () => {
   };
 
   const deleteWork = (record: WorkRecord) => {
+    const theme = localStorage.getItem('tenderHub_theme') || 'light';
+
     confirm({
       title: 'Подтверждение удаления',
       icon: <ExclamationCircleOutlined />,
@@ -105,6 +140,7 @@ export const useWorks = () => {
       okText: 'Удалить',
       cancelText: 'Отмена',
       okButtonProps: { danger: true },
+      rootClassName: theme === 'dark' ? 'dark-modal' : '',
       onOk: async () => {
         try {
           const { error } = await supabase
@@ -124,11 +160,48 @@ export const useWorks = () => {
     });
   };
 
+  // Поиск дублей по нормализованному имени + единице
+  const findDuplicates = (): Set<string> => {
+    const seen = new Map<string, number>();
+    const duplicateKeys = new Set<string>();
+
+    worksData.forEach((work) => {
+      const key = `${normalizeName(work.name)}|${work.unit}`;
+      const count = seen.get(key) || 0;
+      seen.set(key, count + 1);
+
+      if (count > 0) {
+        duplicateKeys.add(key);
+      }
+    });
+
+    return duplicateKeys;
+  };
+
+  // Фильтрация данных
+  const getFilteredData = (): WorkRecord[] => {
+    if (!showDuplicatesOnly) {
+      return worksData;
+    }
+
+    const duplicateKeys = findDuplicates();
+    return worksData.filter((work) => {
+      const key = `${normalizeName(work.name)}|${work.unit}`;
+      return duplicateKeys.has(key);
+    });
+  };
+
+  const toggleDuplicatesFilter = () => {
+    setShowDuplicatesOnly(!showDuplicatesOnly);
+  };
+
   return {
-    worksData,
+    worksData: getFilteredData(),
     loading,
+    showDuplicatesOnly,
     loadWorks,
     saveWork,
     deleteWork,
+    toggleDuplicatesFilter,
   };
 };

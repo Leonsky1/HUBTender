@@ -94,9 +94,11 @@ const Nomenclatures: React.FC = () => {
           unitColors={unitColors}
           currentPage={currentPage}
           pageSize={pageSize}
+          showDuplicatesOnly={materials.showDuplicatesOnly}
           onDelete={materials.deleteMaterial}
           onSave={materials.saveMaterial}
           onPageChange={handlePageChange}
+          onToggleDuplicates={materials.toggleDuplicatesFilter}
         />
       ),
     },
@@ -112,9 +114,11 @@ const Nomenclatures: React.FC = () => {
           unitColors={unitColors}
           currentPage={currentPage}
           pageSize={pageSize}
+          showDuplicatesOnly={works.showDuplicatesOnly}
           onDelete={works.deleteWork}
           onSave={works.saveWork}
           onPageChange={handlePageChange}
+          onToggleDuplicates={works.toggleDuplicatesFilter}
         />
       ),
     },

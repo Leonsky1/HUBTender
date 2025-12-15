@@ -1,6 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { Table, Button, Space, Tooltip, Tag, Modal, Form, AutoComplete, Select } from 'antd';
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, FilterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { MaterialRecord } from '../hooks/useMaterials.tsx';
 
@@ -11,9 +11,11 @@ interface MaterialsTabProps {
   unitColors: Record<string, string>;
   currentPage: number;
   pageSize: number;
+  showDuplicatesOnly: boolean;
   onDelete: (record: MaterialRecord) => void;
   onSave: (values: any, editingId?: string) => Promise<boolean>;
   onPageChange: (page: number, newPageSize: number) => void;
+  onToggleDuplicates: () => void;
 }
 
 export interface MaterialsTabRef {
@@ -27,9 +29,11 @@ export const MaterialsTab = forwardRef<MaterialsTabRef, MaterialsTabProps>(({
   unitColors,
   currentPage,
   pageSize,
+  showDuplicatesOnly,
   onDelete,
   onSave,
   onPageChange,
+  onToggleDuplicates,
 }, ref) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<MaterialRecord | null>(null);
@@ -136,6 +140,16 @@ export const MaterialsTab = forwardRef<MaterialsTabRef, MaterialsTabProps>(({
 
   return (
     <>
+      <div style={{ marginBottom: 16 }}>
+        <Button
+          icon={<FilterOutlined />}
+          onClick={onToggleDuplicates}
+          type={showDuplicatesOnly ? 'primary' : 'default'}
+        >
+          {showDuplicatesOnly ? 'Показать все' : 'Показать дубли'}
+        </Button>
+      </div>
+
       <Table
         columns={columns}
         dataSource={data}

@@ -45,6 +45,7 @@ export const useNomenclatureUpload = () => {
   const [existingUnits, setExistingUnits] = useState<ExistingUnit[]>([]);
   const [unitMappings, setUnitMappings] = useState<UnitMapping[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [existingRecords, setExistingRecords] = useState<Map<string, { name: string; unit: string }>>(new Map());
 
   // Очистка имени для сохранения в БД (убираем все лишние пробелы)
   const cleanName = (name: string): string => {
@@ -76,6 +77,48 @@ export const useNomenclatureUpload = () => {
       }
     } catch (error) {
       console.error('Ошибка при загрузке единиц:', error);
+    }
+  };
+
+  // Загрузка существующих материалов/работ из БД
+  const fetchExistingRecords = async (mode: 'materials' | 'works') => {
+    try {
+      const tableName = mode === 'materials' ? 'material_names' : 'work_names';
+
+      // Загружаем все записи батчами
+      let allRecords: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('name, unit')
+          .range(from, from + batchSize - 1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allRecords = [...allRecords, ...data];
+          from += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      // Создаем Map с ключом: normalized_name + unit
+      const recordsMap = new Map<string, { name: string; unit: string }>();
+      allRecords.forEach(record => {
+        const key = `${normalizeName(record.name)}|${record.unit}`;
+        recordsMap.set(key, record);
+      });
+
+      setExistingRecords(recordsMap);
+    } catch (error) {
+      console.error('Ошибка загрузки существующих записей:', error);
+      message.error('Не удалось загрузить существующие записи');
     }
   };
 
@@ -235,14 +278,23 @@ export const useNomenclatureUpload = () => {
     return mapping?.mappedCode || undefined;
   };
 
-  // Получение уникальных записей (первое вхождение)
+  // Получение уникальных записей (первое вхождение), исключая дубли с БД
   const getUniqueRecords = (data: ParsedNomenclatureRow[]): ParsedNomenclatureRow[] => {
     const seen = new Set<string>();
     return data.filter(row => {
+      // Проверка дублей внутри файла (по normalizedName)
       if (seen.has(row.normalizedName)) {
         return false;
       }
       seen.add(row.normalizedName);
+
+      // Проверка дублей с существующими записями в БД (по normalizedName + unit)
+      const dbKey = `${row.normalizedName}|${row.unit_code}`;
+      if (existingRecords.has(dbKey)) {
+        console.log(`[Duplicate] Пропуск записи "${row.name}" [${row.unit_code}] - уже существует в БД`);
+        return false;
+      }
+
       return true;
     });
   };
@@ -271,6 +323,9 @@ export const useNomenclatureUpload = () => {
     setUploadProgress(0);
 
     try {
+      // 0. Обновить список существующих записей перед загрузкой
+      await fetchExistingRecords(mode);
+
       // 1. Создать новые единицы измерения (если action='create')
       const unitsToCreate = unitMappings.filter(m => m.action === 'create');
 
@@ -352,6 +407,7 @@ export const useNomenclatureUpload = () => {
     unitMappings,
     uploading,
     fetchExistingUnits,
+    fetchExistingRecords,
     parseExcelFile,
     handleMappingChange,
     isReadyForUpload,

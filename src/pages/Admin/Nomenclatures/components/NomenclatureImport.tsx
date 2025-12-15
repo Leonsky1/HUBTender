@@ -20,6 +20,7 @@ export const NomenclatureImport: React.FC<NomenclatureImportProps> = ({ open, mo
     unitMappings,
     uploading,
     fetchExistingUnits,
+    fetchExistingRecords,
     parseExcelFile,
     handleMappingChange,
     isReadyForUpload,
@@ -30,8 +31,9 @@ export const NomenclatureImport: React.FC<NomenclatureImportProps> = ({ open, mo
   useEffect(() => {
     if (open) {
       fetchExistingUnits();
+      fetchExistingRecords(mode);
     }
-  }, [open]);
+  }, [open, mode]);
 
   const handleClose = () => {
     reset();
