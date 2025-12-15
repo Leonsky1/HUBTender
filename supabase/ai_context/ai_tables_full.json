@@ -618,6 +618,129 @@
     "check_constraints": [],
     "unique_constraints": []
   },
+  "public.cost_redistribution_results": {
+    "schema": "public",
+    "name": "cost_redistribution_results",
+    "comment": "Результаты перераспределения стоимости работ между затратами на строительство.\r\n    Хранит финансовые данные после перераспределения и правила для воспроизводимости расчета.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "gen_random_uuid()",
+        "comment": "Уникальный идентификатор записи результата"
+      },
+      {
+        "name": "tender_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": "Ссылка на тендер"
+      },
+      {
+        "name": "markup_tactic_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": "Ссылка на тактику наценок"
+      },
+      {
+        "name": "boq_item_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": "Ссылка на элемент BOQ (работа)"
+      },
+      {
+        "name": "original_work_cost",
+        "type": "numeric(18,2)",
+        "nullable": true,
+        "default": null,
+        "comment": "Исходная стоимость работы до перераспределения"
+      },
+      {
+        "name": "deducted_amount",
+        "type": "numeric(18,2)",
+        "nullable": false,
+        "default": "0",
+        "comment": "Сумма, вычтенная из стоимости работы"
+      },
+      {
+        "name": "added_amount",
+        "type": "numeric(18,2)",
+        "nullable": false,
+        "default": "0",
+        "comment": "Сумма, добавленная к стоимости работы"
+      },
+      {
+        "name": "final_work_cost",
+        "type": "numeric(18,2)",
+        "nullable": true,
+        "default": null,
+        "comment": "Финальная стоимость работы после перераспределения"
+      },
+      {
+        "name": "redistribution_rules",
+        "type": "jsonb",
+        "nullable": true,
+        "default": null,
+        "comment": "JSONB с правилами вычитания и целевыми затратами для воспроизводимости расчета.\r\n    Формат: {\r\n        \"deductions\": [\r\n            {\"detail_cost_category_id\": \"uuid\", \"category_name\": \"...\", \"percentage\": 10}\r\n        ],\r\n        \"targets\": [\r\n            {\"detail_cost_category_id\": \"uuid\", \"category_name\": \"...\", \"weight\": 1.0}\r\n        ]\r\n    }"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": "Дата и время создания записи"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": "Дата и время последнего обновления записи"
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null,
+        "comment": "Пользователь, создавший запись"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_redistribution_boq_item",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_redistribution_tender_tactic",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "unique": false,
+        "columns": []
+      }
+    ],
+    "check_constraints": [],
+    "unique_constraints": [
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "column": "boq_item_id"
+      },
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "column": "markup_tactic_id"
+      },
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "column": "tender_id"
+      }
+    ]
+  },
   "public.detail_cost_categories": {
     "schema": "public",
     "name": "detail_cost_categories",
@@ -1148,10 +1271,89 @@
     ],
     "unique_constraints": []
   },
+  "public.roles": {
+    "schema": "public",
+    "name": "roles",
+    "comment": "Role definitions with permissions",
+    "columns": [
+      {
+        "name": "code",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": "Role code identifier (e.g., administrator, engineer)"
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": "Human-readable role name in Russian"
+      },
+      {
+        "name": "allowed_pages",
+        "type": "jsonb",
+        "nullable": false,
+        "default": "'[]'::jsonb",
+        "comment": "Array of allowed page paths for this role. Empty array means full access."
+      },
+      {
+        "name": "is_system_role",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false",
+        "comment": "System roles cannot be deleted"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "nullable": true,
+        "default": "'default'::text",
+        "comment": "Ant Design tag color for the role\r\n  (e.g., blue, green, purple, etc.)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "roles_name_key",
+        "unique": false,
+        "columns": []
+      }
+    ],
+    "check_constraints": [
+      {
+        "name": "roles_code_format",
+        "definition": "N/A"
+      },
+      {
+        "name": "roles_name_not_empty",
+        "definition": "N/A"
+      }
+    ],
+    "unique_constraints": [
+      {
+        "name": "roles_name_key",
+        "column": "name"
+      }
+    ]
+  },
   "public.subcontract_growth_exclusions": {
     "schema": "public",
     "name": "subcontract_growth_exclusions",
-    "comment": "Исключения категорий затрат из расчёта роста субподряда",
+    "comment": "Исключения роста субподряда для категорий затрат",
     "columns": [
       {
         "name": "id",
@@ -1165,14 +1367,21 @@
         "type": "uuid",
         "nullable": false,
         "default": null,
-        "comment": "ID тендера"
+        "comment": null
       },
       {
         "name": "detail_cost_category_id",
         "type": "uuid",
         "nullable": false,
         "default": null,
-        "comment": "ID детальной категории затрат, исключённой из роста субподряда"
+        "comment": null
+      },
+      {
+        "name": "exclusion_type",
+        "type": "text",
+        "nullable": false,
+        "default": "'works'::text",
+        "comment": "Тип исключения: works (суб-раб) или materials (суб-мат)"
       },
       {
         "name": "created_at",
@@ -1191,29 +1400,28 @@
     ],
     "indexes": [
       {
-        "name": "idx_subcontract_growth_exclusions_detail",
-        "unique": false,
-        "columns": []
-      },
-      {
-        "name": "idx_subcontract_growth_exclusions_tender",
-        "unique": false,
-        "columns": []
-      },
-      {
-        "name": "subcontract_growth_exclusions_tender_id_detail_cost_categor_key",
+        "name": "subcontract_growth_exclusions_unique",
         "unique": false,
         "columns": []
       }
     ],
-    "check_constraints": [],
+    "check_constraints": [
+      {
+        "name": "subcontract_growth_exclusions_exclusion_type_check",
+        "definition": "N/A"
+      }
+    ],
     "unique_constraints": [
       {
-        "name": "subcontract_growth_exclusions_tender_id_detail_cost_categor_key",
+        "name": "subcontract_growth_exclusions_unique",
         "column": "detail_cost_category_id"
       },
       {
-        "name": "subcontract_growth_exclusions_tender_id_detail_cost_categor_key",
+        "name": "subcontract_growth_exclusions_unique",
+        "column": "exclusion_type"
+      },
+      {
+        "name": "subcontract_growth_exclusions_unique",
         "column": "tender_id"
       }
     ]
@@ -1438,6 +1646,125 @@
     ],
     "check_constraints": [],
     "unique_constraints": []
+  },
+  "public.tender_documents": {
+    "schema": "public",
+    "name": "tender_documents",
+    "comment": "Проектная документация в markdown. RLS отключен для development.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "gen_random_uuid()",
+        "comment": null
+      },
+      {
+        "name": "tender_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "section_type",
+        "type": "character varying(50)",
+        "nullable": false,
+        "default": null,
+        "comment": "Раздел проектной документации: АР (архитектурные решения), КР (конструктивные решения), ИОС, ТХ, ПОС и т.д."
+      },
+      {
+        "name": "title",
+        "type": "character varying(255)",
+        "nullable": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "original_filename",
+        "type": "character varying(255)",
+        "nullable": true,
+        "default": null,
+        "comment": "Имя загруженного файла для отладки и логов"
+      },
+      {
+        "name": "content_markdown",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": "Полный текст документа в markdown формате после конвертации из PDF/DOCX"
+      },
+      {
+        "name": "file_size",
+        "type": "bigint",
+        "nullable": true,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "upload_date",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_tender_documents_content_fts",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_tender_documents_section",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_tender_documents_tender",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_tender_documents_uploaded",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "unique_tender_section_file",
+        "unique": false,
+        "columns": []
+      }
+    ],
+    "check_constraints": [],
+    "unique_constraints": [
+      {
+        "name": "unique_tender_section_file",
+        "column": "original_filename"
+      },
+      {
+        "name": "unique_tender_section_file",
+        "column": "section_type"
+      },
+      {
+        "name": "unique_tender_section_file",
+        "column": "tender_id"
+      }
+    ]
   },
   "public.tender_markup_percentage": {
     "schema": "public",
@@ -1890,6 +2217,34 @@
         "nullable": true,
         "default": null,
         "comment": "Ссылка на тактику наценок для данного тендера"
+      },
+      {
+        "name": "apply_subcontract_works_growth",
+        "type": "boolean",
+        "nullable": true,
+        "default": "true",
+        "comment": "Применять ли рост стоимости для субподрядных работ (суб-раб)"
+      },
+      {
+        "name": "apply_subcontract_materials_growth",
+        "type": "boolean",
+        "nullable": true,
+        "default": "true",
+        "comment": "Применять ли рост стоимости для субподрядных материалов (суб-мат)"
+      },
+      {
+        "name": "housing_class",
+        "type": "housing_class_type",
+        "nullable": true,
+        "default": null,
+        "comment": "Класс жилья (комфорт, бизнес, премиум, делюкс)"
+      },
+      {
+        "name": "construction_scope",
+        "type": "construction_scope_type",
+        "nullable": true,
+        "default": null,
+        "comment": "Объем строительства (генподряд, коробка, монолит)"
       }
     ],
     "indexes": [
@@ -2012,6 +2367,253 @@
     ],
     "check_constraints": [],
     "unique_constraints": []
+  },
+  "public.user_tasks": {
+    "schema": "public",
+    "name": "user_tasks",
+    "comment": "Задачи пользователей по тендерам",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "uuid_generate_v4()",
+        "comment": null
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "tender_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "task_status",
+        "type": "task_status",
+        "nullable": true,
+        "default": "'running'::task_status",
+        "comment": "Статус задачи: running (в работе), paused (остановлена),\r\n  completed (завершена)"
+      },
+      {
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": null,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()",
+        "comment": null
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_user_tasks_status",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_user_tasks_tender_id",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_user_tasks_user_id",
+        "unique": false,
+        "columns": []
+      }
+    ],
+    "check_constraints": [
+      {
+        "name": "user_tasks_description_check",
+        "definition": "N/A"
+      }
+    ],
+    "unique_constraints": []
+  },
+  "public.users": {
+    "schema": "public",
+    "name": "users",
+    "comment": "User accounts with role-based access control     \r\n  via role_code",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null,
+        "comment": "User ID linked to auth.users"
+      },
+      {
+        "name": "full_name",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": "User full name (ФИО)"
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": "User email address"
+      },
+      {
+        "name": "access_status",
+        "type": "access_status_type",
+        "nullable": false,
+        "default": "'pending'::access_status_type",
+        "comment": "Access status: pending (awaiting approval), approved (can login), blocked (access denied)"
+      },
+      {
+        "name": "approved_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null,
+        "comment": "ID of Admin/Leader who approved this user"
+      },
+      {
+        "name": "approved_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": null,
+        "comment": "Timestamp when user was approved"
+      },
+      {
+        "name": "registration_date",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": "Date when user registered"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()",
+        "comment": null
+      },
+      {
+        "name": "access_enabled",
+        "type": "boolean",
+        "nullable": true,
+        "default": "true",
+        "comment": "Флаг доступа: true - пользователь может войти, false - доступ закрыт"
+      },
+      {
+        "name": "role_code",
+        "type": "text",
+        "nullable": false,
+        "default": null,
+        "comment": "Current role code, references roles.code"
+      },
+      {
+        "name": "allowed_pages",
+        "type": "jsonb",
+        "nullable": true,
+        "default": "'[]'::jsonb",
+        "comment": "Array of page paths the user      \r\n  can access. Empty array means full access. Sync from roles.allowed_pages based     \r\n  on role_code."
+      },
+      {
+        "name": "tender_deadline_extensions",
+        "type": "jsonb",
+        "nullable": true,
+        "default": "'[]'::jsonb",
+        "comment": "Массив объектов {tender_id: uuid, extended_deadline: timestamp} для ручного продления дедлайна пользователю"
+      },
+      {
+        "name": "current_work_mode",
+        "type": "work_mode",
+        "nullable": true,
+        "default": "'office'::work_mode",
+        "comment": "Текущий режим работы: office (офис), remote (удаленка)"
+      },
+      {
+        "name": "current_work_status",
+        "type": "work_status",
+        "nullable": true,
+        "default": "'working'::work_status",
+        "comment": "Текущий статус работы: working (работаю), not_working (не        \r\n  работаю)"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "idx_users_access_status",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_users_approved_by",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_users_deadline_extensions",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_users_email",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "idx_users_role_code",
+        "unique": false,
+        "columns": []
+      },
+      {
+        "name": "users_email_key",
+        "unique": false,
+        "columns": []
+      }
+    ],
+    "check_constraints": [
+      {
+        "name": "users_email_check",
+        "definition": "N/A"
+      },
+      {
+        "name": "users_full_name_check",
+        "definition": "N/A"
+      }
+    ],
+    "unique_constraints": [
+      {
+        "name": "users_email_key",
+        "column": "email"
+      }
+    ]
   },
   "public.work_names": {
     "schema": "public",

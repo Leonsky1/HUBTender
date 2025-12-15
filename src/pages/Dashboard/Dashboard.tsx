@@ -382,13 +382,13 @@ const Dashboard: React.FC = () => {
 
       {/* Таблица тендеров */}
       <Card
-        bordered={false}
+        variant="borderless"
         className="dashboard-table-card"
         style={{
           borderRadius: 8,
           boxShadow: currentTheme === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.12)',
         }}
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
       >
         <Table
           className="dashboard-table"

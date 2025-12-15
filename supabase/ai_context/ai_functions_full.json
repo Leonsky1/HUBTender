@@ -75,12 +75,117 @@
     "side_effects": [],
     "is_trigger_function": false
   },
+  "public.add_subcontract_growth_exclusion(p_tender_id uuid, p_detail_cost_category_id uuid, p_exclusion_type text)": {
+    "schema": "public",
+    "name": "add_subcontract_growth_exclusion",
+    "returns": "void",
+    "comment": "Добавляет исключение роста субподряда (или обновляет существующее)",
+    "affected_tables": [
+      "public",
+      "SET"
+    ],
+    "side_effects": [
+      "INSERT",
+      "UPDATE"
+    ],
+    "is_trigger_function": false
+  },
+  "public.check_user_page_access(user_id uuid, page_url text)": {
+    "schema": "public",
+    "name": "check_user_page_access",
+    "returns": "void",
+    "comment": "Check if user has access to a specific page URL. Returns TRUE if user can access the page.",
+    "affected_tables": [
+      "public"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.current_user_role()": {
+    "schema": "public",
+    "name": "current_user_role",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [
+      "public"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.current_user_status()": {
+    "schema": "public",
+    "name": "current_user_status",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [
+      "public"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.get_subcontract_growth_exclusions(p_tender_id uuid)": {
+    "schema": "public",
+    "name": "get_subcontract_growth_exclusions",
+    "returns": "void",
+    "comment": "Получает список исключений роста субподряда для указанного тендера",
+    "affected_tables": [
+      "public"
+    ],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.handle_updated_at()": {
+    "schema": "public",
+    "name": "handle_updated_at",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.register_user(p_user_id uuid, p_full_name text, p_email text, p_role_code text, p_allowed_pages jsonb)": {
+    "schema": "public",
+    "name": "register_user",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [
+      "public"
+    ],
+    "side_effects": [
+      "INSERT"
+    ],
+    "is_trigger_function": false
+  },
+  "public.remove_subcontract_growth_exclusion(p_tender_id uuid, p_detail_cost_category_id uuid, p_exclusion_type text)": {
+    "schema": "public",
+    "name": "remove_subcontract_growth_exclusion",
+    "returns": "void",
+    "comment": "Удаляет исключение роста субподряда",
+    "affected_tables": [
+      "public"
+    ],
+    "side_effects": [
+      "DELETE"
+    ],
+    "is_trigger_function": false
+  },
   "public.set_updated_at()": {
     "schema": "public",
     "name": "set_updated_at",
     "returns": "void",
     "comment": null,
     "affected_tables": [],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.toggle_subcontract_growth_exclusion(p_tender_id uuid, p_detail_cost_category_id uuid, p_exclusion_type text)": {
+    "schema": "public",
+    "name": "toggle_subcontract_growth_exclusion",
+    "returns": "void",
+    "comment": "Переключает состояние исключения роста субподряда (вкл/выкл)",
+    "affected_tables": [
+      "public"
+    ],
     "side_effects": [],
     "is_trigger_function": false
   },
@@ -102,6 +207,15 @@
     "side_effects": [],
     "is_trigger_function": false
   },
+  "public.update_cost_redistribution_results_updated_at()": {
+    "schema": "public",
+    "name": "update_cost_redistribution_results_updated_at",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
   "public.update_markup_parameters_updated_at()": {
     "schema": "public",
     "name": "update_markup_parameters_updated_at",
@@ -114,6 +228,24 @@
   "public.update_markup_tactics_updated_at()": {
     "schema": "public",
     "name": "update_markup_tactics_updated_at",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.update_roles_updated_at()": {
+    "schema": "public",
+    "name": "update_roles_updated_at",
+    "returns": "void",
+    "comment": null,
+    "affected_tables": [],
+    "side_effects": [],
+    "is_trigger_function": false
+  },
+  "public.update_tender_documents_updated_at()": {
+    "schema": "public",
+    "name": "update_tender_documents_updated_at",
     "returns": "void",
     "comment": null,
     "affected_tables": [],

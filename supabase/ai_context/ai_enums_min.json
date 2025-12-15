@@ -1,4 +1,14 @@
 {
+  "public.access_status_type": {
+    "schema": "public",
+    "name": "access_status_type",
+    "values": [
+      "pending",
+      "approved",
+      "blocked"
+    ],
+    "comment": null
+  },
   "public.boq_item_type": {
     "schema": "public",
     "name": "boq_item_type",
@@ -11,6 +21,16 @@
       "раб-комп."
     ],
     "comment": "Тип позиции в BOQ: материалы (мат, суб-мат, мат-комп.) и работы (раб, суб-раб, раб-комп.)"
+  },
+  "public.construction_scope_type": {
+    "schema": "public",
+    "name": "construction_scope_type",
+    "values": [
+      "генподряд",
+      "коробка",
+      "монолит"
+    ],
+    "comment": null
   },
   "public.currency_type": {
     "schema": "public",
@@ -33,12 +53,63 @@
     ],
     "comment": null
   },
+  "public.housing_class_type": {
+    "schema": "public",
+    "name": "housing_class_type",
+    "values": [
+      "комфорт",
+      "бизнес",
+      "премиум",
+      "делюкс"
+    ],
+    "comment": null
+  },
   "public.material_type": {
     "schema": "public",
     "name": "material_type",
     "values": [
       "основн.",
       "вспомогат."
+    ],
+    "comment": null
+  },
+  "public.task_status": {
+    "schema": "public",
+    "name": "task_status",
+    "values": [
+      "running",
+      "paused",
+      "completed"
+    ],
+    "comment": null
+  },
+  "public.user_role_type": {
+    "schema": "public",
+    "name": "user_role_type",
+    "values": [
+      "Руководитель",
+      "Администратор",
+      "Разработчик",
+      "Старший группы",
+      "Инженер"
+    ],
+    "comment": null
+  },
+  "public.work_mode": {
+    "schema": "public",
+    "name": "work_mode",
+    "values": [
+      "office",
+      "remote"
+    ],
+    "comment": null
+  },
+  "public.work_status": {
+    "schema": "public",
+    "name": "work_status",
+    "values": [
+      "working",
+      "not_working"
     ],
     "comment": null
   }

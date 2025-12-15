@@ -91,6 +91,34 @@
     "constraint_name": "cost_categories_unit_fkey"
   },
   {
+    "from_table": "public.cost_redistribution_results",
+    "from_column": "boq_item_id",
+    "to_table": "public.boq_items",
+    "to_column": "id",
+    "constraint_name": "cost_redistribution_results_boq_item_id_fkey"
+  },
+  {
+    "from_table": "public.cost_redistribution_results",
+    "from_column": "created_by",
+    "to_table": "auth.users",
+    "to_column": "id",
+    "constraint_name": "cost_redistribution_results_created_by_fkey"
+  },
+  {
+    "from_table": "public.cost_redistribution_results",
+    "from_column": "markup_tactic_id",
+    "to_table": "public.markup_tactics",
+    "to_column": "id",
+    "constraint_name": "cost_redistribution_results_markup_tactic_id_fkey"
+  },
+  {
+    "from_table": "public.cost_redistribution_results",
+    "from_column": "tender_id",
+    "to_table": "public.tenders",
+    "to_column": "id",
+    "constraint_name": "cost_redistribution_results_tender_id_fkey"
+  },
+  {
     "from_table": "public.detail_cost_categories",
     "from_column": "cost_category_id",
     "to_table": "public.cost_categories",
@@ -182,6 +210,13 @@
     "constraint_name": "templates_detail_cost_category_fk"
   },
   {
+    "from_table": "public.tender_documents",
+    "from_column": "tender_id",
+    "to_table": "public.tenders",
+    "to_column": "id",
+    "constraint_name": "tender_documents_tender_id_fkey"
+  },
+  {
     "from_table": "public.tender_markup_percentage",
     "from_column": "markup_parameter_id",
     "to_table": "public.markup_parameters",
@@ -222,6 +257,41 @@
     "to_table": "public.markup_tactics",
     "to_column": "id",
     "constraint_name": "tenders_markup_tactic_id_fkey"
+  },
+  {
+    "from_table": "public.user_tasks",
+    "from_column": "tender_id",
+    "to_table": "public.tenders",
+    "to_column": "id",
+    "constraint_name": "user_tasks_tender_id_fkey"
+  },
+  {
+    "from_table": "public.user_tasks",
+    "from_column": "user_id",
+    "to_table": "public.users",
+    "to_column": "id",
+    "constraint_name": "user_tasks_user_id_fkey"
+  },
+  {
+    "from_table": "public.users",
+    "from_column": "id",
+    "to_table": "auth.users",
+    "to_column": "id",
+    "constraint_name": "fk_users_auth_users"
+  },
+  {
+    "from_table": "public.users",
+    "from_column": "approved_by",
+    "to_table": "public.users",
+    "to_column": "id",
+    "constraint_name": "users_approved_by_fkey"
+  },
+  {
+    "from_table": "public.users",
+    "from_column": "role_code",
+    "to_table": "public.roles",
+    "to_column": "code",
+    "constraint_name": "users_role_code_fkey"
   },
   {
     "from_table": "public.work_names",

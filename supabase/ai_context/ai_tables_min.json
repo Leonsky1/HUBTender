@@ -457,6 +457,104 @@
       }
     ]
   },
+  "public.cost_redistribution_results": {
+    "schema": "public",
+    "name": "cost_redistribution_results",
+    "comment": "Результаты перераспределения стоимости работ между затратами на строительство.\r\n    Хранит финансовые данные после перераспределения и правила для воспроизводимости расчета.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "tender_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "markup_tactic_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "boq_item_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "original_work_cost",
+        "type": "numeric(18,2)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "deducted_amount",
+        "type": "numeric(18,2)",
+        "nullable": false,
+        "default": "0"
+      },
+      {
+        "name": "added_amount",
+        "type": "numeric(18,2)",
+        "nullable": false,
+        "default": "0"
+      },
+      {
+        "name": "final_work_cost",
+        "type": "numeric(18,2)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "redistribution_rules",
+        "type": "jsonb",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      }
+    ],
+    "primary_key": "id",
+    "foreign_keys": [
+      {
+        "column": "boq_item_id",
+        "references": "public.boq_items.id"
+      },
+      {
+        "column": "created_by",
+        "references": "auth.users.id"
+      },
+      {
+        "column": "markup_tactic_id",
+        "references": "public.markup_tactics.id"
+      },
+      {
+        "column": "tender_id",
+        "references": "public.tenders.id"
+      }
+    ]
+  },
   "public.detail_cost_categories": {
     "schema": "public",
     "name": "detail_cost_categories",
@@ -823,10 +921,61 @@
     "primary_key": "id",
     "foreign_keys": []
   },
+  "public.roles": {
+    "schema": "public",
+    "name": "roles",
+    "comment": "Role definitions with permissions",
+    "columns": [
+      {
+        "name": "code",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "allowed_pages",
+        "type": "jsonb",
+        "nullable": false,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "is_system_role",
+        "type": "boolean",
+        "nullable": false,
+        "default": "false"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "nullable": true,
+        "default": "'default'::text"
+      }
+    ],
+    "primary_key": "code",
+    "foreign_keys": []
+  },
   "public.subcontract_growth_exclusions": {
     "schema": "public",
     "name": "subcontract_growth_exclusions",
-    "comment": "Исключения категорий затрат из расчёта роста субподряда",
+    "comment": "Исключения роста субподряда для категорий затрат",
     "columns": [
       {
         "name": "id",
@@ -845,6 +994,12 @@
         "type": "uuid",
         "nullable": false,
         "default": null
+      },
+      {
+        "name": "exclusion_type",
+        "type": "text",
+        "nullable": false,
+        "default": "'works'::text"
       },
       {
         "name": "created_at",
@@ -1014,6 +1169,80 @@
       {
         "column": "detail_cost_category_id",
         "references": "public.detail_cost_categories.id"
+      }
+    ]
+  },
+  "public.tender_documents": {
+    "schema": "public",
+    "name": "tender_documents",
+    "comment": "Проектная документация в markdown. RLS отключен для development.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "gen_random_uuid()"
+      },
+      {
+        "name": "tender_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "section_type",
+        "type": "character varying(50)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "title",
+        "type": "character varying(255)",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "original_filename",
+        "type": "character varying(255)",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "content_markdown",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "file_size",
+        "type": "bigint",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "upload_date",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_key": "id",
+    "foreign_keys": [
+      {
+        "column": "tender_id",
+        "references": "public.tenders.id"
       }
     ]
   },
@@ -1327,6 +1556,30 @@
         "type": "uuid",
         "nullable": true,
         "default": null
+      },
+      {
+        "name": "apply_subcontract_works_growth",
+        "type": "boolean",
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "apply_subcontract_materials_growth",
+        "type": "boolean",
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "housing_class",
+        "type": "housing_class_type",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "construction_scope",
+        "type": "construction_scope_type",
+        "nullable": true,
+        "default": null
       }
     ],
     "primary_key": "id",
@@ -1397,6 +1650,184 @@
     ],
     "primary_key": "code",
     "foreign_keys": []
+  },
+  "public.user_tasks": {
+    "schema": "public",
+    "name": "user_tasks",
+    "comment": "Задачи пользователей по тендерам",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": "uuid_generate_v4()"
+      },
+      {
+        "name": "user_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "tender_id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "task_status",
+        "type": "task_status",
+        "nullable": true,
+        "default": "'running'::task_status"
+      },
+      {
+        "name": "completed_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": "now()"
+      }
+    ],
+    "primary_key": "id",
+    "foreign_keys": [
+      {
+        "column": "tender_id",
+        "references": "public.tenders.id"
+      },
+      {
+        "column": "user_id",
+        "references": "public.users.id"
+      }
+    ]
+  },
+  "public.users": {
+    "schema": "public",
+    "name": "users",
+    "comment": "User accounts with role-based access control     \r\n  via role_code",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "full_name",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "access_status",
+        "type": "access_status_type",
+        "nullable": false,
+        "default": "'pending'::access_status_type"
+      },
+      {
+        "name": "approved_by",
+        "type": "uuid",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "approved_at",
+        "type": "timestamp with time zone",
+        "nullable": true,
+        "default": null
+      },
+      {
+        "name": "registration_date",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "nullable": false,
+        "default": "now()"
+      },
+      {
+        "name": "access_enabled",
+        "type": "boolean",
+        "nullable": true,
+        "default": "true"
+      },
+      {
+        "name": "role_code",
+        "type": "text",
+        "nullable": false,
+        "default": null
+      },
+      {
+        "name": "allowed_pages",
+        "type": "jsonb",
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "tender_deadline_extensions",
+        "type": "jsonb",
+        "nullable": true,
+        "default": "'[]'::jsonb"
+      },
+      {
+        "name": "current_work_mode",
+        "type": "work_mode",
+        "nullable": true,
+        "default": "'office'::work_mode"
+      },
+      {
+        "name": "current_work_status",
+        "type": "work_status",
+        "nullable": true,
+        "default": "'working'::work_status"
+      }
+    ],
+    "primary_key": "id",
+    "foreign_keys": [
+      {
+        "column": "id",
+        "references": "auth.users.id"
+      },
+      {
+        "column": "approved_by",
+        "references": "public.users.id"
+      },
+      {
+        "column": "role_code",
+        "references": "public.roles.code"
+      }
+    ]
   },
   "public.work_names": {
     "schema": "public",

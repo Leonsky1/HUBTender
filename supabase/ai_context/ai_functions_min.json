@@ -47,11 +47,65 @@
     "returns": "void",
     "purpose": "Function"
   },
+  "public.add_subcontract_growth_exclusion(p_tender_id uuid, p_detail_cost_category_id uuid, p_exclusion_type text)": {
+    "schema": "public",
+    "name": "add_subcontract_growth_exclusion",
+    "returns": "void",
+    "purpose": "Добавляет исключение роста субподряда (или обновляет существующее)"
+  },
+  "public.check_user_page_access(user_id uuid, page_url text)": {
+    "schema": "public",
+    "name": "check_user_page_access",
+    "returns": "void",
+    "purpose": "Check if user has access to a specific page URL. Returns TRUE if user can access the page."
+  },
+  "public.current_user_role()": {
+    "schema": "public",
+    "name": "current_user_role",
+    "returns": "void",
+    "purpose": "Function"
+  },
+  "public.current_user_status()": {
+    "schema": "public",
+    "name": "current_user_status",
+    "returns": "void",
+    "purpose": "Function"
+  },
+  "public.get_subcontract_growth_exclusions(p_tender_id uuid)": {
+    "schema": "public",
+    "name": "get_subcontract_growth_exclusions",
+    "returns": "void",
+    "purpose": "Получает список исключений роста субподряда для указанного тендера"
+  },
+  "public.handle_updated_at()": {
+    "schema": "public",
+    "name": "handle_updated_at",
+    "returns": "void",
+    "purpose": "Function"
+  },
+  "public.register_user(p_user_id uuid, p_full_name text, p_email text, p_role_code text, p_allowed_pages jsonb)": {
+    "schema": "public",
+    "name": "register_user",
+    "returns": "void",
+    "purpose": "Function"
+  },
+  "public.remove_subcontract_growth_exclusion(p_tender_id uuid, p_detail_cost_category_id uuid, p_exclusion_type text)": {
+    "schema": "public",
+    "name": "remove_subcontract_growth_exclusion",
+    "returns": "void",
+    "purpose": "Удаляет исключение роста субподряда"
+  },
   "public.set_updated_at()": {
     "schema": "public",
     "name": "set_updated_at",
     "returns": "void",
     "purpose": "Function"
+  },
+  "public.toggle_subcontract_growth_exclusion(p_tender_id uuid, p_detail_cost_category_id uuid, p_exclusion_type text)": {
+    "schema": "public",
+    "name": "toggle_subcontract_growth_exclusion",
+    "returns": "void",
+    "purpose": "Переключает состояние исключения роста субподряда (вкл/выкл)"
   },
   "public.update_boq_items_updated_at()": {
     "schema": "public",
@@ -65,6 +119,12 @@
     "returns": "void",
     "purpose": "Function"
   },
+  "public.update_cost_redistribution_results_updated_at()": {
+    "schema": "public",
+    "name": "update_cost_redistribution_results_updated_at",
+    "returns": "void",
+    "purpose": "Function"
+  },
   "public.update_markup_parameters_updated_at()": {
     "schema": "public",
     "name": "update_markup_parameters_updated_at",
@@ -74,6 +134,18 @@
   "public.update_markup_tactics_updated_at()": {
     "schema": "public",
     "name": "update_markup_tactics_updated_at",
+    "returns": "void",
+    "purpose": "Function"
+  },
+  "public.update_roles_updated_at()": {
+    "schema": "public",
+    "name": "update_roles_updated_at",
+    "returns": "void",
+    "purpose": "Function"
+  },
+  "public.update_tender_documents_updated_at()": {
+    "schema": "public",
+    "name": "update_tender_documents_updated_at",
     "returns": "void",
     "purpose": "Function"
   },
