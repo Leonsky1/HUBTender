@@ -575,6 +575,30 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_cost_categories_unit ON public.cost_categories USING btree (unit)"
   },
+  "public.cost_redistribution_results.idx_redistribution_boq_item": {
+    "schema": "public",
+    "name": "idx_redistribution_boq_item",
+    "table_name": "cost_redistribution_results",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_redistribution_boq_item ON public.cost_redistribution_results USING btree (boq_item_id)"
+  },
+  "public.cost_redistribution_results.idx_redistribution_tender_tactic": {
+    "schema": "public",
+    "name": "idx_redistribution_tender_tactic",
+    "table_name": "cost_redistribution_results",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_redistribution_tender_tactic ON public.cost_redistribution_results USING btree (tender_id, markup_tactic_id)"
+  },
+  "public.cost_redistribution_results.uq_cost_redistribution_results_tender_tactic_boq": {
+    "schema": "public",
+    "name": "uq_cost_redistribution_results_tender_tactic_boq",
+    "table_name": "cost_redistribution_results",
+    "is_unique": true,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX uq_cost_redistribution_results_tender_tactic_boq ON public.cost_redistribution_results USING btree (tender_id, markup_tactic_id, boq_item_id)"
+  },
   "public.detail_cost_categories.idx_detail_cost_categories_category_id": {
     "schema": "public",
     "name": "idx_detail_cost_categories_category_id",
@@ -751,29 +775,21 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_materials_library_type_currency ON public.materials_library USING btree (material_type, currency_type)"
   },
-  "public.subcontract_growth_exclusions.idx_subcontract_growth_exclusions_detail": {
+  "public.roles.roles_name_key": {
     "schema": "public",
-    "name": "idx_subcontract_growth_exclusions_detail",
-    "table_name": "subcontract_growth_exclusions",
-    "is_unique": false,
+    "name": "roles_name_key",
+    "table_name": "roles",
+    "is_unique": true,
     "is_primary": false,
-    "sql": "CREATE INDEX idx_subcontract_growth_exclusions_detail ON public.subcontract_growth_exclusions USING btree (detail_cost_category_id)"
+    "sql": "CREATE UNIQUE INDEX roles_name_key ON public.roles USING btree (name)"
   },
-  "public.subcontract_growth_exclusions.idx_subcontract_growth_exclusions_tender": {
+  "public.subcontract_growth_exclusions.subcontract_growth_exclusions_unique": {
     "schema": "public",
-    "name": "idx_subcontract_growth_exclusions_tender",
-    "table_name": "subcontract_growth_exclusions",
-    "is_unique": false,
-    "is_primary": false,
-    "sql": "CREATE INDEX idx_subcontract_growth_exclusions_tender ON public.subcontract_growth_exclusions USING btree (tender_id)"
-  },
-  "public.subcontract_growth_exclusions.subcontract_growth_exclusions_tender_id_detail_cost_categor_key": {
-    "schema": "public",
-    "name": "subcontract_growth_exclusions_tender_id_detail_cost_categor_key",
+    "name": "subcontract_growth_exclusions_unique",
     "table_name": "subcontract_growth_exclusions",
     "is_unique": true,
     "is_primary": false,
-    "sql": "CREATE UNIQUE INDEX subcontract_growth_exclusions_tender_id_detail_cost_categor_key ON public.subcontract_growth_exclusions USING btree (tender_id, detail_cost_category_id)"
+    "sql": "CREATE UNIQUE INDEX subcontract_growth_exclusions_unique ON public.subcontract_growth_exclusions USING btree (tender_id, detail_cost_category_id, exclusion_type)"
   },
   "public.template_items.idx_template_items_detail_cost_category_id": {
     "schema": "public",
@@ -830,6 +846,46 @@
     "is_unique": false,
     "is_primary": false,
     "sql": "CREATE INDEX idx_templates_detail_cost_category_id ON public.templates USING btree (detail_cost_category_id)"
+  },
+  "public.tender_documents.idx_tender_documents_content_fts": {
+    "schema": "public",
+    "name": "idx_tender_documents_content_fts",
+    "table_name": "tender_documents",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_documents_content_fts ON public.tender_documents USING gin (to_tsvector('russian'::regconfig, content_markdown))"
+  },
+  "public.tender_documents.idx_tender_documents_section": {
+    "schema": "public",
+    "name": "idx_tender_documents_section",
+    "table_name": "tender_documents",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_documents_section ON public.tender_documents USING btree (section_type)"
+  },
+  "public.tender_documents.idx_tender_documents_tender": {
+    "schema": "public",
+    "name": "idx_tender_documents_tender",
+    "table_name": "tender_documents",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_documents_tender ON public.tender_documents USING btree (tender_id)"
+  },
+  "public.tender_documents.idx_tender_documents_uploaded": {
+    "schema": "public",
+    "name": "idx_tender_documents_uploaded",
+    "table_name": "tender_documents",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_tender_documents_uploaded ON public.tender_documents USING btree (upload_date DESC)"
+  },
+  "public.tender_documents.unique_tender_section_file": {
+    "schema": "public",
+    "name": "unique_tender_section_file",
+    "table_name": "tender_documents",
+    "is_unique": true,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX unique_tender_section_file ON public.tender_documents USING btree (tender_id, section_type, original_filename)"
   },
   "public.tender_markup_percentage.idx_tender_markup_percentage_markup_parameter_id": {
     "schema": "public",
@@ -943,6 +999,78 @@
     "is_primary": false,
     "sql": "CREATE INDEX idx_units_sort_order ON public.units USING btree (sort_order)"
   },
+  "public.user_tasks.idx_user_tasks_status": {
+    "schema": "public",
+    "name": "idx_user_tasks_status",
+    "table_name": "user_tasks",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_user_tasks_status ON public.user_tasks USING btree (task_status)"
+  },
+  "public.user_tasks.idx_user_tasks_tender_id": {
+    "schema": "public",
+    "name": "idx_user_tasks_tender_id",
+    "table_name": "user_tasks",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_user_tasks_tender_id ON public.user_tasks USING btree (tender_id)"
+  },
+  "public.user_tasks.idx_user_tasks_user_id": {
+    "schema": "public",
+    "name": "idx_user_tasks_user_id",
+    "table_name": "user_tasks",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_user_tasks_user_id ON public.user_tasks USING btree (user_id)"
+  },
+  "public.users.idx_users_access_status": {
+    "schema": "public",
+    "name": "idx_users_access_status",
+    "table_name": "users",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_users_access_status ON public.users USING btree (access_status)"
+  },
+  "public.users.idx_users_approved_by": {
+    "schema": "public",
+    "name": "idx_users_approved_by",
+    "table_name": "users",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_users_approved_by ON public.users USING btree (approved_by)"
+  },
+  "public.users.idx_users_deadline_extensions": {
+    "schema": "public",
+    "name": "idx_users_deadline_extensions",
+    "table_name": "users",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_users_deadline_extensions ON public.users USING gin (tender_deadline_extensions)"
+  },
+  "public.users.idx_users_email": {
+    "schema": "public",
+    "name": "idx_users_email",
+    "table_name": "users",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_users_email ON public.users USING btree (email)"
+  },
+  "public.users.idx_users_role_code": {
+    "schema": "public",
+    "name": "idx_users_role_code",
+    "table_name": "users",
+    "is_unique": false,
+    "is_primary": false,
+    "sql": "CREATE INDEX idx_users_role_code ON public.users USING btree (role_code)"
+  },
+  "public.users.users_email_key": {
+    "schema": "public",
+    "name": "users_email_key",
+    "table_name": "users",
+    "is_unique": true,
+    "is_primary": false,
+    "sql": "CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)"
+  },
   "public.work_names.idx_work_names_name": {
     "schema": "public",
     "name": "idx_work_names_name",
@@ -1007,61 +1135,61 @@
     "is_primary": false,
     "sql": "CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_24.messages_2025_11_24_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_09.messages_2025_12_09_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_24_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_24",
+    "name": "messages_2025_12_09_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_09",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_24_inserted_at_topic_idx ON realtime.messages_2025_11_24 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_09_inserted_at_topic_idx ON realtime.messages_2025_12_09 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_25.messages_2025_11_25_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_10.messages_2025_12_10_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_25_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_25",
+    "name": "messages_2025_12_10_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_10",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_25_inserted_at_topic_idx ON realtime.messages_2025_11_25 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_10_inserted_at_topic_idx ON realtime.messages_2025_12_10 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_26.messages_2025_11_26_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_11.messages_2025_12_11_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_26_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_26",
+    "name": "messages_2025_12_11_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_11",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_26_inserted_at_topic_idx ON realtime.messages_2025_11_26 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_11_inserted_at_topic_idx ON realtime.messages_2025_12_11 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_27.messages_2025_11_27_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_12.messages_2025_12_12_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_27_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_27",
+    "name": "messages_2025_12_12_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_12",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_27_inserted_at_topic_idx ON realtime.messages_2025_11_27 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_12_inserted_at_topic_idx ON realtime.messages_2025_12_12 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_28.messages_2025_11_28_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_13.messages_2025_12_13_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_28_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_28",
+    "name": "messages_2025_12_13_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_13",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_28_inserted_at_topic_idx ON realtime.messages_2025_11_28 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_13_inserted_at_topic_idx ON realtime.messages_2025_12_13 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_29.messages_2025_11_29_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_14.messages_2025_12_14_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_29_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_29",
+    "name": "messages_2025_12_14_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_14",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_29_inserted_at_topic_idx ON realtime.messages_2025_11_29 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_14_inserted_at_topic_idx ON realtime.messages_2025_12_14 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
-  "realtime.messages_2025_11_30.messages_2025_11_30_inserted_at_topic_idx": {
+  "realtime.messages_2025_12_15.messages_2025_12_15_inserted_at_topic_idx": {
     "schema": "realtime",
-    "name": "messages_2025_11_30_inserted_at_topic_idx",
-    "table_name": "messages_2025_11_30",
+    "name": "messages_2025_12_15_inserted_at_topic_idx",
+    "table_name": "messages_2025_12_15",
     "is_unique": false,
     "is_primary": false,
-    "sql": "CREATE INDEX messages_2025_11_30_inserted_at_topic_idx ON realtime.messages_2025_11_30 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
+    "sql": "CREATE INDEX messages_2025_12_15_inserted_at_topic_idx ON realtime.messages_2025_12_15 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE))"
   },
   "realtime.subscription.ix_realtime_subscription_entity": {
     "schema": "realtime",

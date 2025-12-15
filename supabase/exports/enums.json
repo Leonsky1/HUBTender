@@ -96,6 +96,17 @@
     "comment": null,
     "sql": "CREATE TYPE auth.one_time_token_type AS ENUM ('confirmation_token', 'reauthentication_token', 'recovery_token', 'email_change_token_new', 'email_change_token_current', 'phone_change_token');"
   },
+  "public.access_status_type": {
+    "schema": "public",
+    "name": "access_status_type",
+    "values": [
+      "pending",
+      "approved",
+      "blocked"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.access_status_type AS ENUM ('pending', 'approved', 'blocked');"
+  },
   "public.boq_item_type": {
     "schema": "public",
     "name": "boq_item_type",
@@ -109,6 +120,17 @@
     ],
     "comment": "Тип позиции в BOQ: материалы (мат, суб-мат, мат-комп.) и работы (раб, суб-раб, раб-комп.)",
     "sql": "CREATE TYPE public.boq_item_type AS ENUM ('мат', 'суб-мат', 'мат-комп.', 'раб', 'суб-раб', 'раб-комп.');"
+  },
+  "public.construction_scope_type": {
+    "schema": "public",
+    "name": "construction_scope_type",
+    "values": [
+      "генподряд",
+      "коробка",
+      "монолит"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.construction_scope_type AS ENUM ('генподряд', 'коробка', 'монолит');"
   },
   "public.currency_type": {
     "schema": "public",
@@ -133,6 +155,18 @@
     "comment": null,
     "sql": "CREATE TYPE public.delivery_price_type AS ENUM ('в цене', 'не в цене', 'суммой');"
   },
+  "public.housing_class_type": {
+    "schema": "public",
+    "name": "housing_class_type",
+    "values": [
+      "комфорт",
+      "бизнес",
+      "премиум",
+      "делюкс"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.housing_class_type AS ENUM ('комфорт', 'бизнес', 'премиум', 'делюкс');"
+  },
   "public.material_type": {
     "schema": "public",
     "name": "material_type",
@@ -142,6 +176,50 @@
     ],
     "comment": null,
     "sql": "CREATE TYPE public.material_type AS ENUM ('основн.', 'вспомогат.');"
+  },
+  "public.task_status": {
+    "schema": "public",
+    "name": "task_status",
+    "values": [
+      "running",
+      "paused",
+      "completed"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.task_status AS ENUM ('running', 'paused', 'completed');"
+  },
+  "public.user_role_type": {
+    "schema": "public",
+    "name": "user_role_type",
+    "values": [
+      "Руководитель",
+      "Администратор",
+      "Разработчик",
+      "Старший группы",
+      "Инженер"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.user_role_type AS ENUM ('Руководитель', 'Администратор', 'Разработчик', 'Старший группы', 'Инженер');"
+  },
+  "public.work_mode": {
+    "schema": "public",
+    "name": "work_mode",
+    "values": [
+      "office",
+      "remote"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.work_mode AS ENUM ('office', 'remote');"
+  },
+  "public.work_status": {
+    "schema": "public",
+    "name": "work_status",
+    "values": [
+      "working",
+      "not_working"
+    ],
+    "comment": null,
+    "sql": "CREATE TYPE public.work_status AS ENUM ('working', 'not_working');"
   },
   "realtime.action": {
     "schema": "realtime",

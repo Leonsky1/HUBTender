@@ -2752,6 +2752,163 @@
       }
     ]
   },
+  "public.cost_redistribution_results": {
+    "schema": "public",
+    "name": "cost_redistribution_results",
+    "comment": "Результаты перераспределения стоимости работ между затратами на строительство.\r\n    Хранит финансовые данные после перераспределения и правила для воспроизводимости расчета.",
+    "columns": [
+      {
+        "name": "id",
+        "comment": "Уникальный идентификатор записи результата",
+        "default": "gen_random_uuid()",
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "tender_id",
+        "comment": "Ссылка на тендер",
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "markup_tactic_id",
+        "comment": "Ссылка на тактику наценок",
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "boq_item_id",
+        "comment": "Ссылка на элемент BOQ (работа)",
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "original_work_cost",
+        "comment": "Исходная стоимость работы до перераспределения",
+        "default": null,
+        "data_type": "numeric(18,2)",
+        "is_nullable": true
+      },
+      {
+        "name": "deducted_amount",
+        "comment": "Сумма, вычтенная из стоимости работы",
+        "default": "0",
+        "data_type": "numeric(18,2)",
+        "is_nullable": false
+      },
+      {
+        "name": "added_amount",
+        "comment": "Сумма, добавленная к стоимости работы",
+        "default": "0",
+        "data_type": "numeric(18,2)",
+        "is_nullable": false
+      },
+      {
+        "name": "final_work_cost",
+        "comment": "Финальная стоимость работы после перераспределения",
+        "default": null,
+        "data_type": "numeric(18,2)",
+        "is_nullable": true
+      },
+      {
+        "name": "redistribution_rules",
+        "comment": "JSONB с правилами вычитания и целевыми затратами для воспроизводимости расчета.\r\n    Формат: {\r\n        \"deductions\": [\r\n            {\"detail_cost_category_id\": \"uuid\", \"category_name\": \"...\", \"percentage\": 10}\r\n        ],\r\n        \"targets\": [\r\n            {\"detail_cost_category_id\": \"uuid\", \"category_name\": \"...\", \"weight\": 1.0}\r\n        ]\r\n    }",
+        "default": null,
+        "data_type": "jsonb",
+        "is_nullable": true
+      },
+      {
+        "name": "created_at",
+        "comment": "Дата и время создания записи",
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "updated_at",
+        "comment": "Дата и время последнего обновления записи",
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "created_by",
+        "comment": "Пользователь, создавший запись",
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": true
+      }
+    ],
+    "constraints": [
+      {
+        "name": "cost_redistribution_results_boq_item_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "boq_item_id",
+        "foreign_table": "boq_items",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      },
+      {
+        "name": "cost_redistribution_results_created_by_fkey",
+        "type": "FOREIGN KEY",
+        "column": "created_by",
+        "foreign_table": "users",
+        "foreign_column": "id",
+        "foreign_table_schema": "auth"
+      },
+      {
+        "name": "cost_redistribution_results_markup_tactic_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "markup_tactic_id",
+        "foreign_table": "markup_tactics",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      },
+      {
+        "name": "cost_redistribution_results_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "cost_redistribution_results_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table": "tenders",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      },
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "type": "UNIQUE",
+        "column": "boq_item_id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "type": "UNIQUE",
+        "column": "markup_tactic_id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "uq_cost_redistribution_results_tender_tactic_boq",
+        "type": "UNIQUE",
+        "column": "tender_id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      }
+    ]
+  },
   "public.detail_cost_categories": {
     "schema": "public",
     "name": "detail_cost_categories",
@@ -3262,10 +3419,100 @@
       }
     ]
   },
+  "public.roles": {
+    "schema": "public",
+    "name": "roles",
+    "comment": "Role definitions with permissions",
+    "columns": [
+      {
+        "name": "code",
+        "comment": "Role code identifier (e.g., administrator, engineer)",
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "name",
+        "comment": "Human-readable role name in Russian",
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "allowed_pages",
+        "comment": "Array of allowed page paths for this role. Empty array means full access.",
+        "default": "'[]'::jsonb",
+        "data_type": "jsonb",
+        "is_nullable": false
+      },
+      {
+        "name": "is_system_role",
+        "comment": "System roles cannot be deleted",
+        "default": "false",
+        "data_type": "boolean",
+        "is_nullable": false
+      },
+      {
+        "name": "created_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "updated_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "color",
+        "comment": "Ant Design tag color for the role\r\n  (e.g., blue, green, purple, etc.)",
+        "default": "'default'::text",
+        "data_type": "text",
+        "is_nullable": true
+      }
+    ],
+    "constraints": [
+      {
+        "name": "roles_code_format",
+        "type": "CHECK",
+        "column": "code",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "roles_name_key",
+        "type": "UNIQUE",
+        "column": "name",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "roles_name_not_empty",
+        "type": "CHECK",
+        "column": "name",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "roles_pkey",
+        "type": "PRIMARY KEY",
+        "column": "code",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      }
+    ]
+  },
   "public.subcontract_growth_exclusions": {
     "schema": "public",
     "name": "subcontract_growth_exclusions",
-    "comment": "Исключения категорий затрат из расчёта роста субподряда",
+    "comment": "Исключения роста субподряда для категорий затрат",
     "columns": [
       {
         "name": "id",
@@ -3276,16 +3523,23 @@
       },
       {
         "name": "tender_id",
-        "comment": "ID тендера",
+        "comment": null,
         "default": null,
         "data_type": "uuid",
         "is_nullable": false
       },
       {
         "name": "detail_cost_category_id",
-        "comment": "ID детальной категории затрат, исключённой из роста субподряда",
+        "comment": null,
         "default": null,
         "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "exclusion_type",
+        "comment": "Тип исключения: works (суб-раб) или materials (суб-мат)",
+        "default": "'works'::text",
+        "data_type": "text",
         "is_nullable": false
       },
       {
@@ -3313,25 +3567,17 @@
         "foreign_table_schema": "public"
       },
       {
+        "name": "subcontract_growth_exclusions_exclusion_type_check",
+        "type": "CHECK",
+        "column": "exclusion_type",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
         "name": "subcontract_growth_exclusions_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
-        "foreign_table": null,
-        "foreign_column": null,
-        "foreign_table_schema": null
-      },
-      {
-        "name": "subcontract_growth_exclusions_tender_id_detail_cost_categor_key",
-        "type": "UNIQUE",
-        "column": "detail_cost_category_id",
-        "foreign_table": null,
-        "foreign_column": null,
-        "foreign_table_schema": null
-      },
-      {
-        "name": "subcontract_growth_exclusions_tender_id_detail_cost_categor_key",
-        "type": "UNIQUE",
-        "column": "tender_id",
         "foreign_table": null,
         "foreign_column": null,
         "foreign_table_schema": null
@@ -3343,6 +3589,30 @@
         "foreign_table": "tenders",
         "foreign_column": "id",
         "foreign_table_schema": "public"
+      },
+      {
+        "name": "subcontract_growth_exclusions_unique",
+        "type": "UNIQUE",
+        "column": "detail_cost_category_id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "subcontract_growth_exclusions_unique",
+        "type": "UNIQUE",
+        "column": "exclusion_type",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "subcontract_growth_exclusions_unique",
+        "type": "UNIQUE",
+        "column": "tender_id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
       }
     ]
   },
@@ -3629,6 +3899,125 @@
         "name": "templates_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      }
+    ]
+  },
+  "public.tender_documents": {
+    "schema": "public",
+    "name": "tender_documents",
+    "comment": "Проектная документация в markdown. RLS отключен для development.",
+    "columns": [
+      {
+        "name": "id",
+        "comment": null,
+        "default": "gen_random_uuid()",
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "tender_id",
+        "comment": null,
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "section_type",
+        "comment": "Раздел проектной документации: АР (архитектурные решения), КР (конструктивные решения), ИОС, ТХ, ПОС и т.д.",
+        "default": null,
+        "data_type": "character varying(50)",
+        "is_nullable": false
+      },
+      {
+        "name": "title",
+        "comment": null,
+        "default": null,
+        "data_type": "character varying(255)",
+        "is_nullable": false
+      },
+      {
+        "name": "original_filename",
+        "comment": "Имя загруженного файла для отладки и логов",
+        "default": null,
+        "data_type": "character varying(255)",
+        "is_nullable": true
+      },
+      {
+        "name": "content_markdown",
+        "comment": "Полный текст документа в markdown формате после конвертации из PDF/DOCX",
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "file_size",
+        "comment": null,
+        "default": null,
+        "data_type": "bigint",
+        "is_nullable": true
+      },
+      {
+        "name": "upload_date",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      },
+      {
+        "name": "created_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      },
+      {
+        "name": "updated_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      }
+    ],
+    "constraints": [
+      {
+        "name": "tender_documents_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "tender_documents_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table": "tenders",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      },
+      {
+        "name": "unique_tender_section_file",
+        "type": "UNIQUE",
+        "column": "original_filename",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "unique_tender_section_file",
+        "type": "UNIQUE",
+        "column": "section_type",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "unique_tender_section_file",
+        "type": "UNIQUE",
+        "column": "tender_id",
         "foreign_table": null,
         "foreign_column": null,
         "foreign_table_schema": null
@@ -4172,6 +4561,34 @@
         "default": null,
         "data_type": "uuid",
         "is_nullable": true
+      },
+      {
+        "name": "apply_subcontract_works_growth",
+        "comment": "Применять ли рост стоимости для субподрядных работ (суб-раб)",
+        "default": "true",
+        "data_type": "boolean",
+        "is_nullable": true
+      },
+      {
+        "name": "apply_subcontract_materials_growth",
+        "comment": "Применять ли рост стоимости для субподрядных материалов (суб-мат)",
+        "default": "true",
+        "data_type": "boolean",
+        "is_nullable": true
+      },
+      {
+        "name": "housing_class",
+        "comment": "Класс жилья (комфорт, бизнес, премиум, делюкс)",
+        "default": null,
+        "data_type": "housing_class_type",
+        "is_nullable": true
+      },
+      {
+        "name": "construction_scope",
+        "comment": "Объем строительства (генподряд, коробка, монолит)",
+        "default": null,
+        "data_type": "construction_scope_type",
+        "is_nullable": true
       }
     ],
     "constraints": [
@@ -4287,6 +4704,273 @@
         "foreign_table": null,
         "foreign_column": null,
         "foreign_table_schema": null
+      }
+    ]
+  },
+  "public.user_tasks": {
+    "schema": "public",
+    "name": "user_tasks",
+    "comment": "Задачи пользователей по тендерам",
+    "columns": [
+      {
+        "name": "id",
+        "comment": null,
+        "default": "uuid_generate_v4()",
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "user_id",
+        "comment": null,
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "tender_id",
+        "comment": null,
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "description",
+        "comment": null,
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "task_status",
+        "comment": "Статус задачи: running (в работе), paused (остановлена),\r\n  completed (завершена)",
+        "default": "'running'::task_status",
+        "data_type": "task_status",
+        "is_nullable": true
+      },
+      {
+        "name": "completed_at",
+        "comment": null,
+        "default": null,
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      },
+      {
+        "name": "created_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      },
+      {
+        "name": "updated_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      }
+    ],
+    "constraints": [
+      {
+        "name": "user_tasks_description_check",
+        "type": "CHECK",
+        "column": "description",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "user_tasks_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "user_tasks_tender_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "tender_id",
+        "foreign_table": "tenders",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      },
+      {
+        "name": "user_tasks_user_id_fkey",
+        "type": "FOREIGN KEY",
+        "column": "user_id",
+        "foreign_table": "users",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      }
+    ]
+  },
+  "public.users": {
+    "schema": "public",
+    "name": "users",
+    "comment": "User accounts with role-based access control     \r\n  via role_code",
+    "columns": [
+      {
+        "name": "id",
+        "comment": "User ID linked to auth.users",
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": false
+      },
+      {
+        "name": "full_name",
+        "comment": "User full name (ФИО)",
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "email",
+        "comment": "User email address",
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "access_status",
+        "comment": "Access status: pending (awaiting approval), approved (can login), blocked (access denied)",
+        "default": "'pending'::access_status_type",
+        "data_type": "access_status_type",
+        "is_nullable": false
+      },
+      {
+        "name": "approved_by",
+        "comment": "ID of Admin/Leader who approved this user",
+        "default": null,
+        "data_type": "uuid",
+        "is_nullable": true
+      },
+      {
+        "name": "approved_at",
+        "comment": "Timestamp when user was approved",
+        "default": null,
+        "data_type": "timestamp with time zone",
+        "is_nullable": true
+      },
+      {
+        "name": "registration_date",
+        "comment": "Date when user registered",
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "created_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "updated_at",
+        "comment": null,
+        "default": "now()",
+        "data_type": "timestamp with time zone",
+        "is_nullable": false
+      },
+      {
+        "name": "access_enabled",
+        "comment": "Флаг доступа: true - пользователь может войти, false - доступ закрыт",
+        "default": "true",
+        "data_type": "boolean",
+        "is_nullable": true
+      },
+      {
+        "name": "role_code",
+        "comment": "Current role code, references roles.code",
+        "default": null,
+        "data_type": "text",
+        "is_nullable": false
+      },
+      {
+        "name": "allowed_pages",
+        "comment": "Array of page paths the user      \r\n  can access. Empty array means full access. Sync from roles.allowed_pages based     \r\n  on role_code.",
+        "default": "'[]'::jsonb",
+        "data_type": "jsonb",
+        "is_nullable": true
+      },
+      {
+        "name": "tender_deadline_extensions",
+        "comment": "Массив объектов {tender_id: uuid, extended_deadline: timestamp} для ручного продления дедлайна пользователю",
+        "default": "'[]'::jsonb",
+        "data_type": "jsonb",
+        "is_nullable": true
+      },
+      {
+        "name": "current_work_mode",
+        "comment": "Текущий режим работы: office (офис), remote (удаленка)",
+        "default": "'office'::work_mode",
+        "data_type": "work_mode",
+        "is_nullable": true
+      },
+      {
+        "name": "current_work_status",
+        "comment": "Текущий статус работы: working (работаю), not_working (не        \r\n  работаю)",
+        "default": "'working'::work_status",
+        "data_type": "work_status",
+        "is_nullable": true
+      }
+    ],
+    "constraints": [
+      {
+        "name": "fk_users_auth_users",
+        "type": "FOREIGN KEY",
+        "column": "id",
+        "foreign_table": "users",
+        "foreign_column": "id",
+        "foreign_table_schema": "auth"
+      },
+      {
+        "name": "users_approved_by_fkey",
+        "type": "FOREIGN KEY",
+        "column": "approved_by",
+        "foreign_table": "users",
+        "foreign_column": "id",
+        "foreign_table_schema": "public"
+      },
+      {
+        "name": "users_email_check",
+        "type": "CHECK",
+        "column": "email",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "users_email_key",
+        "type": "UNIQUE",
+        "column": "email",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "users_full_name_check",
+        "type": "CHECK",
+        "column": "full_name",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "users_pkey",
+        "type": "PRIMARY KEY",
+        "column": "id",
+        "foreign_table": null,
+        "foreign_column": null,
+        "foreign_table_schema": null
+      },
+      {
+        "name": "users_role_code_fkey",
+        "type": "FOREIGN KEY",
+        "column": "role_code",
+        "foreign_table": "roles",
+        "foreign_column": "code",
+        "foreign_table_schema": "public"
       }
     ]
   },
@@ -4424,9 +5108,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_24": {
+  "realtime.messages_2025_12_09": {
     "schema": "realtime",
-    "name": "messages_2025_11_24",
+    "name": "messages_2025_12_09",
     "comment": null,
     "columns": [
       {
@@ -4488,7 +5172,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_24_pkey",
+        "name": "messages_2025_12_09_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4496,7 +5180,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_24_pkey",
+        "name": "messages_2025_12_09_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,
@@ -4505,9 +5189,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_25": {
+  "realtime.messages_2025_12_10": {
     "schema": "realtime",
-    "name": "messages_2025_11_25",
+    "name": "messages_2025_12_10",
     "comment": null,
     "columns": [
       {
@@ -4569,7 +5253,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_25_pkey",
+        "name": "messages_2025_12_10_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4577,7 +5261,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_25_pkey",
+        "name": "messages_2025_12_10_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,
@@ -4586,9 +5270,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_26": {
+  "realtime.messages_2025_12_11": {
     "schema": "realtime",
-    "name": "messages_2025_11_26",
+    "name": "messages_2025_12_11",
     "comment": null,
     "columns": [
       {
@@ -4650,7 +5334,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_26_pkey",
+        "name": "messages_2025_12_11_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4658,7 +5342,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_26_pkey",
+        "name": "messages_2025_12_11_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,
@@ -4667,9 +5351,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_27": {
+  "realtime.messages_2025_12_12": {
     "schema": "realtime",
-    "name": "messages_2025_11_27",
+    "name": "messages_2025_12_12",
     "comment": null,
     "columns": [
       {
@@ -4731,7 +5415,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_27_pkey",
+        "name": "messages_2025_12_12_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4739,7 +5423,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_27_pkey",
+        "name": "messages_2025_12_12_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,
@@ -4748,9 +5432,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_28": {
+  "realtime.messages_2025_12_13": {
     "schema": "realtime",
-    "name": "messages_2025_11_28",
+    "name": "messages_2025_12_13",
     "comment": null,
     "columns": [
       {
@@ -4812,7 +5496,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_28_pkey",
+        "name": "messages_2025_12_13_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4820,7 +5504,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_28_pkey",
+        "name": "messages_2025_12_13_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,
@@ -4829,9 +5513,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_29": {
+  "realtime.messages_2025_12_14": {
     "schema": "realtime",
-    "name": "messages_2025_11_29",
+    "name": "messages_2025_12_14",
     "comment": null,
     "columns": [
       {
@@ -4893,7 +5577,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_29_pkey",
+        "name": "messages_2025_12_14_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4901,7 +5585,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_29_pkey",
+        "name": "messages_2025_12_14_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,
@@ -4910,9 +5594,9 @@
       }
     ]
   },
-  "realtime.messages_2025_11_30": {
+  "realtime.messages_2025_12_15": {
     "schema": "realtime",
-    "name": "messages_2025_11_30",
+    "name": "messages_2025_12_15",
     "comment": null,
     "columns": [
       {
@@ -4974,7 +5658,7 @@
     ],
     "constraints": [
       {
-        "name": "messages_2025_11_30_pkey",
+        "name": "messages_2025_12_15_pkey",
         "type": "PRIMARY KEY",
         "column": "id",
         "foreign_table": null,
@@ -4982,7 +5666,7 @@
         "foreign_table_schema": null
       },
       {
-        "name": "messages_2025_11_30_pkey",
+        "name": "messages_2025_12_15_pkey",
         "type": "PRIMARY KEY",
         "column": "inserted_at",
         "foreign_table": null,

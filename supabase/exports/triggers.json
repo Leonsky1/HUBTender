@@ -35,6 +35,15 @@
     "comment": null,
     "sql": "CREATE TRIGGER update_cost_categories_updated_at BEFORE UPDATE ON public.cost_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
+  "public.cost_redistribution_results.trigger_update_cost_redistribution_results_updated_at": {
+    "schema": "public",
+    "name": "trigger_update_cost_redistribution_results_updated_at",
+    "table_name": "cost_redistribution_results",
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER trigger_update_cost_redistribution_results_updated_at BEFORE UPDATE ON public.cost_redistribution_results FOR EACH ROW EXECUTE FUNCTION update_cost_redistribution_results_updated_at()"
+  },
   "public.detail_cost_categories.update_detail_cost_categories_updated_at": {
     "schema": "public",
     "name": "update_detail_cost_categories_updated_at",
@@ -80,14 +89,23 @@
     "comment": null,
     "sql": "CREATE TRIGGER update_materials_library_updated_at BEFORE UPDATE ON public.materials_library FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
-  "public.subcontract_growth_exclusions.update_subcontract_growth_exclusions_updated_at": {
+  "public.roles.roles_updated_at_trigger": {
     "schema": "public",
-    "name": "update_subcontract_growth_exclusions_updated_at",
+    "name": "roles_updated_at_trigger",
+    "table_name": "roles",
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER roles_updated_at_trigger BEFORE UPDATE ON public.roles FOR EACH ROW EXECUTE FUNCTION update_roles_updated_at()"
+  },
+  "public.subcontract_growth_exclusions.set_updated_at": {
+    "schema": "public",
+    "name": "set_updated_at",
     "table_name": "subcontract_growth_exclusions",
     "event": null,
     "timing": null,
     "comment": null,
-    "sql": "CREATE TRIGGER update_subcontract_growth_exclusions_updated_at BEFORE UPDATE ON public.subcontract_growth_exclusions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+    "sql": "CREATE TRIGGER set_updated_at BEFORE UPDATE ON public.subcontract_growth_exclusions FOR EACH ROW EXECUTE FUNCTION handle_updated_at()"
   },
   "public.template_items.set_updated_at_template_items": {
     "schema": "public",
@@ -106,6 +124,15 @@
     "timing": null,
     "comment": null,
     "sql": "CREATE TRIGGER set_updated_at_templates BEFORE UPDATE ON public.templates FOR EACH ROW EXECUTE FUNCTION set_updated_at()"
+  },
+  "public.tender_documents.trigger_update_tender_documents_timestamp": {
+    "schema": "public",
+    "name": "trigger_update_tender_documents_timestamp",
+    "table_name": "tender_documents",
+    "event": null,
+    "timing": null,
+    "comment": "Автоматически обновляет поле updated_at при изменении записи",
+    "sql": "CREATE TRIGGER trigger_update_tender_documents_timestamp BEFORE UPDATE ON public.tender_documents FOR EACH ROW EXECUTE FUNCTION update_tender_documents_updated_at()"
   },
   "public.tender_markup_percentage.trigger_update_tender_markup_percentage_updated_at": {
     "schema": "public",
@@ -142,6 +169,24 @@
     "timing": null,
     "comment": null,
     "sql": "CREATE TRIGGER update_units_updated_at BEFORE UPDATE ON public.units FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  "public.user_tasks.set_user_tasks_updated_at": {
+    "schema": "public",
+    "name": "set_user_tasks_updated_at",
+    "table_name": "user_tasks",
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER set_user_tasks_updated_at BEFORE UPDATE ON public.user_tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+  },
+  "public.users.update_users_updated_at": {
+    "schema": "public",
+    "name": "update_users_updated_at",
+    "table_name": "users",
+    "event": null,
+    "timing": null,
+    "comment": null,
+    "sql": "CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
   },
   "public.work_names.update_work_names_updated_at": {
     "schema": "public",
