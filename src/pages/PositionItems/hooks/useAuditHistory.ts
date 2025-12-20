@@ -34,22 +34,8 @@ export function useAuditHistory(
     setError(null);
 
     try {
-      // Шаг 1: Получить все boq_item_id для данной позиции
-      const { data: boqItems, error: boqError } = await supabase
-        .from('boq_items')
-        .select('id')
-        .eq('client_position_id', positionId);
-
-      if (boqError) throw boqError;
-
-      if (!boqItems || boqItems.length === 0) {
-        setAuditRecords([]);
-        return;
-      }
-
-      const itemIds = boqItems.map((item) => item.id);
-
-      // Шаг 2: Получить audit записи для этих item_id
+      // Загрузить audit записи напрямую по client_position_id из JSON полей
+      // Это позволяет видеть записи DELETE (удаленные элементы больше не в boq_items)
       let query = supabase
         .from('boq_items_audit')
         .select(
@@ -58,7 +44,7 @@ export function useAuditHistory(
           user:changed_by(id, full_name, email)
         `
         )
-        .in('boq_item_id', itemIds)
+        .or(`new_data->>client_position_id.eq.${positionId},old_data->>client_position_id.eq.${positionId}`)
         .order('changed_at', { ascending: false });
 
       // Применить фильтры
