@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useClientPositions } from './hooks/useClientPositions';
 import { usePositionActions } from './hooks/usePositionActions';
+import { usePositionFilters } from './hooks/usePositionFilters';
 import { useDeadlineCheck } from '../../hooks/useDeadlineCheck';
 import { TenderSelectionScreen } from './components/TenderSelectionScreen';
 import { PositionToolbar } from './components/PositionToolbar';
@@ -32,6 +34,7 @@ const ClientPositions: React.FC = () => {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [additionalModalOpen, setAdditionalModalOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [tempSelectedPositionIds, setTempSelectedPositionIds] = useState<Set<string>>(new Set());
 
   // Hooks
   const {
@@ -63,6 +66,16 @@ const ClientPositions: React.FC = () => {
     handleExportToExcel,
     handleDeleteAdditionalPosition,
   } = usePositionActions(clientPositions, setClientPositions, setLoading, fetchClientPositions, currentTheme);
+
+  // Хук фильтрации позиций
+  const { user } = useAuth();
+  const {
+    selectedPositionIds,
+    isFilterActive,
+    loading: filterLoading,
+    saveFilter,
+    clearFilter,
+  } = usePositionFilters(user?.id, selectedTenderId);
 
   // Проверка дедлайна для блокировки редактирования
   const { canEdit: canEditByDeadline, loading: deadlineLoading } =
@@ -97,6 +110,15 @@ const ClientPositions: React.FC = () => {
       }))
       .sort((a, b) => b.value - a.value);
   }, [tenders, selectedTenderTitle]);
+
+  // Фильтрация позиций в зависимости от активного фильтра
+  const displayedPositions = useMemo(() => {
+    if (!isFilterActive || selectedPositionIds.size === 0) {
+      return clientPositions;
+    }
+    // Строгая фильтрация: показываем только выбранные позиции
+    return clientPositions.filter(pos => selectedPositionIds.has(pos.id));
+  }, [clientPositions, isFilterActive, selectedPositionIds]);
 
   // Обработка выбора наименования тендера
   const handleTenderTitleChange = (title: string) => {
@@ -177,6 +199,34 @@ const ClientPositions: React.FC = () => {
     fetchClientPositions(tender.id);
   };
 
+  // Обработчики фильтра
+  const handleToggleFilterCheckbox = (positionId: string) => {
+    setTempSelectedPositionIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(positionId)) {
+        newSet.delete(positionId);
+      } else {
+        newSet.add(positionId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleApplyFilter = async () => {
+    const positionIds = Array.from(tempSelectedPositionIds);
+    await saveFilter(positionIds);
+  };
+
+  const handleClearFilter = async () => {
+    await clearFilter();
+    setTempSelectedPositionIds(new Set());
+  };
+
+  // Синхронизация tempSelectedPositionIds с загруженным фильтром
+  useEffect(() => {
+    setTempSelectedPositionIds(selectedPositionIds);
+  }, [selectedPositionIds]);
+
   // Если тендер не выбран, показываем экран выбора тендера
   if (!selectedTender) {
     return (
@@ -220,9 +270,9 @@ const ClientPositions: React.FC = () => {
       {/* Таблица позиций заказчика */}
       {selectedTender && (
         <PositionTable
-          clientPositions={clientPositions}
+          clientPositions={displayedPositions}
           selectedTender={selectedTender}
-          loading={loading}
+          loading={loading || filterLoading}
           copiedPositionId={copiedPositionId}
           copiedNotePositionId={copiedNotePositionId}
           selectedTargetIds={selectedTargetIds}
@@ -231,6 +281,9 @@ const ClientPositions: React.FC = () => {
           currentTheme={currentTheme}
           leafPositionIndices={leafPositionIndices}
           readOnly={!canEditByDeadline || deadlineLoading}
+          isFilterActive={isFilterActive}
+          filterSelectedCount={selectedPositionIds.size}
+          totalPositionsCount={clientPositions.length}
           onRowClick={handleRowClick}
           onOpenAdditionalModal={handleOpenAdditionalModal}
           onCopyPosition={handleCopyPosition}
@@ -246,6 +299,10 @@ const ClientPositions: React.FC = () => {
             handleDeleteAdditionalPosition(positionId, positionName, selectedTenderId, event)
           }
           onExportToExcel={() => handleExportToExcel(selectedTender)}
+          tempSelectedPositionIds={tempSelectedPositionIds}
+          onToggleFilterCheckbox={handleToggleFilterCheckbox}
+          onApplyFilter={handleApplyFilter}
+          onClearFilter={handleClearFilter}
         />
       )}
 

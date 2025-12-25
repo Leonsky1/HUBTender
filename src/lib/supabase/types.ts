@@ -755,6 +755,18 @@ export interface DeadlineCheckResult {
 }
 
 // =============================================
+// Типы для таблицы user_position_filters (персональные фильтры позиций)
+// =============================================
+
+export interface UserPositionFilter {
+  id: string;
+  user_id: string;
+  tender_id: string;
+  position_id: string;
+  created_at: string;
+}
+
+// =============================================
 // Константы прав доступа по ролям
 // =============================================
 

@@ -10,6 +10,7 @@ import {
   ClearOutlined,
   FileTextOutlined,
   FileAddOutlined,
+  FilterOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { ClientPosition, Tender } from '../../../lib/supabase';
@@ -28,6 +29,9 @@ interface PositionTableProps {
   currentTheme: string;
   leafPositionIndices: Set<number>;
   readOnly?: boolean;
+  isFilterActive?: boolean;
+  filterSelectedCount?: number;
+  totalPositionsCount?: number;
   onRowClick: (record: ClientPosition, index: number) => void;
   onOpenAdditionalModal: (parentId: string, event: React.MouseEvent) => void;
   onCopyPosition: (positionId: string, event: React.MouseEvent) => void;
@@ -39,6 +43,10 @@ interface PositionTableProps {
   onDeleteBoqItems: (positionId: string, positionName: string, event: React.MouseEvent) => void;
   onDeleteAdditionalPosition: (positionId: string, positionName: string, event: React.MouseEvent) => void;
   onExportToExcel: () => void;
+  tempSelectedPositionIds?: Set<string>;
+  onToggleFilterCheckbox?: (positionId: string) => void;
+  onApplyFilter?: () => void;
+  onClearFilter?: () => void;
 }
 
 export const PositionTable: React.FC<PositionTableProps> = ({
@@ -64,16 +72,47 @@ export const PositionTable: React.FC<PositionTableProps> = ({
   onDeleteBoqItems,
   onDeleteAdditionalPosition,
   onExportToExcel,
+  isFilterActive = false,
+  filterSelectedCount = 0,
+  totalPositionsCount = 0,
+  tempSelectedPositionIds = new Set(),
+  onToggleFilterCheckbox,
+  onApplyFilter,
+  onClearFilter,
 }) => {
   // Состояние для отслеживания открытой позиции
   const [expandedPositionId, setExpandedPositionId] = useState<string | null>(null);
 
   const columns: ColumnsType<ClientPosition> = useMemo(() => [
     {
+      title: <div style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>Фильтр</div>,
+      key: 'filter_checkbox',
+      width: 60,
+      align: 'center',
+      fixed: 'left',
+      render: (_, record) => (
+        <Tag
+          color={tempSelectedPositionIds.has(record.id) ? 'blue' : 'default'}
+          style={{
+            cursor: readOnly ? 'not-allowed' : 'pointer',
+            margin: 0,
+            opacity: readOnly ? 0.5 : 1,
+            pointerEvents: readOnly ? 'none' : 'auto',
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFilterCheckbox?.(record.id);
+          }}
+        >
+          {tempSelectedPositionIds.has(record.id) ? <CheckOutlined /> : <span style={{ width: 14, display: 'inline-block' }}></span>}
+        </Tag>
+      ),
+    },
+    {
       title: <div style={{ textAlign: 'center' }}>№</div>,
       dataIndex: 'position_number',
       key: 'position_number',
-      width: 60,
+      width: 50,
       align: 'center',
       fixed: 'left',
     },
@@ -401,6 +440,8 @@ export const PositionTable: React.FC<PositionTableProps> = ({
     currentTheme,
     expandedPositionId,
     readOnly,
+    tempSelectedPositionIds,
+    onToggleFilterCheckbox,
     onOpenAdditionalModal,
     onDeleteAdditionalPosition,
     onCopyPosition,
@@ -413,9 +454,47 @@ export const PositionTable: React.FC<PositionTableProps> = ({
   return (
     <Card
       bordered={false}
-      title="Позиции заказчика"
+      title={
+        <Space>
+          <FileTextOutlined />
+          <span>Позиции заказчика</span>
+          {isFilterActive && (
+            <Tag color="blue">
+              Показано {filterSelectedCount} из {totalPositionsCount}
+            </Tag>
+          )}
+        </Space>
+      }
       extra={
         <Space>
+          {/* Кнопки фильтра */}
+          {!isFilterActive && tempSelectedPositionIds.size > 0 && (
+            <Button
+              type="primary"
+              icon={<FilterOutlined />}
+              onClick={onApplyFilter}
+              disabled={readOnly}
+            >
+              Скрыть невыбранные строки ({tempSelectedPositionIds.size})
+            </Button>
+          )}
+
+          {isFilterActive && (
+            <>
+              <Button
+                icon={<FilterOutlined />}
+                onClick={onApplyFilter}
+                disabled={readOnly}
+              >
+                Обновить фильтр
+              </Button>
+              <Button onClick={onClearFilter} disabled={readOnly}>
+                Отменить фильтр
+              </Button>
+            </>
+          )}
+
+          {/* Существующие кнопки */}
           {copiedPositionId && selectedTargetIds.size > 0 && (
             <Button
               type="primary"
