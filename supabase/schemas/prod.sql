@@ -1,5 +1,5 @@
 -- Database Schema SQL Export
--- Generated: 2025-12-18T14:25:42.567558
+-- Generated: 2025-12-25T11:23:49.377857
 -- Database: postgres
 -- Host: aws-1-eu-west-1.pooler.supabase.com
 
@@ -422,8 +422,8 @@ COMMENT ON COLUMN public.boq_items.total_amount IS 'Итоговая сумма'
 COMMENT ON COLUMN public.boq_items.detail_cost_category_id IS 'Затрата на строительство, связь с таблицей detail_cost_categories';
 COMMENT ON COLUMN public.boq_items.quote_link IS 'Ссылка на КП';
 COMMENT ON COLUMN public.boq_items.commercial_markup IS 'Коэффициент наценки';
-COMMENT ON COLUMN public.boq_items.total_commercial_material_cost IS 'Итоговая стоимость материала в коммерческой стоимости';
-COMMENT ON COLUMN public.boq_items.total_commercial_work_cost IS 'Итоговая стоимость работы в коммерческой стоимости';
+COMMENT ON COLUMN public.boq_items.total_commercial_material_cost IS 'Коммерческая стоимость материалов с точностью до 6 знаков для минимизации погрешности округления';
+COMMENT ON COLUMN public.boq_items.total_commercial_work_cost IS 'Коммерческая стоимость работ с точностью до 6 знаков для минимизации погрешности округления';
 COMMENT ON COLUMN public.boq_items.created_at IS 'Дата и время создания записи';
 COMMENT ON COLUMN public.boq_items.updated_at IS 'Дата и время последнего обновления';
 COMMENT ON COLUMN public.boq_items.parent_work_item_id IS 'Привязка материала к работе (FK к boq_items.id, NULL если материал независимый)';
@@ -441,12 +441,11 @@ CREATE TABLE IF NOT EXISTS public.boq_items_audit (
     old_data jsonb,
     new_data jsonb,
     changed_fields ARRAY,
-    CONSTRAINT boq_items_audit_boq_item_id_fkey FOREIGN KEY (boq_item_id) REFERENCES None.None(None),
     CONSTRAINT boq_items_audit_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES None.None(None),
     CONSTRAINT boq_items_audit_pkey PRIMARY KEY (id)
 );
 COMMENT ON TABLE public.boq_items_audit IS 'История изменений BOQ items с полным snapshot данных';
-COMMENT ON COLUMN public.boq_items_audit.boq_item_id IS 'ID элемента BOQ из таблицы boq_items';
+COMMENT ON COLUMN public.boq_items_audit.boq_item_id IS 'ID удаленного элемента (хранится без FK constraint для сохранения истории после удаления)';
 COMMENT ON COLUMN public.boq_items_audit.operation_type IS 'Тип операции: INSERT, UPDATE, DELETE';
 COMMENT ON COLUMN public.boq_items_audit.changed_at IS 'Дата и время изменения';
 COMMENT ON COLUMN public.boq_items_audit.changed_by IS 'Пользователь, совершивший изменение (из таблицы users)';
@@ -845,7 +844,7 @@ CREATE TABLE IF NOT EXISTS public.tender_markup_percentage (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     tender_id uuid NOT NULL,
     markup_parameter_id uuid NOT NULL,
-    value numeric(5,2) NOT NULL DEFAULT 0,
+    value numeric(8,5) NOT NULL DEFAULT 0,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT tender_markup_percentage_markup_parameter_id_fkey FOREIGN KEY (markup_parameter_id) REFERENCES None.None(None),
@@ -858,7 +857,7 @@ COMMENT ON TABLE public.tender_markup_percentage IS 'Проценты нацен
 COMMENT ON COLUMN public.tender_markup_percentage.id IS 'Уникальный идентификатор записи';
 COMMENT ON COLUMN public.tender_markup_percentage.tender_id IS 'Ссылка на тендер';
 COMMENT ON COLUMN public.tender_markup_percentage.markup_parameter_id IS 'Ссылка на параметр наценки';
-COMMENT ON COLUMN public.tender_markup_percentage.value IS 'Значение процента (0-100)';
+COMMENT ON COLUMN public.tender_markup_percentage.value IS 'Значение процента (0-999.99999) с точностью до 5 знаков после запятой';
 COMMENT ON COLUMN public.tender_markup_percentage.created_at IS 'Дата создания';
 COMMENT ON COLUMN public.tender_markup_percentage.updated_at IS 'Дата последнего обновления';
 
@@ -933,6 +932,8 @@ CREATE TABLE IF NOT EXISTS public.tenders (
     apply_subcontract_materials_growth boolean DEFAULT true,
     housing_class USER-DEFINED,
     construction_scope USER-DEFINED,
+    project_folder_link text,
+    is_archived boolean NOT NULL DEFAULT false,
     CONSTRAINT tenders_created_by_fkey FOREIGN KEY (created_by) REFERENCES None.None(None),
     CONSTRAINT tenders_markup_tactic_id_fkey FOREIGN KEY (markup_tactic_id) REFERENCES None.None(None),
     CONSTRAINT tenders_pkey PRIMARY KEY (id),
@@ -964,6 +965,8 @@ COMMENT ON COLUMN public.tenders.apply_subcontract_works_growth IS 'Примен
 COMMENT ON COLUMN public.tenders.apply_subcontract_materials_growth IS 'Применять ли рост стоимости для субподрядных материалов (суб-мат)';
 COMMENT ON COLUMN public.tenders.housing_class IS 'Класс жилья (комфорт, бизнес, премиум, делюкс)';
 COMMENT ON COLUMN public.tenders.construction_scope IS 'Объем строительства (генподряд, коробка, монолит)';
+COMMENT ON COLUMN public.tenders.project_folder_link IS 'Ссылка на папку с проектом';
+COMMENT ON COLUMN public.tenders.is_archived IS 'Флаг архивации тендера';
 
 -- Table: public.units
 CREATE TABLE IF NOT EXISTS public.units (
@@ -1077,8 +1080,8 @@ CREATE TABLE IF NOT EXISTS realtime.messages (
     CONSTRAINT messages_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_15
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_15 (
+-- Table: realtime.messages_2025_12_22
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_22 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1087,12 +1090,12 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_15 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_15_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_15_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_22_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_22_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_16
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_16 (
+-- Table: realtime.messages_2025_12_23
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_23 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1101,12 +1104,12 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_16 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_16_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_16_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_23_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_23_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_17
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_17 (
+-- Table: realtime.messages_2025_12_24
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_24 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1115,12 +1118,12 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_17 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_17_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_17_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_24_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_24_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_18
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_18 (
+-- Table: realtime.messages_2025_12_25
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_25 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1129,12 +1132,12 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_18 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_18_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_18_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_25_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_25_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_19
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_19 (
+-- Table: realtime.messages_2025_12_26
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_26 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1143,12 +1146,12 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_19 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_19_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_19_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_26_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_26_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_20
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_20 (
+-- Table: realtime.messages_2025_12_27
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_27 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1157,12 +1160,12 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_20 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_20_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_20_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_27_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_27_pkey PRIMARY KEY (inserted_at)
 );
 
--- Table: realtime.messages_2025_12_21
-CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_21 (
+-- Table: realtime.messages_2025_12_28
+CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_28 (
     topic text NOT NULL,
     extension text NOT NULL,
     payload jsonb,
@@ -1171,8 +1174,8 @@ CREATE TABLE IF NOT EXISTS realtime.messages_2025_12_21 (
     updated_at timestamp without time zone NOT NULL DEFAULT now(),
     inserted_at timestamp without time zone NOT NULL DEFAULT now(),
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    CONSTRAINT messages_2025_12_21_pkey PRIMARY KEY (id),
-    CONSTRAINT messages_2025_12_21_pkey PRIMARY KEY (inserted_at)
+    CONSTRAINT messages_2025_12_28_pkey PRIMARY KEY (id),
+    CONSTRAINT messages_2025_12_28_pkey PRIMARY KEY (inserted_at)
 );
 
 -- Table: realtime.schema_migrations
@@ -1575,7 +1578,7 @@ $function$
 
 
 -- Function: extensions.armor
-CREATE OR REPLACE FUNCTION extensions.armor(bytea, text[], text[])
+CREATE OR REPLACE FUNCTION extensions.armor(bytea)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1583,7 +1586,7 @@ AS '$libdir/pgcrypto', $function$pg_armor$function$
 
 
 -- Function: extensions.armor
-CREATE OR REPLACE FUNCTION extensions.armor(bytea)
+CREATE OR REPLACE FUNCTION extensions.armor(bytea, text[], text[])
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1886,7 +1889,7 @@ AS '$libdir/pgcrypto', $function$pgp_key_id_w$function$
 
 
 -- Function: extensions.pgp_pub_decrypt
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1902,7 +1905,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_text$function$
 
 
 -- Function: extensions.pgp_pub_decrypt
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_decrypt(bytea, bytea, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1934,7 +1937,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_decrypt_bytea$function$
 
 
 -- Function: extensions.pgp_pub_encrypt
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -1942,7 +1945,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_text$function$
 
 
 -- Function: extensions.pgp_pub_encrypt
-CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea)
+CREATE OR REPLACE FUNCTION extensions.pgp_pub_encrypt(text, bytea, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -1966,7 +1969,7 @@ AS '$libdir/pgcrypto', $function$pgp_pub_encrypt_bytea$function$
 
 
 -- Function: extensions.pgp_sym_decrypt
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -1974,7 +1977,7 @@ AS '$libdir/pgcrypto', $function$pgp_sym_decrypt_text$function$
 
 
 -- Function: extensions.pgp_sym_decrypt
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_decrypt(bytea, text)
  RETURNS text
  LANGUAGE c
  IMMUTABLE PARALLEL SAFE STRICT
@@ -2014,7 +2017,7 @@ AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_text$function$
 
 
 -- Function: extensions.pgp_sym_encrypt_bytea
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -2022,7 +2025,7 @@ AS '$libdir/pgcrypto', $function$pgp_sym_encrypt_bytea$function$
 
 
 -- Function: extensions.pgp_sym_encrypt_bytea
-CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text, text)
+CREATE OR REPLACE FUNCTION extensions.pgp_sym_encrypt_bytea(bytea, text)
  RETURNS bytea
  LANGUAGE c
  PARALLEL SAFE STRICT
@@ -2437,10 +2440,11 @@ CREATE OR REPLACE FUNCTION public.clear_audit_user()
  LANGUAGE plpgsql
  SECURITY DEFINER
 AS $function$
-  BEGIN
-    PERFORM set_config('app.current_user_id', '', false);
-  END;
-  $function$
+    BEGIN
+      -- Очистить значение на уровне сессии
+      PERFORM set_config('app.current_user_id', '', true);
+    END;
+    $function$
 
 
 -- Function: public.current_user_role
@@ -2463,6 +2467,43 @@ CREATE OR REPLACE FUNCTION public.current_user_status()
 AS $function$
   SELECT access_status FROM public.users WHERE id = auth.uid();
 $function$
+
+
+-- Function: public.delete_boq_item_with_audit
+CREATE OR REPLACE FUNCTION public.delete_boq_item_with_audit(p_user_id uuid, p_item_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+  DECLARE
+    v_old_item record;
+  BEGIN
+    -- Получаем старое состояние
+    SELECT * INTO v_old_item FROM public.boq_items WHERE id = p_item_id;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'BOQ item not found: %', p_item_id;
+    END IF;
+
+    -- Вручную вставляем audit запись ПЕРЕД удалением
+    INSERT INTO public.boq_items_audit (
+      boq_item_id,
+      operation_type,
+      changed_by,
+      old_data
+    ) VALUES (
+      p_item_id,
+      'DELETE',
+      p_user_id,
+      to_jsonb(v_old_item)
+    );
+
+    -- Выполняем DELETE
+    DELETE FROM public.boq_items WHERE id = p_item_id;
+
+    RETURN to_jsonb(v_old_item);
+  END;
+  $function$
 
 
 -- Function: public.get_subcontract_growth_exclusions
@@ -2493,6 +2534,77 @@ BEGIN
   RETURN NEW;
 END;
 $function$
+
+
+-- Function: public.insert_boq_item_with_audit
+CREATE OR REPLACE FUNCTION public.insert_boq_item_with_audit(p_user_id uuid, p_data jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+  DECLARE
+    v_new_item record;
+  BEGIN
+    -- Выполняем INSERT
+    INSERT INTO public.boq_items (
+      tender_id,
+      client_position_id,
+      sort_number,
+      boq_item_type,
+      work_name_id,
+      material_name_id,
+      parent_work_item_id,
+      unit_code,
+      quantity,
+      conversion_coefficient,
+      consumption_coefficient,
+      unit_rate,
+      currency_type,
+      total_amount,
+      delivery_price_type,
+      delivery_amount,
+      quote_link,
+      detail_cost_category_id,
+      material_type
+    )
+    SELECT
+      (p_data->>'tender_id')::uuid,
+      (p_data->>'client_position_id')::uuid,
+      COALESCE((p_data->>'sort_number')::integer, 0),
+      (p_data->>'boq_item_type')::boq_item_type,
+      (p_data->>'work_name_id')::uuid,
+      (p_data->>'material_name_id')::uuid,
+      (p_data->>'parent_work_item_id')::uuid,
+      p_data->>'unit_code',
+      COALESCE((p_data->>'quantity')::numeric, 1),
+      (p_data->>'conversion_coefficient')::numeric,
+      (p_data->>'consumption_coefficient')::numeric,
+      COALESCE((p_data->>'unit_rate')::numeric, 0),
+      COALESCE((p_data->>'currency_type')::currency_type, 'RUB'::currency_type),
+      COALESCE((p_data->>'total_amount')::numeric, 0),
+      (p_data->>'delivery_price_type')::delivery_price_type,
+      (p_data->>'delivery_amount')::numeric,
+      p_data->>'quote_link',
+      (p_data->>'detail_cost_category_id')::uuid,
+      (p_data->>'material_type')::material_type
+    RETURNING * INTO v_new_item;
+
+    -- Вручную вставляем audit запись с user_id
+    INSERT INTO public.boq_items_audit (
+      boq_item_id,
+      operation_type,
+      changed_by,
+      new_data
+    ) VALUES (
+      v_new_item.id,
+      'INSERT',
+      p_user_id,
+      to_jsonb(v_new_item)
+    );
+
+    RETURN to_jsonb(v_new_item);
+  END;
+  $function$
 
 
 -- Function: public.log_boq_items_changes
@@ -2625,10 +2737,11 @@ CREATE OR REPLACE FUNCTION public.set_audit_user(user_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
 AS $function$
-  BEGIN
-    PERFORM set_config('app.current_user_id', user_id::text, false);
-  END;
-  $function$
+    BEGIN
+      -- Используем is_local = true для установки на уровне сессии
+      PERFORM set_config('app.current_user_id', user_id::text, true);
+    END;
+    $function$
 
 
 -- Function: public.set_updated_at
@@ -2673,6 +2786,90 @@ BEGIN
   END IF;
 END;
 $function$
+
+
+-- Function: public.update_boq_item_with_audit
+CREATE OR REPLACE FUNCTION public.update_boq_item_with_audit(p_user_id uuid, p_item_id uuid, p_data jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+  DECLARE
+    v_old_item record;
+    v_new_item record;
+    v_changed_fields text[] := ARRAY[]::text[];
+    v_key text;
+    v_old_val jsonb;
+    v_new_val jsonb;
+  BEGIN
+    -- Получаем старое состояние
+    SELECT * INTO v_old_item FROM public.boq_items WHERE id = p_item_id;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'BOQ item not found: %', p_item_id;
+    END IF;
+
+    -- Выполняем UPDATE только переданных полей
+    UPDATE public.boq_items
+    SET
+      quantity = COALESCE((p_data->>'quantity')::numeric, quantity),
+      unit_rate = COALESCE((p_data->>'unit_rate')::numeric, unit_rate),
+      total_amount = COALESCE((p_data->>'total_amount')::numeric, total_amount),
+      conversion_coefficient = COALESCE((p_data->>'conversion_coefficient')::numeric, conversion_coefficient),
+      consumption_coefficient = COALESCE((p_data->>'consumption_coefficient')::numeric, consumption_coefficient),
+      delivery_price_type = COALESCE((p_data->>'delivery_price_type')::delivery_price_type, delivery_price_type),
+      delivery_amount = COALESCE((p_data->>'delivery_amount')::numeric, delivery_amount),
+      quote_link = COALESCE(p_data->>'quote_link', quote_link),
+      detail_cost_category_id = COALESCE((p_data->>'detail_cost_category_id')::uuid, detail_cost_category_id),
+      material_type = COALESCE((p_data->>'material_type')::material_type, material_type),
+      work_name_id = COALESCE((p_data->>'work_name_id')::uuid, work_name_id),
+      material_name_id = COALESCE((p_data->>'material_name_id')::uuid, material_name_id),
+      unit_code = COALESCE(p_data->>'unit_code', unit_code),
+      parent_work_item_id = COALESCE((p_data->>'parent_work_item_id')::uuid, parent_work_item_id),
+      sort_number = COALESCE((p_data->>'sort_number')::integer, sort_number)
+    WHERE id = p_item_id
+    RETURNING * INTO v_new_item;
+
+    -- Сравниваем old и new, добавляем только реально измененные поля
+    FOR v_key IN SELECT jsonb_object_keys(to_jsonb(v_new_item.*))
+    LOOP
+      v_old_val := to_jsonb(v_old_item.*) -> v_key;
+      v_new_val := to_jsonb(v_new_item.*) -> v_key;
+
+      -- Пропускаем служебные поля
+      IF v_key NOT IN ('updated_at', 'created_at', 'id') THEN
+        -- Добавляем в список только если значение изменилось
+        IF v_old_val IS DISTINCT FROM v_new_val THEN
+          v_changed_fields := array_append(v_changed_fields, v_key);
+        END IF;
+      END IF;
+    END LOOP;
+
+    -- Если ничего не изменилось, не создаем audit запись
+    IF array_length(v_changed_fields, 1) IS NULL THEN
+      RETURN to_jsonb(v_new_item);
+    END IF;
+
+    -- Вручную вставляем audit запись с user_id
+    INSERT INTO public.boq_items_audit (
+      boq_item_id,
+      operation_type,
+      changed_by,
+      old_data,
+      new_data,
+      changed_fields
+    ) VALUES (
+      p_item_id,
+      'UPDATE',
+      p_user_id,
+      to_jsonb(v_old_item),
+      to_jsonb(v_new_item),
+      v_changed_fields
+    );
+
+    RETURN to_jsonb(v_new_item);
+  END;
+  $function$
 
 
 -- Function: public.update_boq_items_updated_at
@@ -4444,10 +4641,6 @@ $function$
 -- TRIGGERS
 -- ============================================
 
--- Trigger: boq_items_audit_trigger on public.boq_items
--- Description: Триггер для автоматической записи истории изменений
-CREATE TRIGGER boq_items_audit_trigger AFTER INSERT OR DELETE OR UPDATE ON public.boq_items FOR EACH ROW EXECUTE FUNCTION log_boq_items_changes()
-
 -- Trigger: boq_items_updated_at_trigger on public.boq_items
 CREATE TRIGGER boq_items_updated_at_trigger BEFORE UPDATE ON public.boq_items FOR EACH ROW EXECUTE FUNCTION update_boq_items_updated_at()
 
@@ -4926,6 +5119,9 @@ CREATE INDEX idx_tenders_client_name ON public.tenders USING btree (client_name)
 CREATE INDEX idx_tenders_created_at ON public.tenders USING btree (created_at DESC);
 
 -- Index on public.tenders
+CREATE INDEX idx_tenders_is_archived ON public.tenders USING btree (is_archived);
+
+-- Index on public.tenders
 CREATE INDEX idx_tenders_submission_deadline ON public.tenders USING btree (submission_deadline);
 
 -- Index on public.tenders
@@ -4994,26 +5190,26 @@ CREATE INDEX idx_works_library_work_name_id ON public.works_library USING btree 
 -- Index on realtime.messages
 CREATE INDEX messages_inserted_at_topic_index ON ONLY realtime.messages USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_15
-CREATE INDEX messages_2025_12_15_inserted_at_topic_idx ON realtime.messages_2025_12_15 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_22
+CREATE INDEX messages_2025_12_22_inserted_at_topic_idx ON realtime.messages_2025_12_22 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_16
-CREATE INDEX messages_2025_12_16_inserted_at_topic_idx ON realtime.messages_2025_12_16 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_23
+CREATE INDEX messages_2025_12_23_inserted_at_topic_idx ON realtime.messages_2025_12_23 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_17
-CREATE INDEX messages_2025_12_17_inserted_at_topic_idx ON realtime.messages_2025_12_17 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_24
+CREATE INDEX messages_2025_12_24_inserted_at_topic_idx ON realtime.messages_2025_12_24 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_18
-CREATE INDEX messages_2025_12_18_inserted_at_topic_idx ON realtime.messages_2025_12_18 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_25
+CREATE INDEX messages_2025_12_25_inserted_at_topic_idx ON realtime.messages_2025_12_25 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_19
-CREATE INDEX messages_2025_12_19_inserted_at_topic_idx ON realtime.messages_2025_12_19 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_26
+CREATE INDEX messages_2025_12_26_inserted_at_topic_idx ON realtime.messages_2025_12_26 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_20
-CREATE INDEX messages_2025_12_20_inserted_at_topic_idx ON realtime.messages_2025_12_20 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_27
+CREATE INDEX messages_2025_12_27_inserted_at_topic_idx ON realtime.messages_2025_12_27 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
--- Index on realtime.messages_2025_12_21
-CREATE INDEX messages_2025_12_21_inserted_at_topic_idx ON realtime.messages_2025_12_21 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
+-- Index on realtime.messages_2025_12_28
+CREATE INDEX messages_2025_12_28_inserted_at_topic_idx ON realtime.messages_2025_12_28 USING btree (inserted_at DESC, topic) WHERE ((extension = 'broadcast'::text) AND (private IS TRUE));
 
 -- Index on realtime.subscription
 CREATE INDEX ix_realtime_subscription_entity ON realtime.subscription USING btree (entity);

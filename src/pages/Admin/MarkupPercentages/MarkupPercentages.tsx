@@ -582,11 +582,11 @@ const MarkupPercentages: React.FC = () => {
                           >
                             <InputNumber
                               min={0}
-                              max={999.99}
-                              step={0.01}
+                              max={999.99999}
+                              step={0.00001}
                               addonAfter="%"
                               style={{ width: '120px' }}
-                              precision={2}
+                              precision={5}
                               parser={parseNumberInput}
                               formatter={formatNumberInput}
                             />
